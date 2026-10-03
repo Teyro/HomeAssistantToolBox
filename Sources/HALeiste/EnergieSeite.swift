@@ -242,9 +242,13 @@ struct VerlaufDiagramm: View {
             }
             .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 18))
             .chartXAxis {
-                AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
+                AxisMarks(values: .stride(by: .hour, count: 6)) { wert in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
-                    AxisValueLabel(format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute(), collisionResolution: .greedy)
+                    AxisValueLabel {
+                        if let d = wert.as(Date.self) {
+                            Text(String(format: "%02d:00", Calendar.current.component(.hour, from: d))).fixedSize()
+                        }
+                    }
                 }
             }
             .chartYAxis {

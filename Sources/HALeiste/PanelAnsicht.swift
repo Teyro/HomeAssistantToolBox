@@ -155,6 +155,7 @@ struct PanelAnsicht: View {
                         .foregroundStyle(.white)
                 }
             }
+            .fixedSize()
             .padding(.horizontal, 9)
             .padding(.vertical, 6)
             .foregroundStyle(gewaehlt ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
