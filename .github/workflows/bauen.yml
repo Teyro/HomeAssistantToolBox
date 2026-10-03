@@ -1,0 +1,57 @@
+name: Bauen und testen
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bauen:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift-Version
+        run: swift --version
+
+      - name: Logik testen
+        run: swift test
+
+      - name: App bauen
+        run: |
+          VERSION=$(cat VERSION)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF#refs/tags/v}"; fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          ./scripts/baue-app.sh "$VERSION"
+
+      - name: Bildschirmfotos gegen nachgebautes Home Assistant
+        run: |
+          node test/ha-mock.mjs 8123 > mock.log 2>&1 &
+          sleep 2
+          for m in Dark Light; do
+            HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
+            HA_BILDER="$PWD/bilder-ci" timeout 120 "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
+          done
+          ls -la bilder-ci || true
+          tail -20 mock.log
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bilder
+          path: bilder-ci
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: build/HA-Leiste-*.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" build/HA-Leiste-$VERSION.zip --clobber
