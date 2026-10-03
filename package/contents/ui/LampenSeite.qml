@@ -22,6 +22,7 @@ ColumnLayout {
 
     // Welche Gruppen/Räume aufgeklappt sind (bleibt beim Aktualisieren erhalten)
     property var offen: ({})
+    property bool einzelneOffen: true
     function umschalten(schluessel) {
         const o = Object.assign({}, offen);
         o[schluessel] = !o[schluessel];
@@ -108,14 +109,19 @@ ColumnLayout {
             }
 
             // ---- Lampen ohne Raum (bzw. alle, wenn Räume ausgeblendet sind) ----
-            Kirigami.ListSectionHeader {
+            KlappKopf {
                 Layout.fillWidth: true
-                visible: einzelListe.count > 0
+                visible: einzelListe.anzahl > 0
                 text: seite.zeigeRaeume && seite.ha.raeume.length > 0 ? i18n("Ohne Raum") : i18n("Alle Lampen")
+                anzahl: einzelListe.anzahl
+                offen: seite.einzelneOffen
+                onUmschalten: seite.einzelneOffen = !seite.einzelneOffen
             }
             Repeater {
                 id: einzelListe
-                model: seite.zeigeRaeume && seite.ha.raeume.length > 0 ? seite.ha.ohneRaum : seite.ha.lichter
+                readonly property var liste: seite.zeigeRaeume && seite.ha.raeume.length > 0 ? seite.ha.ohneRaum : seite.ha.lichter
+                readonly property int anzahl: liste.length
+                model: seite.einzelneOffen ? liste : []
                 delegate: LampenZeile {
                     required property var modelData
                     Layout.fillWidth: true

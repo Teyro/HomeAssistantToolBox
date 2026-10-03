@@ -7,6 +7,7 @@ import QtQuick.Layouts
 
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PC3
+import org.kde.plasma.extras as PlasmaExtras
 
 import "logik.js" as Logik
 
@@ -26,14 +27,12 @@ Item {
     implicitHeight: inhalt.implicitHeight + Kirigami.Units.smallSpacing * 2
 
     HoverHandler { id: zeiger }
-    Rectangle {
+    PlasmaExtras.Highlight {
         anchors.fill: parent
         anchors.leftMargin: Kirigami.Units.smallSpacing + zeile.einzug
         anchors.rightMargin: Kirigami.Units.smallSpacing
-        radius: Kirigami.Units.cornerRadius
-        color: Kirigami.Theme.highlightColor
-        opacity: zeiger.hovered ? 0.1 : 0
-        Behavior on opacity { NumberAnimation { duration: Kirigami.Units.shortDuration } }
+        hovered: true
+        visible: zeiger.hovered
     }
 
     ColumnLayout {

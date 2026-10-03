@@ -3,17 +3,18 @@
 
 /** Template für Home Assistant: Räume (Bereiche) mit Lampen/Schaltern und Leistungssensoren je Schalter. */
 var BEREICHE_TEMPLATE =
-    "{%- set ns = namespace(a=[], p=[]) -%}" +
+    "{%- set ns = namespace(a=[], p=[], g=[]) -%}" +
     "{%- for ar in areas() -%}" +
     "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch)\\\\.') | list}] -%}" +
     "{%- endfor -%}" +
     "{%- for s in states.switch -%}" +
     "{%- set d = device_id(s.entity_id) -%}" +
-    "{%- if d -%}{%- for e in device_entities(d) -%}" +
+    "{%- if d -%}{%- set ns.g = ns.g + [[s.entity_id, d, device_attr(d, 'name_by_user') or device_attr(d, 'name') or '']] -%}" +
+    "{%- for e in device_entities(d) -%}" +
     "{%- if e.startswith('sensor.') and state_attr(e, 'device_class') == 'power' -%}{%- set ns.p = ns.p + [[s.entity_id, e]] -%}{%- endif -%}" +
     "{%- endfor -%}{%- endif -%}" +
     "{%- endfor -%}" +
-    "{{ {'bereiche': ns.a, 'leistung': ns.p} | tojson }}";
+    "{{ {'bereiche': ns.a, 'leistung': ns.p, 'geraete': ns.g} | tojson }}";
 
 var EINSTELLUNGS_SCHALTER = /(^|[\s_.-])(led|leds|indikator|indicator|kindersicherung|child[\s_]?lock|tastensperre|button[\s_]?lock|nachtmodus|night[\s_]?mode|do[\s_]?not[\s_]?disturb|auto[\s_-]?update|firmware|beta|ota|neustart|restart|reboot|identify|identifizieren|power[\s_]?on[\s_]?behavio(u)?r|einschaltverhalten|überlastschutz|overload|benachrichtigung|notification|signalton|beep|buzzer|statuslicht|status[\s_]?light|ecomodus|eco[\s_]?mode)($|[\s_.-])/i;
 
@@ -96,7 +97,7 @@ function baueModell(zustaende, bereiche, opt) {
     opt = opt || {};
     var versteckt = (opt.ausgeblendet || "").split(/[\s,;]+/).filter(function (x) { return x; });
     var ids = Object.keys(zustaende);
-    var lichter = [], gruppen = [], schalter = [], leistung = [], energie = [];
+    var lichter = [], gruppen = [], schalter = [], schalterGruppen = [], leistung = [], energie = [];
     var inGruppe = {};
 
     var register = opt.register || {};
@@ -119,8 +120,11 @@ function baueModell(zustaende, bereiche, opt) {
             }
         } else if (d === "group" && opt.alteGruppen !== false && a.entity_id && a.entity_id.length) {
             var nurLicht = a.entity_id.filter(function (m) { return domain(m) === "light" && zustaende[m]; });
+            var nurSchalter = a.entity_id.filter(function (m) { return domain(m) === "switch" && zustaende[m]; });
             if (nurLicht.length && nurLicht.length === a.entity_id.length) {
                 gruppen.push({ id: id, name: name(e), mitglieder: nurLicht, alt: true });
+            } else if (nurSchalter.length && nurSchalter.length === a.entity_id.length) {
+                schalterGruppen.push({ id: id, name: name(e), steuerId: id, mitglieder: nurSchalter, art: "gruppe" });
             }
         } else if (d === "switch") {
             if (opt.nurSteckdosen && a.device_class !== "outlet") return;
@@ -128,6 +132,11 @@ function baueModell(zustaende, bereiche, opt) {
             // am Namen erkennen, damit nicht jede "LED"- oder "Kindersicherung"-Option erscheint.
             if (!opt.register || !Object.keys(opt.register).length) {
                 if (EINSTELLUNGS_SCHALTER.test(name(e)) || EINSTELLUNGS_SCHALTER.test(id)) return;
+            }
+            // Schaltergruppe (Helfer "Gruppe → Schalter"): hat eine Liste von Mitgliedern
+            if (a.entity_id && a.entity_id.length) {
+                schalterGruppen.push({ id: id, name: name(e), steuerId: id, mitglieder: a.entity_id.slice(), art: "gruppe" });
+                return;
             }
             schalter.push({ id: id, name: name(e) });
         } else if (d === "sensor" && istVerfuegbar(e)) {
@@ -187,6 +196,40 @@ function baueModell(zustaende, bereiche, opt) {
     var schalterRaum = {};
     raeume.forEach(function (r) { r.schalter.forEach(function (id) { schalterRaum[id] = r.name; }); });
 
+    // Geräte mit mehreren Schaltern (z. B. Steckdosenleisten) als eigene Gruppe
+    var istSchalter = {};
+    schalter.forEach(function (x) { istSchalter[x.id] = true; });
+    if (bereiche && bereiche.geraete) {
+        var jeGeraet = {};
+        bereiche.geraete.forEach(function (g) {
+            if (!istSchalter[g[0]]) return;
+            (jeGeraet[g[1]] = jeGeraet[g[1]] || { name: g[2], ids: [] }).ids.push(g[0]);
+        });
+        Object.keys(jeGeraet).forEach(function (d) {
+            var g = jeGeraet[d];
+            if (g.ids.length < 2) return;
+            g.ids.sort(function (x, y) { return name(zustaende[x]).localeCompare(name(zustaende[y]), "de"); });
+            schalterGruppen.push({ id: "geraet:" + d, name: g.name || name(zustaende[g.ids[0]]), steuerId: "", mitglieder: g.ids, art: "geraet" });
+        });
+    }
+    // Mitglieder auf vorhandene, sichtbare Schalter beschränken; leere Gruppen weglassen
+    schalterGruppen = schalterGruppen.map(function (g) {
+        return Object.assign({}, g, { mitglieder: g.mitglieder.filter(function (m) { return istSchalter[m]; }) });
+    }).filter(function (g) { return g.mitglieder.length > 0; });
+    var inSchalterGruppe = {};
+    schalterGruppen.forEach(function (g) {
+        g.mitglieder.forEach(function (m) { inSchalterGruppe[m] = true; });
+        // Gesamtverbrauch: jeden Sensor nur einmal (eine Leiste hat oft einen Sensor für alle Dosen)
+        var sensoren = {};
+        g.mitglieder.forEach(function (m) { if (schalterLeistung[m]) sensoren[schalterLeistung[m]] = true; });
+        g.leistung = Object.keys(sensoren);
+        var raeumeG = {};
+        g.mitglieder.forEach(function (m) { raeumeG[schalterRaum[m] || ""] = true; });
+        var rk = Object.keys(raeumeG);
+        g.raum = rk.length === 1 ? rk[0] : "";
+    });
+    schalterGruppen.sort(vergleicheName);
+
     var hauptWatt = null;
     if (opt.hauptzaehler && zustaende[opt.hauptzaehler]) {
         var h = zustaende[opt.hauptzaehler];
@@ -207,6 +250,8 @@ function baueModell(zustaende, bereiche, opt) {
         lichterAn: lichterAn,
         schalter: schalter.map(function (s) { return { id: s.id, name: s.name, raum: schalterRaum[s.id] || "", leistung: schalterLeistung[s.id] || "" }; }),
         schalterAn: schalter.filter(function (s) { return istAn(zustaende[s.id]); }).length,
+        schalterGruppen: schalterGruppen,
+        einzelneSchalter: schalter.filter(function (s) { return !inSchalterGruppe[s.id]; }).map(function (s) { return s.id; }),
         leistung: leistung.filter(function (p) { return p.id !== opt.hauptzaehler; }),
         energie: energie,
         hauptWatt: hauptWatt,
@@ -277,4 +322,52 @@ function achsenSchritt(max, ziel) {
     var stufen = [1, 2, 2.5, 5, 10];
     for (var i = 0; i < stufen.length; i++) if (stufen[i] * p >= roh) return stufen[i] * p;
     return 10 * p;
+}
+
+/** Zustand einer Steckdosengruppe: an/gesamt und Summe der (eindeutigen) Leistungssensoren. */
+function schalterGruppenStatus(gruppe, zustaende) {
+    var an = 0, verfuegbar = 0, watt = 0, gemessen = false;
+    gruppe.mitglieder.forEach(function (id) {
+        var e = zustaende[id];
+        if (istVerfuegbar(e)) verfuegbar++;
+        if (istAn(e)) an++;
+    });
+    (gruppe.leistung || []).forEach(function (id) {
+        var w = wattVon(zustaende[id]);
+        if (!isNaN(w)) { watt += w; gemessen = true; }
+    });
+    return { an: an, gesamt: gruppe.mitglieder.length, verfuegbar: verfuegbar, watt: gemessen ? watt : NaN };
+}
+
+/** Leistung eines Sensors in Watt (NaN, wenn unbekannt). */
+function wattVon(e) {
+    if (!e || !istVerfuegbar(e)) return NaN;
+    var w = parseFloat(e.state);
+    if (isNaN(w)) return NaN;
+    return e.attributes && e.attributes.unit_of_measurement === "kW" ? w * 1000 : w;
+}
+
+/** Ist diese Entität für das Widget überhaupt interessant? (alles andere wird ignoriert) */
+function relevant(id, e, hauptzaehler) {
+    var d = domain(id);
+    if (d === "light" || d === "switch" || d === "group") return true;
+    if (d !== "sensor") return false;
+    if (id === hauptzaehler) return true;
+    var k = e && e.attributes ? e.attributes.device_class : null;
+    return k === "power" || k === "energy";
+}
+
+/** Kennzahlen aus dem Verlauf: Energie (Fläche unter der Kurve), Spitze, Durchschnitt. */
+function verlaufKennzahlen(punkte, ende) {
+    if (!punkte || punkte.length < 2) return null;
+    var wh = 0, spitze = punkte[0], minimum = punkte[0];
+    for (var i = 0; i < punkte.length; i++) {
+        var p = punkte[i];
+        var bis = i + 1 < punkte.length ? punkte[i + 1].t : ende;
+        wh += p.w * Math.max(0, bis - p.t) / 3600000;
+        if (p.w > spitze.w) spitze = p;
+        if (p.w < minimum.w) minimum = p;
+    }
+    var dauer = (ende - punkte[0].t) / 3600000;
+    return { kwh: wh / 1000, spitze: spitze, minimum: minimum, schnitt: dauer > 0 ? wh / dauer : 0 };
 }

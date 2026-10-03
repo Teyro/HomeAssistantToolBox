@@ -8,6 +8,7 @@ import QtQuick.Layouts
 
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PC3
+import org.kde.plasma.extras as PlasmaExtras
 
 import "logik.js" as Logik
 
@@ -50,14 +51,12 @@ ColumnLayout {
             cursorShape: Qt.PointingHandCursor
             onClicked: eintrag.klick()
         }
-        Rectangle {
+        PlasmaExtras.Highlight {
             anchors.fill: parent
             anchors.leftMargin: Kirigami.Units.smallSpacing
             anchors.rightMargin: Kirigami.Units.smallSpacing
-            radius: Kirigami.Units.cornerRadius
-            color: Kirigami.Theme.highlightColor
-            opacity: eintrag.aufgeklappt ? 0.14 : zeiger.hovered ? 0.1 : 0
-            Behavior on opacity { NumberAnimation { duration: Kirigami.Units.shortDuration } }
+            hovered: !eintrag.aufgeklappt
+            visible: eintrag.aufgeklappt || zeiger.hovered
         }
 
         ColumnLayout {

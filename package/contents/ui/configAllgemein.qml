@@ -22,6 +22,7 @@ KCM.SimpleKCM {
     property alias cfg_alteGruppen: alteGruppen.checked
     property alias cfg_nurSteckdosen: nurSteckdosen.checked
     property alias cfg_zeigeAnzahl: zeigeAnzahl.checked
+    property alias cfg_symbolPanelhoehe: symbolPanelhoehe.checked
     property string cfg_hauptzaehler
     property alias cfg_ausgeblendet: ausgeblendet.text
 
@@ -151,6 +152,10 @@ KCM.SimpleKCM {
             id: zeigeAnzahl
             Kirigami.FormData.label: i18n("Panel:")
             text: i18n("Zahl der eingeschalteten Lampen am Symbol")
+        }
+        QQC2.CheckBox {
+            id: symbolPanelhoehe
+            text: i18n("Symbol so groß wie das Panel (statt wie im Systemabschnitt)")
         }
         QQC2.TextField {
             id: ausgeblendet

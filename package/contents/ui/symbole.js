@@ -11,6 +11,7 @@ var PFADE = {
     "lampen-gruppe": "<path d=\"M7.5 5a3.6 3.6 0 0 0-2.2 6.5v1.6h4.4v-1.6A3.6 3.6 0 0 0 7.5 5z\"/><path d=\"M14.5 5a3.6 3.6 0 0 0-2.2 6.5v1.6h4.4v-1.6A3.6 3.6 0 0 0 14.5 5z\"/><path d=\"M5.8 15.4h3.4M12.8 15.4h3.4M3.5 18.5h15\"/>",
     "raum": "<path d=\"M2.5 10.2 11 3l8.5 7.2\"/><path d=\"M4.5 8.8v10.7h13V8.8\"/><path d=\"M9 19.5v-5.5h4v5.5\"/>",
     "steckdose": "<rect x=\"3\" y=\"3\" width=\"16\" height=\"16\" rx=\"4\"/><circle cx=\"11\" cy=\"11\" r=\"4.6\"/><circle cx=\"9.2\" cy=\"11\" r=\".5\" fill=\"currentColor\"/><circle cx=\"12.8\" cy=\"11\" r=\".5\" fill=\"currentColor\"/>",
+    "steckdosenleiste": "<rect x=\"2.5\" y=\"7\" width=\"17\" height=\"8\" rx=\"2.5\"/><circle cx=\"6.6\" cy=\"11\" r=\"1.5\"/><circle cx=\"11\" cy=\"11\" r=\"1.5\"/><circle cx=\"15.4\" cy=\"11\" r=\"1.5\"/><path d=\"M19.5 11h1.2\"/>",
     "energie": "<path d=\"M12.5 2.8 5.5 12.3h5l-1 6.9 7-9.5h-5z\" stroke-linejoin=\"round\"/>"
 };
 

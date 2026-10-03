@@ -14,13 +14,17 @@ und alles ist da.
   zuletzt Lampen ohne Raum. Ein Klick auf eine Gruppe oder einen Raum klappt die einzelnen
   Lampen auf. Jede Lampe und jede Gruppe hat einen Schalter und einen Helligkeitsregler; das
   Symbol leuchtet in der echten Farbe der Lampe (Farbe bzw. Weißton). „Alle aus“ mit einem Klick.
-- **Steckdosen**: alle Schalter nach Raum sortiert, mit aktuellem Verbrauch, wenn die Steckdose
-  misst (z. B. Shelly Plug, Tasmota, Fritz!DECT).
-- **Energie**: aktueller Verbrauch, Verlauf der letzten 24 Stunden (mit Werten beim Überfahren
-  mit der Maus), die größten Verbraucher als Balken und alle Zählerstände.
+- **Steckdosen**: Schaltergruppen aus Home Assistant und Geräte mit mehreren Dosen
+  (Steckdosenleisten) als eine Zeile mit gemeinsamem Schalter und Gesamtverbrauch – zum
+  Aufklappen wie bei den Lampen. Einzelne Steckdosen darunter, nach Raum sortiert und zunächst
+  eingeklappt. Verbrauch, wenn die Steckdose misst (z. B. Shelly Plug, Tasmota, Fritz!DECT).
+- **Energie**: aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden (Energie, Durchschnitt,
+  Spitze), Verlauf mit Werten beim Überfahren mit der Maus, die größten Verbraucher mit Anteil
+  und alle Zählerstände als Kacheln.
 - **Live**: Änderungen (Schalter an der Wand, Automationen, App) erscheinen sofort über die
   WebSocket-Schnittstelle von Home Assistant.
-- **Panel-Symbol** im Breeze-Stil (Haus mit Glühbirne), passt sich hellem und dunklem
+- **Panel-Symbol** im Breeze-Stil (Haus mit Glühbirne), so groß wie die Symbole im
+  Systemabschnitt (oder wahlweise so hoch wie das Panel), passt sich hellem und dunklem
   Farbschema an; ein kleines Abzeichen zeigt, wie viele Lampen an sind. Tooltip mit
   Zusammenfassung, Rechtsklick: „Alle Lampen aus“, „Home Assistant öffnen“.
 - Läuft auch im **Systemabschnitt** (Systemabschnitt-Einstellungen → Einträge).
@@ -53,7 +57,7 @@ und alles ist da.
 - Gruppen und/oder Räume anzeigen, klassische `group.*`-Gruppen einbeziehen
 - Nur Schalter vom Typ „Steckdose“ zeigen
 - Entitäten ausblenden, auch mit `*`: `light.flur_nachtlicht, switch.*_kindersicherung`
-- Zahl der eingeschalteten Lampen am Panel-Symbol an/aus
+- Zahl der eingeschalteten Lampen am Panel-Symbol an/aus, Symbolgröße
 
 ## Gut zu wissen
 

@@ -54,6 +54,8 @@ PlasmoidItem {
         zeigeAnzahl: Plasmoid.configuration.zeigeAnzahl
         verbunden: verbindung.verbunden
         eingerichtet: verbindung.eingerichtet
+        panelhoehe: Plasmoid.configuration.symbolPanelhoehe
+        horizontal: Plasmoid.formFactor !== PlasmaCore.Types.Vertical
         onGeklickt: root.expanded = !root.expanded
     }
 

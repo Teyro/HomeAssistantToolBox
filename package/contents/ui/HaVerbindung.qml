@@ -30,6 +30,8 @@ Item {
     property var ohneRaum: []
     property var lichter: []
     property var schalter: []
+    property var schalterGruppen: []
+    property var einzelneSchalter: []
     property var leistung: []
     property var energie: []
     property int lichterAn: 0
@@ -44,6 +46,13 @@ Item {
     // "Erneut versuchen" wieder.
     property bool abgelehnt: false
     property string fehler: ""
+    // Kurzer Hinweis, wenn ein Schaltbefehl fehlschlägt (verschwindet nach einigen Sekunden)
+    property string meldung: ""
+    Timer {
+        id: meldungTimer
+        interval: 6000
+        onTriggered: ha.meldung = ""
+    }
     property bool live: liveLader.item !== null && liveLader.item.verbunden
     property date stand: new Date(0)
 
@@ -102,8 +111,14 @@ Item {
                 verbunden = false;
                 return;
             }
+            // Nur behalten, was das Widget braucht (Lampen, Schalter, Gruppen, Leistung/Energie)
             const neu = {};
-            for (let i = 0; i < liste.length; i++) neu[liste[i].entity_id] = liste[i];
+            const haupt = optionen.hauptzaehler || "";
+            for (let i = 0; i < liste.length; i++) {
+                const e = liste[i];
+                if (Logik.relevant(e.entity_id, e, haupt)) neu[e.entity_id] = e;
+            }
+            puffer = {};
             zustaende = neu;
             fehler = "";
             verbunden = true;
@@ -131,7 +146,7 @@ Item {
 
     function neuBerechnen() {
         const m = Logik.baueModell(zustaende, bereiche, Object.assign({}, optionen, { register: register }));
-        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "leistung", "energie"]) {
+        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie"]) {
             const j = JSON.stringify(m[schluessel]);
             if (_json[schluessel] !== j) {
                 _json[schluessel] = j;
@@ -144,28 +159,59 @@ Item {
         summeWatt = m.summeWatt;
     }
 
+    // Änderungen werden kurz gesammelt und gemeinsam übernommen: Home Assistant meldet oft
+    // viele Werte pro Sekunde – einzeln würde jedes Mal die ganze Liste kopiert.
+    property var puffer: ({})
+
     /** Einen einzelnen Zustand ersetzen (WebSocket oder sofortige Rückmeldung). */
-    function setzeZustand(entityId, neu) {
+    function setzeZustand(entityId, neu, sofort) {
+        if (!Logik.relevant(entityId, neu || zustaende[entityId], optionen.hauptzaehler || "")) return;
+        puffer[entityId] = neu || null;
+        if (sofort) uebernehmen();
+        else if (!sammelTimer.running) sammelTimer.start();
+    }
+
+    function uebernehmen() {
+        sammelTimer.stop();
+        const ids = Object.keys(puffer);
+        if (!ids.length) return;
         const z = Object.assign({}, zustaende);
-        const alt = z[entityId];
-        if (neu) z[entityId] = neu; else delete z[entityId];
+        let struktur = false;
+        for (const id of ids) {
+            const alt = z[id];
+            const neu = puffer[id];
+            if (neu) z[id] = neu; else delete z[id];
+            // Neu aufbauen nur, wenn sich die Struktur ändern kann: neue/entfernte Entität,
+            // geänderte Gruppenmitglieder oder Namen, Messwerte (Energie-Reiter)
+            if (!alt || !neu || id.startsWith("sensor.")
+                    || String(alt.attributes && alt.attributes.entity_id) !== String(neu.attributes && neu.attributes.entity_id)
+                    || (alt.attributes && alt.attributes.friendly_name) !== (neu.attributes && neu.attributes.friendly_name)) {
+                struktur = true;
+            }
+        }
+        puffer = {};
         zustaende = z;
-        // Nur neu aufbauen, wenn sich die Struktur ändern kann (neue/entfernte Entität, Gruppenmitglieder)
-        if (!alt || !neu || (alt.attributes && neu.attributes && String(alt.attributes.entity_id) !== String(neu.attributes.entity_id))
-                || entityId.startsWith("sensor.") || alt.attributes.friendly_name !== neu.attributes.friendly_name) {
+        if (struktur) {
             neuBerechnen();
         } else {
-            // Zähler (Lampen an …) trotzdem aktuell halten
             lichterAn = lichter.filter(id => Logik.istAn(z[id])).length;
             schalterAn = schalter.filter(s => Logik.istAn(z[s.id])).length;
         }
     }
+    Timer {
+        id: sammelTimer
+        interval: 120
+        onTriggered: ha.uebernehmen()
+    }
 
     // ------------------------------------------------------------------ Schalten
     function dienst(domain, dienstName, daten) {
-        anfrage("POST", "/api/services/" + domain + "/" + dienstName, daten, function (antwort, meldung) {
-            if (meldung) {
-                fehler = meldung;
+        anfrage("POST", "/api/services/" + domain + "/" + dienstName, daten, function (antwort, fehlertext) {
+            if (fehlertext) {
+                ha.meldung = i18n("Schalten fehlgeschlagen: %1", fehlertext);
+                meldungTimer.restart();
+                // Vorab angezeigten Zustand wieder richtigstellen
+                nachladenTimer.restart();
                 return;
             }
             // Antwort enthält die geänderten Zustände
@@ -182,16 +228,16 @@ Item {
         if (!e) return;
         const neu = Object.assign({}, e, { state: an ? "on" : "off", attributes: Object.assign({}, e.attributes) });
         if (prozent !== undefined) neu.attributes.brightness = Math.round(prozent * 2.55);
-        setzeZustand(entityId, neu);
+        setzeZustand(entityId, neu, true);
     }
 
     function schalte(entityId, an) {
         const d = Logik.domain(entityId);
+        const e = zustaende[entityId];
         vorab(entityId, an);
+        // Gruppen: Mitglieder gleich mit umschalten (die echte Rückmeldung kommt danach)
+        if (e && e.attributes && e.attributes.entity_id) e.attributes.entity_id.forEach(m => vorab(m, an));
         if (d === "group") {
-            const e = zustaende[entityId];
-            // alte Gruppen: Mitglieder vorab mitschalten
-            if (e && e.attributes && e.attributes.entity_id) e.attributes.entity_id.forEach(m => vorab(m, an));
             dienst("homeassistant", an ? "turn_on" : "turn_off", { entity_id: entityId });
         } else {
             dienst(d, an ? "turn_on" : "turn_off", { entity_id: entityId });
@@ -212,6 +258,13 @@ Item {
         } else {
             dienst("light", "turn_on", { entity_id: entityId, brightness_pct: p });
         }
+    }
+
+    /** Mehrere Schalter/Steckdosen gemeinsam (Steckdosenleiste ohne eigene Gruppen-Entität). */
+    function schalteSchalter(ids, an) {
+        if (!ids.length) return;
+        ids.forEach(id => vorab(id, an));
+        dienst("switch", an ? "turn_on" : "turn_off", { entity_id: ids });
     }
 
     /** Mehrere Lampen gemeinsam (Räume): ein Aufruf für alle. */

@@ -21,7 +21,7 @@ PlasmaExtras.Representation {
     signal einrichten()
 
     Layout.minimumWidth: Kirigami.Units.gridUnit * 18
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 26
     Layout.minimumHeight: Kirigami.Units.gridUnit * 16
     Layout.preferredHeight: Kirigami.Units.gridUnit * 28
 
@@ -30,7 +30,7 @@ PlasmaExtras.Representation {
     header: PlasmaExtras.PlasmoidHeading {
         visible: voll.ha.eingerichtet && voll.ha.verbunden
         contentItem: RowLayout {
-            spacing: 0
+            spacing: Kirigami.Units.smallSpacing
             PC3.TabBar {
                 id: reiter
                 objectName: "reiter"
@@ -39,6 +39,58 @@ PlasmaExtras.Representation {
                 Reiter { text: i18n("Lampen"); symbol: "lampe"; zahl: voll.ha.lichterAn }
                 Reiter { text: i18n("Steckdosen"); symbol: "steckdose"; zahl: voll.ha.schalterAn; visible: voll.ha.schalter.length > 0 }
                 Reiter { text: i18n("Energie"); symbol: "energie"; visible: voll.ha.leistung.length > 0 || voll.ha.energie.length > 0 || voll.ha.hauptWatt !== null }
+            }
+            // Werkzeugknöpfe wie bei den Plasma-eigenen Widgets
+            PC3.ToolButton {
+                icon.name: "view-refresh"
+                display: PC3.AbstractButton.IconOnly
+                text: i18n("Neu laden")
+                PC3.ToolTip.text: text
+                PC3.ToolTip.visible: hovered
+                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
+                onClicked: { voll.ha.bereicheLaden(); voll.ha.erneutVersuchen(); }
+            }
+            PC3.ToolButton {
+                icon.name: "internet-web-browser-symbolic"
+                display: PC3.AbstractButton.IconOnly
+                text: i18n("Home Assistant öffnen")
+                PC3.ToolTip.text: text
+                PC3.ToolTip.visible: hovered
+                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
+                onClicked: Qt.openUrlExternally(voll.ha.basis)
+            }
+            PC3.ToolButton {
+                icon.name: "configure"
+                display: PC3.AbstractButton.IconOnly
+                text: i18n("Einrichten …")
+                PC3.ToolTip.text: text
+                PC3.ToolTip.visible: hovered
+                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
+                onClicked: voll.einrichten()
+            }
+        }
+    }
+
+    // Statuszeile: Live-Verbindung und Stand
+    footer: PlasmaExtras.PlasmoidHeading {
+        position: PC3.ToolBar.Footer
+        visible: voll.ha.eingerichtet && voll.ha.verbunden
+        contentItem: RowLayout {
+            spacing: Kirigami.Units.smallSpacing
+            Rectangle {
+                Layout.preferredWidth: Kirigami.Units.smallSpacing * 2
+                Layout.preferredHeight: width
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                radius: width / 2
+                color: voll.ha.live ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.neutralTextColor
+            }
+            PC3.Label {
+                Layout.fillWidth: true
+                text: voll.ha.live ? i18n("Live verbunden mit %1", voll.ha.basis.replace(/^https?:\/\//, ""))
+                                   : i18n("Verbunden mit %1 · Stand %2", voll.ha.basis.replace(/^https?:\/\//, ""), Qt.formatTime(voll.ha.stand, "hh:mm"))
+                font: Kirigami.Theme.smallFont
+                color: Kirigami.Theme.disabledTextColor
+                elide: Text.ElideMiddle
             }
         }
     }
@@ -77,6 +129,18 @@ PlasmaExtras.Representation {
                 enabled: !voll.ha.laedt
                 onTriggered: voll.ha.erneutVersuchen()
             }
+        }
+
+        Kirigami.InlineMessage {
+            id: hinweis
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Kirigami.Units.smallSpacing
+            z: 1
+            type: Kirigami.MessageType.Error
+            text: voll.ha.meldung
+            visible: voll.ha.meldung !== "" && voll.ha.verbunden
         }
 
         StackLayout {

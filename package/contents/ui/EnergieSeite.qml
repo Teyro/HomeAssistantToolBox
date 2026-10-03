@@ -1,6 +1,6 @@
 /*
- * Reiter "Energie": aktueller Verbrauch mit 24-Stunden-Verlauf, größte Verbraucher als
- * Balken und Zählerstände.
+ * Reiter "Energie": aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden und Verlauf,
+ * größte Verbraucher mit Anteil am Gesamtverbrauch, Zählerstände als Kacheln.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
@@ -20,8 +20,9 @@ PC3.ScrollView {
 
     property var verlauf: []
     readonly property real aktuell: ha.hauptWatt !== null ? ha.hauptWatt : ha.summeWatt
-    readonly property var verbraucher: ha.leistung.filter(p => p.watt > 0).slice(0, 12)
+    readonly property var verbraucher: ha.leistung.filter(p => p.watt > 0).slice(0, 10)
     readonly property real maxWatt: verbraucher.length ? verbraucher[0].watt : 1
+    readonly property var kennzahlen: Logik.verlaufKennzahlen(verlauf, Date.now())
 
     contentWidth: availableWidth
     PC3.ScrollBar.horizontal.policy: PC3.ScrollBar.AlwaysOff
@@ -48,30 +49,67 @@ PC3.ScrollView {
         width: seite.availableWidth
         spacing: Kirigami.Units.smallSpacing
 
-        // ---- Aktueller Verbrauch ----
-        ColumnLayout {
+        // ---- Jetzt ----
+        RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.rightMargin: Kirigami.Units.largeSpacing
             Layout.topMargin: Kirigami.Units.largeSpacing
-            spacing: 0
-            PC3.Label {
-                text: seite.ha.hauptWatt !== null ? i18n("Aktueller Verbrauch") : i18n("Verbrauch der Messsteckdosen")
-                color: Kirigami.Theme.disabledTextColor
-            }
-            RowLayout {
-                spacing: Kirigami.Units.smallSpacing
+            spacing: Kirigami.Units.largeSpacing
+
+            // Symbol im Kreis wie bei den Lampen
+            Rectangle {
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: Kirigami.Units.iconSizes.large
+                implicitHeight: implicitWidth
+                radius: width / 2
+                color: Qt.alpha(Kirigami.Theme.highlightColor, 0.18)
                 Glyphe {
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                    anchors.centerIn: parent
+                    width: Kirigami.Units.iconSizes.medium
+                    height: width
                     name: "energie"
                     farbe: Kirigami.Theme.highlightColor
                 }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 0
+                PC3.Label {
+                    text: seite.ha.hauptWatt !== null ? i18n("Verbrauch gerade") : i18n("Verbrauch der Messsteckdosen")
+                    color: Kirigami.Theme.disabledTextColor
+                    font: Kirigami.Theme.smallFont
+                }
                 PC3.Label {
                     text: Logik.formatWatt(seite.aktuell)
-                    font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 2.4
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 2.2
                     font.weight: Font.DemiBold
                     font.features: { "tnum": 1 }
+                }
+            }
+            // Kennzahlen der letzten 24 Stunden
+            GridLayout {
+                visible: seite.kennzahlen !== null
+                columns: 2
+                columnSpacing: Kirigami.Units.smallSpacing
+                rowSpacing: 0
+                PC3.Label { text: i18n("24 h"); font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                PC3.Label {
+                    text: seite.kennzahlen ? "≈ " + Logik.formatKwh(seite.kennzahlen.kwh) : ""
+                    font: Kirigami.Theme.smallFont
+                    Layout.alignment: Qt.AlignRight
+                }
+                PC3.Label { text: i18n("Ø"); font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                PC3.Label {
+                    text: seite.kennzahlen ? Logik.formatWatt(seite.kennzahlen.schnitt) : ""
+                    font: Kirigami.Theme.smallFont
+                    Layout.alignment: Qt.AlignRight
+                }
+                PC3.Label { text: i18n("Spitze"); font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                PC3.Label {
+                    text: seite.kennzahlen ? Logik.formatWatt(seite.kennzahlen.spitze.w) + " · " + Qt.formatTime(new Date(seite.kennzahlen.spitze.t), "hh:mm") : ""
+                    font: Kirigami.Theme.smallFont
+                    Layout.alignment: Qt.AlignRight
                 }
             }
         }
@@ -81,9 +119,11 @@ PC3.ScrollView {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.rightMargin: Kirigami.Units.largeSpacing
-            Layout.preferredHeight: Kirigami.Units.gridUnit * 6
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 6.5
             visible: seite.hauptzaehler !== ""
             punkte: seite.verlauf
+            aktuell: seite.ha.hauptWatt
         }
         PC3.Label {
             Layout.fillWidth: true
@@ -99,70 +139,106 @@ PC3.ScrollView {
         // ---- Größte Verbraucher ----
         Kirigami.ListSectionHeader {
             Layout.fillWidth: true
+            Layout.topMargin: Kirigami.Units.smallSpacing
             visible: seite.verbraucher.length > 0
             text: i18n("Größte Verbraucher gerade")
         }
         Repeater {
             model: seite.verbraucher
             delegate: ColumnLayout {
+                id: verbraucher
                 required property var modelData
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.largeSpacing
                 Layout.rightMargin: Kirigami.Units.largeSpacing
-                spacing: 2
+                spacing: 3
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
                     PC3.Label {
                         Layout.fillWidth: true
-                        text: modelData.name
+                        text: verbraucher.modelData.name
                         elide: Text.ElideRight
                         textFormat: Text.PlainText
                     }
                     PC3.Label {
-                        text: Logik.formatWatt(modelData.watt)
+                        // Anteil am Hauptzähler (über 100 % z. B. bei eigener PV-Erzeugung nicht sinnvoll)
+                        visible: seite.aktuell > 0 && seite.ha.hauptWatt !== null && verbraucher.modelData.watt <= seite.aktuell
+                        text: Math.round(verbraucher.modelData.watt / seite.aktuell * 100) + " %"
+                        font: Kirigami.Theme.smallFont
+                        color: Kirigami.Theme.disabledTextColor
+                    }
+                    PC3.Label {
+                        text: Logik.formatWatt(verbraucher.modelData.watt)
+                        font.weight: Font.DemiBold
                         font.features: { "tnum": 1 }
+                        horizontalAlignment: Text.AlignRight
+                        Layout.minimumWidth: Kirigami.Units.gridUnit * 3.5
                     }
                 }
-                // Balken: dünn, rechts abgerundet, Spur in Hintergrundton
+                // Balken: dünn, abgerundet, Spur im Hintergrundton
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 6
                     radius: 3
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.08)
                     Rectangle {
-                        width: Math.max(6, parent.width * modelData.watt / seite.maxWatt)
+                        width: Math.max(6, parent.width * verbraucher.modelData.watt / seite.maxWatt)
                         height: parent.height
                         radius: 3
                         color: Kirigami.Theme.highlightColor
+                        Behavior on width { NumberAnimation { duration: Kirigami.Units.longDuration; easing.type: Easing.OutCubic } }
                     }
                 }
                 Item { Layout.preferredHeight: Kirigami.Units.smallSpacing }
             }
         }
 
-        // ---- Zählerstände ----
+        // ---- Zählerstände als Kacheln ----
         Kirigami.ListSectionHeader {
             Layout.fillWidth: true
             visible: seite.ha.energie.length > 0
             text: i18n("Zählerstände")
         }
-        Repeater {
-            model: seite.ha.energie
-            delegate: RowLayout {
-                required property var modelData
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.largeSpacing
-                Layout.rightMargin: Kirigami.Units.largeSpacing
-                PC3.Label {
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            columns: 2
+            columnSpacing: Kirigami.Units.smallSpacing
+            rowSpacing: Kirigami.Units.smallSpacing
+            Repeater {
+                model: seite.ha.energie
+                delegate: Rectangle {
+                    id: kachel
+                    required property var modelData
                     Layout.fillWidth: true
-                    text: modelData.name
-                    elide: Text.ElideRight
-                    textFormat: Text.PlainText
-                }
-                PC3.Label {
-                    text: Logik.formatKwh(modelData.kwh)
-                    color: Kirigami.Theme.disabledTextColor
-                    font.features: { "tnum": 1 }
+                    Layout.preferredWidth: 1
+                    implicitHeight: kachelInhalt.implicitHeight + Kirigami.Units.largeSpacing * 2
+                    radius: Kirigami.Units.cornerRadius
+                    color: Qt.alpha(Kirigami.Theme.textColor, 0.05)
+                    border.color: Qt.alpha(Kirigami.Theme.textColor, 0.08)
+                    ColumnLayout {
+                        id: kachelInhalt
+                        anchors.fill: parent
+                        anchors.margins: Kirigami.Units.largeSpacing
+                        spacing: 0
+                        PC3.Label {
+                            Layout.fillWidth: true
+                            text: kachel.modelData.name
+                            elide: Text.ElideRight
+                            font: Kirigami.Theme.smallFont
+                            color: Kirigami.Theme.disabledTextColor
+                            textFormat: Text.PlainText
+                        }
+                        PC3.Label {
+                            Layout.fillWidth: true
+                            text: Logik.formatKwh(kachel.modelData.kwh)
+                            font.weight: Font.DemiBold
+                            font.features: { "tnum": 1 }
+                            elide: Text.ElideRight
+                        }
+                    }
                 }
             }
         }

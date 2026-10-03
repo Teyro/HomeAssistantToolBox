@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const TOKEN = 'test-token';
 const PORT = Number(process.argv[2] || 8123);
-const LOG = '/tmp/hatest/mock.log';
+const LOG = process.env.HA_MOCK_LOG || '/tmp/ha-mock.log';
 fs.writeFileSync(LOG, '');
 const log = (s) => fs.appendFileSync(LOG, s + '\n');
 
@@ -41,6 +41,13 @@ schalter('switch.waschmaschine', 'Waschmaschine', false);
 schalter('switch.heizluefter', 'Heizlüfter Bad', false);
 schalter('switch.weihnachtsbaum', 'Weihnachtsbaum', false);
 schalter('switch.router_neustart', 'Router-Neustart', false, 'switch');
+// Steckdosenleiste mit drei Dosen (ein Gerät) und eine Schaltergruppe (Helfer)
+schalter('switch.leiste_dose_1', 'Schreibtischleiste Dose 1', true);
+schalter('switch.leiste_dose_2', 'Schreibtischleiste Dose 2', true);
+schalter('switch.leiste_dose_3', 'Schreibtischleiste Dose 3', false);
+schalter('switch.lichterkette', 'Lichterkette Balkon', false);
+z['switch.weihnachtsdeko'] = { entity_id: 'switch.weihnachtsdeko', state: 'off', last_changed: jetzt(), attributes: { friendly_name: 'Weihnachtsdeko', entity_id: ['switch.weihnachtsbaum', 'switch.lichterkette'] } };
+sensor('sensor.leiste_leistung', 'Schreibtischleiste Leistung', 61.5, 'W', 'power');
 // Einstellungs-Schalter von Geräten (entity_category: config) – dürfen nicht als Steckdose erscheinen
 schalter('switch.kaffeemaschine_led', 'Kaffeemaschine LED', true, 'switch');
 schalter('switch.tv_kindersicherung', 'Fernseher Kindersicherung', false, 'switch');
@@ -65,11 +72,12 @@ const BEREICHE = [
   ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch']],
   ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter']],
   ['kinderzimmer', 'Kinderzimmer', ['light.kinderzimmer']],
-  ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc']],
+  ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc', 'switch.leiste_dose_1', 'switch.leiste_dose_2', 'switch.leiste_dose_3']],
   ['flur', 'Flur', ['light.flur']],
   ['keller', 'Keller', ['switch.waschmaschine']],
 ];
-const LEISTUNG = [['switch.kaffeemaschine', 'sensor.kaffeemaschine_leistung'], ['switch.tv', 'sensor.tv_power'], ['switch.pc', 'sensor.pc_leistung'], ['switch.waschmaschine', 'sensor.waschmaschine_power']];
+const GERAETE = Object.keys(z).filter((id) => id.startsWith('switch.') && !z[id].attributes.entity_id).map((id) => id.startsWith('switch.leiste_') ? [id, 'leiste1', 'Schreibtischleiste'] : [id, 'dev_' + id, z[id].attributes.friendly_name]);
+const LEISTUNG = [['switch.leiste_dose_1', 'sensor.leiste_leistung'], ['switch.leiste_dose_2', 'sensor.leiste_leistung'], ['switch.leiste_dose_3', 'sensor.leiste_leistung'], ['switch.kaffeemaschine', 'sensor.kaffeemaschine_leistung'], ['switch.tv', 'sensor.tv_power'], ['switch.pc', 'sensor.pc_leistung'], ['switch.waschmaschine', 'sensor.waschmaschine_power']];
 
 function verlauf(id) {
   const punkte = [];
@@ -120,7 +128,7 @@ function aendern(id, aenderung) {
   return neu;
 }
 function gruppenAktualisieren() {
-  for (const g of ['light.wohnzimmer', 'light.kueche_alle', 'group.aussen']) {
+  for (const g of ['light.wohnzimmer', 'light.kueche_alle', 'group.aussen', 'switch.weihnachtsdeko']) {
     const m = z[g].attributes.entity_id;
     const an = m.filter((x) => z[x].state === 'on');
     const b = an.length ? Math.round(an.reduce((s, x) => s + (z[x].attributes.brightness || 255), 0) / an.length) : undefined;
@@ -142,7 +150,7 @@ const server = http.createServer((req, res) => {
       const t = JSON.parse(body).template;
       if (!t.includes('areas()')) { res.writeHead(400); res.end('?'); return; }
       res.writeHead(200, { 'Content-Type': 'text/plain' });
-      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e]) => ({ id, name, e })), leistung: LEISTUNG }));
+      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e]) => ({ id, name, e })), leistung: LEISTUNG, geraete: GERAETE }));
     }
     if (url.pathname.startsWith('/api/history/period/')) return json(verlauf(url.searchParams.get('filter_entity_id')));
     const m = url.pathname.match(/^\/api\/services\/(\w+)\/(\w+)$/);

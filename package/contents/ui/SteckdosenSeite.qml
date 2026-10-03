@@ -1,6 +1,6 @@
 /*
- * Reiter "Steckdosen": alle Schalter/Steckdosen nach Raum sortiert, mit aktuellem Verbrauch,
- * wenn die Steckdose ihn misst.
+ * Reiter "Steckdosen": oben die Steckdosengruppen (Schaltergruppen und Geräte mit mehreren
+ * Dosen), darunter – zunächst eingeklappt – die einzelnen Steckdosen nach Raum.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
@@ -13,12 +13,24 @@ import "logik.js" as Logik
 
 ColumnLayout {
     id: seite
+    objectName: "steckdosenSeite"
 
     required property var ha
 
-    // Nach Raum gruppiert, Räume alphabetisch, "Ohne Raum" zuletzt
-    readonly property var sortiert: {
-        const liste = ha.schalter.slice();
+    property var offen: ({})
+    // Ohne Gruppen gibt es nichts zum Einklappen – dann gleich alles zeigen
+    property bool einzelneOffen: false
+    readonly property bool einzelneSichtbar: einzelneOffen || ha.schalterGruppen.length === 0
+
+    function umschalten(schluessel) {
+        const o = Object.assign({}, offen);
+        o[schluessel] = !o[schluessel];
+        offen = o;
+    }
+
+    // Einzelne nach Raum gruppiert, Räume alphabetisch, "Ohne Raum" zuletzt
+    readonly property var einzelne: {
+        const liste = ha.schalter.filter(s => ha.einzelneSchalter.indexOf(s.id) >= 0);
         liste.sort((a, b) => {
             if (a.raum === b.raum) return a.name.localeCompare(b.name, "de");
             if (!a.raum) return 1;
@@ -27,7 +39,18 @@ ColumnLayout {
         });
         return liste;
     }
-    readonly property bool mitRaeumen: ha.schalter.some(s => s.raum !== "")
+    readonly property bool mitRaeumen: einzelne.some(s => s.raum !== "")
+    readonly property real summe: {
+        let w = 0;
+        const gesehen = {};
+        for (const s of ha.schalter) {
+            if (!s.leistung || gesehen[s.leistung]) continue;
+            gesehen[s.leistung] = true;
+            const p = Logik.wattVon(ha.zustaende[s.leistung]);
+            if (!isNaN(p)) w += p;
+        }
+        return w;
+    }
 
     spacing: 0
 
@@ -39,20 +62,13 @@ ColumnLayout {
         Layout.bottomMargin: Kirigami.Units.smallSpacing
         PC3.Label {
             Layout.fillWidth: true
-            text: i18n("%1 von %2 an", seite.ha.schalterAn, seite.ha.schalter.length)
+            text: seite.ha.schalter.length === 0 ? i18n("Keine Steckdosen gefunden")
+                : i18n("%1 von %2 an", seite.ha.schalterAn, seite.ha.schalter.length)
             color: Kirigami.Theme.disabledTextColor
         }
         PC3.Label {
-            readonly property real summe: {
-                let w = 0;
-                for (const s of seite.ha.schalter) {
-                    const p = s.leistung ? parseFloat((seite.ha.zustaende[s.leistung] || {}).state) : NaN;
-                    if (!isNaN(p)) w += (seite.ha.zustaende[s.leistung].attributes.unit_of_measurement === "kW" ? p * 1000 : p);
-                }
-                return w;
-            }
             visible: seite.ha.schalter.some(s => s.leistung)
-            text: i18n("zusammen %1", Logik.formatWatt(summe))
+            text: i18n("zusammen %1", Logik.formatWatt(seite.summe))
             color: Kirigami.Theme.disabledTextColor
         }
     }
@@ -67,83 +83,53 @@ ColumnLayout {
         ColumnLayout {
             width: rollen.availableWidth
             spacing: 0
+
+            Kirigami.ListSectionHeader {
+                Layout.fillWidth: true
+                visible: seite.ha.schalterGruppen.length > 0
+                text: i18n("Gruppen & Steckdosenleisten")
+            }
             Repeater {
-                model: seite.sortiert
+                model: seite.ha.schalterGruppen
+                delegate: SteckdosenGruppe {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    ha: seite.ha
+                    daten: modelData
+                    aufgeklappt: !!seite.offen[modelData.id]
+                    onKlick: seite.umschalten(modelData.id)
+                }
+            }
+
+            KlappKopf {
+                Layout.fillWidth: true
+                visible: seite.einzelne.length > 0 && seite.ha.schalterGruppen.length > 0
+                text: i18n("Einzelne Steckdosen")
+                anzahl: seite.einzelne.length
+                offen: seite.einzelneOffen
+                onUmschalten: seite.einzelneOffen = !seite.einzelneOffen
+            }
+            Repeater {
+                model: seite.einzelneSichtbar ? seite.einzelne : []
                 delegate: ColumnLayout {
-                    id: eintrag
+                    id: einzelEintrag
                     required property var modelData
                     required property int index
                     Layout.fillWidth: true
                     spacing: 0
-
-                    readonly property var e: seite.ha.zustaende[modelData.id]
-                    readonly property bool an: Logik.istAn(e)
-                    readonly property bool verfuegbar: Logik.istVerfuegbar(e)
-                    readonly property var messung: modelData.leistung ? seite.ha.zustaende[modelData.leistung] : null
-                    readonly property real watt: {
-                        if (!messung) return NaN;
-                        const w = parseFloat(messung.state);
-                        return messung.attributes && messung.attributes.unit_of_measurement === "kW" ? w * 1000 : w;
-                    }
-
-                    Kirigami.ListSectionHeader {
+                    PC3.Label {
                         Layout.fillWidth: true
-                        visible: seite.mitRaeumen && (eintrag.index === 0 || seite.sortiert[eintrag.index - 1].raum !== eintrag.modelData.raum)
-                        text: eintrag.modelData.raum || i18n("Ohne Raum")
+                        Layout.leftMargin: Kirigami.Units.largeSpacing * 2
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        visible: seite.mitRaeumen && (einzelEintrag.index === 0 || seite.einzelne[einzelEintrag.index - 1].raum !== einzelEintrag.modelData.raum)
+                        text: einzelEintrag.modelData.raum || i18n("Ohne Raum")
+                        font: Kirigami.Theme.smallFont
+                        color: Kirigami.Theme.disabledTextColor
                     }
-
-                    Item {
+                    SteckdosenZeile {
                         Layout.fillWidth: true
-                        implicitHeight: reihe.implicitHeight + Kirigami.Units.smallSpacing * 2
-                        HoverHandler { id: zeiger }
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.leftMargin: Kirigami.Units.smallSpacing
-                            anchors.rightMargin: Kirigami.Units.smallSpacing
-                            radius: Kirigami.Units.cornerRadius
-                            color: Kirigami.Theme.highlightColor
-                            opacity: zeiger.hovered ? 0.1 : 0
-                        }
-                        RowLayout {
-                            id: reihe
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.leftMargin: Kirigami.Units.largeSpacing
-                            anchors.rightMargin: Kirigami.Units.largeSpacing
-                            spacing: Kirigami.Units.largeSpacing
-
-                            Symbol {
-                                quelle: "steckdose"
-                                farbe: eintrag.an ? Kirigami.Theme.highlightColor.toString() : ""
-                                verfuegbar: eintrag.verfuegbar
-                            }
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 0
-                                PC3.Label {
-                                    Layout.fillWidth: true
-                                    text: eintrag.modelData.name
-                                    elide: Text.ElideRight
-                                    textFormat: Text.PlainText
-                                }
-                                PC3.Label {
-                                    Layout.fillWidth: true
-                                    text: !eintrag.verfuegbar ? i18n("nicht erreichbar")
-                                        : !isNaN(eintrag.watt) ? (eintrag.an ? i18n("an · %1", Logik.formatWatt(eintrag.watt)) : i18n("aus · %1", Logik.formatWatt(eintrag.watt)))
-                                        : eintrag.an ? i18n("an") : i18n("aus")
-                                    font: Kirigami.Theme.smallFont
-                                    color: Kirigami.Theme.disabledTextColor
-                                    elide: Text.ElideRight
-                                }
-                            }
-                            PC3.Switch {
-                                checked: eintrag.an
-                                enabled: eintrag.verfuegbar
-                                onToggled: seite.ha.schalte(eintrag.modelData.id, checked)
-                                Accessible.name: i18n("%1 schalten", eintrag.modelData.name)
-                            }
-                        }
+                        ha: seite.ha
+                        eintrag: einzelEintrag.modelData
                     }
                 }
             }

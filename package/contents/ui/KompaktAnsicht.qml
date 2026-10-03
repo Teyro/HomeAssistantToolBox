@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
+import QtQuick.Layouts
 
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PC3
@@ -15,6 +16,18 @@ MouseArea {
     property bool zeigeAnzahl: true
     property bool verbunden: false
     property bool eingerichtet: false
+    // Größe wie die Symbole im Systemabschnitt (Standard) oder so hoch wie das Panel
+    property bool panelhoehe: false
+    property bool horizontal: true
+    readonly property int symbolGroesse: panelhoehe
+        ? Kirigami.Units.iconSizes.roundedIconSize(Math.min(width, height))
+        : Math.min(Kirigami.Units.iconSizes.smallMedium, Math.min(width, height))
+
+    // Im Panel nur so breit wie nötig (wie die Einträge im Systemabschnitt)
+    Layout.minimumWidth: horizontal ? symbolGroesse + Kirigami.Units.smallSpacing * 2 : -1
+    Layout.preferredWidth: Layout.minimumWidth
+    Layout.minimumHeight: horizontal ? -1 : symbolGroesse + Kirigami.Units.smallSpacing * 2
+    Layout.preferredHeight: Layout.minimumHeight
 
     signal geklickt()
 
@@ -26,7 +39,7 @@ MouseArea {
         id: symbol
         anchors.centerIn: parent
         // Wie Plasma-Symbole: auf die nächste Standardgröße, damit es nicht verschwimmt
-        width: Math.round(Math.min(parent.width, parent.height) * 0.86)
+        width: kompakt.symbolGroesse
         height: width
         name: kompakt.lichterAn > 0 ? "ha-licht-an" : "ha-licht-aus"
         farbe: kompakt.containsMouse ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
@@ -36,10 +49,13 @@ MouseArea {
     // Anzahl der eingeschalteten Lampen als kleines Abzeichen (wie bei Benachrichtigungen)
     Rectangle {
         visible: kompakt.zeigeAnzahl && kompakt.lichterAn > 0
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        // Unten rechts am Symbol, leicht überstehend – wie bei den Benachrichtigungen
+        anchors.right: symbol.right
+        anchors.bottom: symbol.bottom
+        anchors.rightMargin: -Math.round(width / 4)
+        anchors.bottomMargin: -Math.round(height / 5)
         width: Math.max(height, zahl.implicitWidth + Kirigami.Units.smallSpacing)
-        height: Math.max(9, Math.round(Math.min(parent.width, parent.height) * 0.4))
+        height: Math.max(10, Math.round(kompakt.symbolGroesse * 0.55))
         radius: height / 2
         color: Kirigami.Theme.highlightColor
         border.color: Kirigami.Theme.backgroundColor

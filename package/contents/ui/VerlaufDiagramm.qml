@@ -15,6 +15,8 @@ Item {
     id: diagramm
 
     property var punkte: []
+    property var aktuell: null          // aktueller Wert (Endpunkt), optional
+    onAktuellChanged: leinwand.requestPaint()
     property real stunden: 24
 
     property real ende: Date.now()
@@ -22,6 +24,7 @@ Item {
     readonly property real maxWert: {
         let m = 0;
         for (const p of punkte) m = Math.max(m, p.w);
+        if (aktuell !== null && aktuell !== undefined && !isNaN(aktuell)) m = Math.max(m, aktuell);
         return m;
     }
     readonly property real schritt: Logik.achsenSchritt(maxWert, 3)
@@ -30,7 +33,8 @@ Item {
     readonly property int unten: Kirigami.Units.gridUnit
     property int zeigeIndex: -1
 
-    function xVon(t) { return links + (width - links) * (t - anfang) / (ende - anfang); }
+    readonly property int rechts: 8
+    function xVon(t) { return links + (width - links - rechts) * (t - anfang) / (ende - anfang); }
     readonly property int oben: Kirigami.Units.smallSpacing * 2
     function yVon(w) { return oben + (height - unten - oben) * (1 - w / yMax); }
     // Achsenbeschriftung einheitlich: alles in W oder alles in kW, ohne unnötige Nachkommastellen
@@ -64,14 +68,17 @@ Item {
             const akzent = Kirigami.Theme.highlightColor;
             const text = Kirigami.Theme.textColor;
             const d = diagramm;
-            ctx.font = Math.round(Kirigami.Theme.smallFont.pixelSize || 10) + "px sans-serif";
+            const pt = Kirigami.Theme.smallFont.pointSize;
+            ctx.font = Math.round(pt > 0 ? pt * 96 / 72 : 10) + "px sans-serif";
 
             // Hilfslinien und y-Beschriftung
             for (let v = 0; v <= d.yMax + 1e-9; v += d.schritt) {
                 const y = Math.round(d.yVon(v)) + 0.5;
-                ctx.strokeStyle = Qt.alpha(text, v === 0 ? 0.35 : 0.12);
+                ctx.strokeStyle = Qt.alpha(text, v === 0 ? 0.3 : 0.1);
                 ctx.lineWidth = 1;
+                if (v !== 0) ctx.setLineDash([2, 3]); else ctx.setLineDash([]);
                 ctx.beginPath(); ctx.moveTo(d.links, y); ctx.lineTo(d.width, y); ctx.stroke();
+                ctx.setLineDash([]);
                 ctx.fillStyle = Qt.alpha(text, 0.6);
                 ctx.textAlign = "right";
                 ctx.fillText(d.achse(v), d.links - 4, y + 4);
@@ -97,7 +104,9 @@ Item {
                 pfad.push([d.xVon(t), d.yVon(p.w)]);
                 vorher = p.w;
             }
+            const endwert = d.aktuell !== null && d.aktuell !== undefined && !isNaN(d.aktuell) ? Math.min(d.aktuell, d.yMax) : vorher;
             pfad.push([d.xVon(d.ende), d.yVon(vorher)]);
+            if (endwert !== vorher) pfad.push([d.xVon(d.ende), d.yVon(endwert)]);
 
             // Fläche
             ctx.beginPath();
@@ -105,7 +114,11 @@ Item {
             for (const q of pfad) ctx.lineTo(q[0], q[1]);
             ctx.lineTo(pfad[pfad.length - 1][0], d.yVon(0));
             ctx.closePath();
-            ctx.fillStyle = Qt.alpha(akzent, 0.16);
+            // weicher Verlauf von oben nach unten
+            const verlauf = ctx.createLinearGradient(0, d.oben, 0, d.yVon(0));
+            verlauf.addColorStop(0, Qt.alpha(akzent, 0.32));
+            verlauf.addColorStop(1, Qt.alpha(akzent, 0.02));
+            ctx.fillStyle = verlauf;
             ctx.fill();
             // Linie
             ctx.beginPath();
@@ -115,6 +128,17 @@ Item {
             ctx.lineWidth = 2;
             ctx.lineJoin = "round";
             ctx.stroke();
+
+            // "Jetzt"-Punkt am Ende mit Hof
+            const letzter = pfad[pfad.length - 1];
+            ctx.beginPath();
+            ctx.arc(letzter[0] - 1, letzter[1], 7, 0, Math.PI * 2);
+            ctx.fillStyle = Qt.alpha(akzent, 0.22);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(letzter[0] - 1, letzter[1], 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = akzent;
+            ctx.fill();
         }
     }
 
@@ -125,7 +149,7 @@ Item {
         hoverEnabled: true
         visible: diagramm.punkte.length > 0
         onPositionChanged: (ereignis) => {
-            const t = diagramm.anfang + (ereignis.x - diagramm.links) / (diagramm.width - diagramm.links) * (diagramm.ende - diagramm.anfang);
+            const t = diagramm.anfang + (ereignis.x - diagramm.links) / (diagramm.width - diagramm.links - diagramm.rechts) * (diagramm.ende - diagramm.anfang);
             let i = -1;
             for (let k = 0; k < diagramm.punkte.length; k++) if (diagramm.punkte[k].t <= t) i = k;
             diagramm.zeigeIndex = ereignis.x >= diagramm.links ? i : -1;
@@ -158,7 +182,7 @@ Item {
                 const p = diagramm.punkte[diagramm.zeigeIndex];
                 if (!p) return "";
                 const zeit = linie.x >= diagramm.links
-                    ? new Date(diagramm.anfang + (linie.x - diagramm.links) / (diagramm.width - diagramm.links) * (diagramm.ende - diagramm.anfang))
+                    ? new Date(diagramm.anfang + (linie.x - diagramm.links) / (diagramm.width - diagramm.links - diagramm.rechts) * (diagramm.ende - diagramm.anfang))
                     : new Date(p.t);
                 return Qt.formatTime(zeit, "hh:mm") + " · " + Logik.formatWatt(p.w);
             }
