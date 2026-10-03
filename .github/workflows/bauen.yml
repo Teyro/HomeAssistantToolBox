@@ -30,12 +30,13 @@ jobs:
           ./scripts/baue-app.sh "$VERSION"
 
       - name: Bildschirmfotos gegen nachgebautes Home Assistant
+        timeout-minutes: 6
         run: |
           node test/ha-mock.mjs 8123 > mock.log 2>&1 &
           sleep 2
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
-            HA_BILDER="$PWD/bilder-ci" timeout 120 "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
+            HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
           done
           ls -la bilder-ci || true
           tail -20 mock.log
