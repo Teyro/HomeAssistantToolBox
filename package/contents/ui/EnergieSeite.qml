@@ -28,7 +28,7 @@ PC3.ScrollView {
     PC3.ScrollBar.horizontal.policy: PC3.ScrollBar.AlwaysOff
 
     function verlaufHolen() {
-        if (aktiv && hauptzaehler !== "") ha.verlaufLaden(hauptzaehler, 24);
+        if (aktiv && hauptzaehler !== "" && ha) ha.verlaufLaden(hauptzaehler, 24);
     }
     onAktivChanged: verlaufHolen()
     onHauptzaehlerChanged: { verlauf = []; verlaufHolen(); }
@@ -144,10 +144,13 @@ PC3.ScrollView {
             text: i18n("Größte Verbraucher gerade")
         }
         Repeater {
-            model: seite.verbraucher
+            // Modell ist nur die Anzahl: die Zeilen bleiben bestehen und ändern nur ihre Werte.
+            // (Mit der Liste als Modell würde bei jedem neuen Messwert alles neu aufgebaut.)
+            model: seite.verbraucher.length
             delegate: ColumnLayout {
                 id: verbraucher
-                required property var modelData
+                required property int index
+                readonly property var modelData: seite.verbraucher[index] || { name: "", watt: 0 }
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.largeSpacing
                 Layout.rightMargin: Kirigami.Units.largeSpacing
@@ -178,16 +181,25 @@ PC3.ScrollView {
                 }
                 // Balken: dünn, abgerundet, Spur im Hintergrundton
                 Rectangle {
+                    id: spur
                     Layout.fillWidth: true
                     Layout.preferredHeight: 6
                     radius: 3
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.08)
                     Rectangle {
-                        width: Math.max(6, parent.width * verbraucher.modelData.watt / seite.maxWatt)
+                        id: balken
+                        objectName: "balken" + verbraucher.index
+                        width: Math.max(6, spur.width * verbraucher.modelData.watt / seite.maxWatt)
                         height: parent.height
                         radius: 3
                         color: Kirigami.Theme.highlightColor
-                        Behavior on width { NumberAnimation { duration: Kirigami.Units.longDuration; easing.type: Easing.OutCubic } }
+                        // Erst nach dem Aufbau animieren, sonst wächst der Balken beim Öffnen von 0 an
+                        property bool bereit: false
+                        Component.onCompleted: Qt.callLater(() => bereit = true)
+                        Behavior on width {
+                            enabled: spur.width > 0 && balken.bereit
+                            NumberAnimation { duration: Kirigami.Units.longDuration; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
                 Item { Layout.preferredHeight: Kirigami.Units.smallSpacing }
@@ -208,10 +220,11 @@ PC3.ScrollView {
             columnSpacing: Kirigami.Units.smallSpacing
             rowSpacing: Kirigami.Units.smallSpacing
             Repeater {
-                model: seite.ha.energie
+                model: seite.ha.energie.length
                 delegate: Rectangle {
                     id: kachel
-                    required property var modelData
+                    required property int index
+                    readonly property var modelData: seite.ha.energie[index] || { name: "", kwh: NaN }
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     implicitHeight: kachelInhalt.implicitHeight + Kirigami.Units.largeSpacing * 2
