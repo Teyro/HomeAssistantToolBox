@@ -22,7 +22,7 @@ enum Vorschau {
 
         Task {
             func warte(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-            func foto(_ name: String) { speichern(f, "\(ordner)/\(modus)_\(name).png") }
+            @MainActor func foto(_ name: String) { speichern(f, "\(ordner)/\(modus)_\(name).png") }
             await warte(5)
             print("verbunden:", kern.ha.verbunden, "live:", kern.ha.live, "lichter:", kern.ha.lichter.count, "fehler:", kern.ha.fehler)
             foto("1_lampen")

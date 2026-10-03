@@ -54,6 +54,12 @@ public struct Schalter: Equatable, Identifiable, Sendable {
     public let name: String
     public let raum: String
     public let leistung: String
+    public init(id: String, name: String, raum: String, leistung: String) {
+        self.id = id
+        self.name = name
+        self.raum = raum
+        self.leistung = leistung
+    }
 }
 
 public struct SchalterGruppe: Equatable, Identifiable, Sendable {
