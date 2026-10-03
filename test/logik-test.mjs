@@ -1,0 +1,18 @@
+import fs from 'node:fs'; import vm from 'node:vm';
+const code = fs.readFileSync(new URL('../package/contents/ui/logik.js', import.meta.url), 'utf8').replace('.pragma library', '');
+const ctx = {}; vm.createContext(ctx); vm.runInContext(code, ctx);
+// Zustände aus dem Mock holen
+const r = await fetch('http://127.0.0.1:8123/api/states', { headers: { Authorization: 'Bearer test-token' } });
+const liste = await r.json(); const z = {}; for (const e of liste) z[e.entity_id] = e;
+const t = await (await fetch('http://127.0.0.1:8123/api/template', { method: 'POST', headers: { Authorization: 'Bearer test-token' }, body: JSON.stringify({ template: ctx.BEREICHE_TEMPLATE }) })).text();
+const m = ctx.baueModell(z, JSON.parse(t), { hauptzaehler: 'sensor.stromzaehler_leistung', ausgeblendet: 'switch.router_*' });
+console.log('Gruppen:', m.gruppen.map(g => `${g.name}[${g.mitglieder.length}]${g.alt ? '(alt)' : ''}`).join(', '));
+console.log('Räume:', m.raeume.map(r => `${r.name}: ${r.lichter.length}L/${r.schalter.length}S`).join(', '));
+console.log('Ohne Raum:', m.ohneRaum.join(', '), '| Lichter', m.lichter.length, 'an', m.lichterAn);
+console.log('Schalter:', m.schalter.map(s => `${s.name}${s.raum ? '@' + s.raum : ''}${s.leistung ? '⚡' : ''}`).join(', '));
+console.log('Leistung:', m.leistung.map(p => `${p.name} ${ctx.formatWatt(p.watt)}`).join(', '), '| Haupt', m.hauptWatt, 'Summe', ctx.formatWatt(m.summeWatt));
+console.log('Energie:', m.energie.map(e => `${e.name} ${ctx.formatKwh(e.kwh)}`).join(', '));
+for (const g of m.gruppen) console.log('  Status', g.name, JSON.stringify(ctx.gruppenStatus(g.mitglieder, z)), ctx.gruppenFarbe(g.mitglieder, z));
+for (const id of ['light.wz_decke', 'light.wz_stehlampe', 'light.kinderzimmer', 'light.bad_spiegel', 'light.flur']) console.log('  ', id, ctx.helligkeit(z[id]), ctx.dimmbar(z[id]), ctx.lampenFarbe(z[id]), ctx.istVerfuegbar(z[id]));
+console.log('Achsen', [0.5, 7, 612, 1450, 9000].map(x => ctx.achsenSchritt(x, 3)).join(' '));
+console.log('Watt', [0, 4.21, 86.3, 1240, 23456].map(ctx.formatWatt).join(' | '));

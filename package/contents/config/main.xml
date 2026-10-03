@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <entry name="adresse" type="String">
+      <label>Adresse von Home Assistant, z. B. http://homeassistant.local:8123</label>
+      <default>http://homeassistant.local:8123</default>
+    </entry>
+    <entry name="token" type="String">
+      <label>Langlebiger Zugriffstoken</label>
+      <default></default>
+    </entry>
+    <entry name="abfrageSekunden" type="Int">
+      <label>Abfrage-Intervall in Sekunden, falls keine Live-Verbindung möglich ist</label>
+      <default>10</default>
+      <min>3</min>
+      <max>600</max>
+    </entry>
+    <entry name="zeigeGruppen" type="Bool"><default>true</default></entry>
+    <entry name="zeigeRaeume" type="Bool"><default>true</default></entry>
+    <entry name="alteGruppen" type="Bool"><default>true</default></entry>
+    <entry name="nurSteckdosen" type="Bool"><default>false</default></entry>
+    <entry name="zeigeAnzahl" type="Bool"><default>true</default></entry>
+    <entry name="hauptzaehler" type="String"><default></default></entry>
+    <entry name="ausgeblendet" type="String"><default></default></entry>
+  </group>
+</kcfg>

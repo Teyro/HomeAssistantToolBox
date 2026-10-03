@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Teyro"
+            }
+        ],
+        "Category": "Online Services",
+        "Description": "Lampen, Steckdosen und Energieverbrauch aus Home Assistant – direkt im Panel",
+        "Description[de]": "Lampen, Steckdosen und Energieverbrauch aus Home Assistant – direkt im Panel",
+        "EnabledByDefault": true,
+        "Icon": "go-home",
+        "Id": "de.teyro.homeassistant",
+        "License": "GPL-3.0-or-later",
+        "Name": "Home Assistant",
+        "Version": "1.0.0",
+        "Website": "https://github.com/Teyro/plasma-homeassistant"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-NotificationArea": "true",
+    "X-Plasma-NotificationAreaCategory": "Hardware"
+}
