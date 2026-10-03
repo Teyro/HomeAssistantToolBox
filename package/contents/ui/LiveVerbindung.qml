@@ -24,6 +24,19 @@ Item {
     property int registerAnfrage: -1
     signal wiederVerbunden()
 
+    // Offene Anfragen: id -> Rückruf(erfolg, ergebnis)
+    property var offeneAnfragen: ({})
+
+    /** Beliebige WebSocket-Anfrage; rueckruf(erfolg, ergebnis) bekommt die Antwort. */
+    function anfrage(nachricht, rueckruf) {
+        if (!verbunden) {
+            rueckruf(false, null);
+            return;
+        }
+        offeneAnfragen[naechsteId] = rueckruf;
+        senden(nachricht);
+    }
+
     function wsAdresse() {
         if (!adresse) return "";
         return adresse.replace(/^http/, "ws") + "/api/websocket";
@@ -52,6 +65,10 @@ Item {
             } else if (m.type === "auth_invalid") {
                 live.verbunden = false;
                 live.abgelehnt = true;
+            } else if (m.type === "result" && live.offeneAnfragen[m.id]) {
+                const rueckruf = live.offeneAnfragen[m.id];
+                delete live.offeneAnfragen[m.id];
+                rueckruf(!!m.success, m.result);
             } else if (m.type === "result" && m.id === live.registerAnfrage) {
                 if (m.success && m.result && m.result.entities) {
                     const liste = {};
@@ -67,6 +84,9 @@ Item {
         onStatusChanged: function (zustand) {
             if (zustand === WebSocket.Closed || zustand === WebSocket.Error) {
                 live.verbunden = false;
+                // offene Anfragen nicht hängen lassen
+                for (const id in live.offeneAnfragen) live.offeneAnfragen[id](false, null);
+                live.offeneAnfragen = {};
                 if (live.adresse !== "" && live.token !== "" && !live.abgelehnt) wiederholen.restart();
             }
         }

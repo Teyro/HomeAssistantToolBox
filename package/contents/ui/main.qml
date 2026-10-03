@@ -64,6 +64,12 @@ PlasmoidItem {
         zeigeGruppen: Plasmoid.configuration.zeigeGruppen
         zeigeRaeume: Plasmoid.configuration.zeigeRaeume
         hauptzaehler: Plasmoid.configuration.hauptzaehler
+        verbrauchAnzeige: ({ strom: Plasmoid.configuration.zeigeStromHeute,
+                             wasser: Plasmoid.configuration.zeigeWasserHeute,
+                             gas: Plasmoid.configuration.zeigeGasHeute })
+        eigeneZaehler: ({ strom: Plasmoid.configuration.zaehlerStrom,
+                          wasser: Plasmoid.configuration.zaehlerWasser,
+                          gas: Plasmoid.configuration.zaehlerGas })
         offen: root.expanded
         onEinrichten: Plasmoid.internalAction("configure").trigger()
     }

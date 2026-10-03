@@ -16,3 +16,8 @@ for (const g of m.gruppen) console.log('  Status', g.name, JSON.stringify(ctx.gr
 for (const id of ['light.wz_decke', 'light.wz_stehlampe', 'light.kinderzimmer', 'light.bad_spiegel', 'light.flur']) console.log('  ', id, ctx.helligkeit(z[id]), ctx.dimmbar(z[id]), ctx.lampenFarbe(z[id]), ctx.istVerfuegbar(z[id]));
 console.log('Achsen', [0.5, 7, 612, 1450, 9000].map(x => ctx.achsenSchritt(x, 3)).join(' '));
 console.log('Watt', [0, 4.21, 86.3, 1240, 23456].map(ctx.formatWatt).join(' | '));
+const prefs = { energy_sources: [{ type: 'grid', flow_from: [{ stat_energy_from: 'sensor.a' }, { stat_energy_from: 'sensor.b' }] }, { type: 'gas', stat_energy_from: 'sensor.g' }, { type: 'water', stat_energy_from: 'sensor.w' }] };
+console.log('Dashboard', JSON.stringify(ctx.zaehlerAusEnergieDashboard(prefs)));
+const mn = new Date(2026, 9, 3).getTime(), iso = (h) => new Date(mn + h * 3600e3).toISOString();
+console.log('Tag', JSON.stringify(ctx.tagesVerbrauch([{ state: '100', last_changed: iso(-24) }, { state: '103', last_changed: iso(-2) }, { state: '104', last_changed: iso(3) }, { state: '1', last_changed: iso(5) }, { state: '2.5', last_changed: iso(8) }], mn)));
+console.log('Menge', ctx.formatMenge(6.17, 'kWh', 'strom'), '|', ctx.formatMenge(0.1057, 'm³', 'wasser'), '|', ctx.formatMenge(1.41, 'm³', 'gas'), '|', ctx.formatMenge(12.3, 'kWh', 'gas'), '|', ctx.formatMenge(NaN, '', 'gas'));

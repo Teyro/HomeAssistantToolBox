@@ -19,8 +19,9 @@ und alles ist da.
   Aufklappen wie bei den Lampen. Einzelne Steckdosen darunter, nach Raum sortiert und zunächst
   eingeklappt. Verbrauch, wenn die Steckdose misst (z. B. Shelly Plug, Tasmota, Fritz!DECT).
 - **Energie**: aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden (Energie, Durchschnitt,
-  Spitze), Verlauf mit Werten beim Überfahren mit der Maus, die größten Verbraucher mit Anteil
-  und alle Zählerstände als Kacheln.
+  Spitze), Verlauf mit Werten beim Überfahren mit der Maus, **Verbrauch heute** an Strom,
+  Wasser und Gas (mit dem Wert von gestern), die größten Verbraucher mit Anteil und alle
+  Zählerstände als Kacheln.
 - **Live**: Änderungen (Schalter an der Wand, Automationen, App) erscheinen sofort über die
   WebSocket-Schnittstelle von Home Assistant.
 - **Panel-Symbol** im Breeze-Stil (Haus mit Glühbirne), so groß wie die Symbole im
@@ -58,6 +59,9 @@ und alles ist da.
 - Nur Schalter vom Typ „Steckdose“ zeigen
 - Entitäten ausblenden, auch mit `*`: `light.flur_nachtlicht, switch.*_kindersicherung`
 - Zahl der eingeschalteten Lampen am Panel-Symbol an/aus, Symbolgröße
+- Verbrauch heute: Strom, Wasser und Gas einzeln ein- und ausblenden. Die Zähler kommen
+  automatisch aus dem Energie-Dashboard von Home Assistant (gleiche Werte wie dort) oder
+  lassen sich von Hand wählen.
 
 ## Gut zu wissen
 

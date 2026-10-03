@@ -26,5 +26,11 @@
     <entry name="symbolPanelhoehe" type="Bool"><default>false</default></entry>
     <entry name="hauptzaehler" type="String"><default></default></entry>
     <entry name="ausgeblendet" type="String"><default></default></entry>
+    <entry name="zeigeStromHeute" type="Bool"><default>true</default></entry>
+    <entry name="zeigeWasserHeute" type="Bool"><default>true</default></entry>
+    <entry name="zeigeGasHeute" type="Bool"><default>true</default></entry>
+    <entry name="zaehlerStrom" type="String"><default></default></entry>
+    <entry name="zaehlerWasser" type="String"><default></default></entry>
+    <entry name="zaehlerGas" type="String"><default></default></entry>
   </group>
 </kcfg>

@@ -61,6 +61,10 @@ Item {
 
     signal verlaufGeladen(string entityId, var punkte)
 
+    // "Verbrauch heute": { strom|wasser|gas: { heute, gestern, einheit, zaehler } }
+    property var verbrauchHeute: ({})
+    property var energiePrefs: null
+
     // ------------------------------------------------------------------ HTTP
     function anfrage(methode, pfad, daten, fertig) {
         if (!eingerichtet) return;
@@ -291,6 +295,95 @@ Item {
         if (an.length) dienst("light", "turn_off", { entity_id: an });
     }
 
+    /**
+     * Verbrauch heute und gestern für Strom, Wasser und Gas. Zähler: eigene Auswahl aus den
+     * Einstellungen, sonst die Zähler aus dem Energie-Dashboard von Home Assistant.
+     * Mit Live-Verbindung über die Langzeitstatistik (genau wie das Energie-Dashboard),
+     * ohne über den Verlauf der Zählerstände.
+     */
+    function verbrauchHeuteLaden(eigene, gewuenscht) {
+        const live = liveLader.item && liveLader.item.verbunden ? liveLader.item : null;
+        const weiter = function (ausDashboard) {
+            const plan = {};
+            for (const art of Logik.VERBRAUCH_ARTEN) {
+                if (!gewuenscht[art]) continue;
+                const ids = eigene[art] ? [eigene[art]] : (ausDashboard ? ausDashboard[art] : []);
+                if (ids.length) plan[art] = ids;
+            }
+            if (!Object.keys(plan).length) { verbrauchHeute = {}; return; }
+            if (live) statistikLaden(live, plan);
+            else historieTageLaden(plan);
+        };
+        if (live && energiePrefs === null) {
+            live.anfrage({ type: "energy/get_prefs" }, function (ok, r) {
+                energiePrefs = ok && r ? r : {};
+                weiter(Logik.zaehlerAusEnergieDashboard(energiePrefs));
+            });
+        } else {
+            weiter(energiePrefs ? Logik.zaehlerAusEnergieDashboard(energiePrefs) : null);
+        }
+    }
+
+    function einheitVon(id) {
+        const e = zustaende[id];
+        return e && e.attributes ? (e.attributes.unit_of_measurement || "") : "";
+    }
+
+    function statistikLaden(live, plan) {
+        const alle = [].concat(...Object.values(plan));
+        live.anfrage({ type: "recorder/get_statistics_metadata", statistic_ids: alle }, function (ok, meta) {
+            const einheit = {};
+            if (ok && meta) for (const m of meta) einheit[m.statistic_id] = m.statistics_unit_of_measurement || m.display_unit_of_measurement || "";
+            const ergebnis = {};
+            let offen = 0;
+            for (const art in plan) {
+                ergebnis[art] = { heute: 0, gestern: 0, einheit: einheit[plan[art][0]] || einheitVon(plan[art][0]), zaehler: plan[art], gueltig: false };
+                for (const id of plan[art]) {
+                    for (const versatz of [0, -1]) {
+                        offen++;
+                        live.anfrage({ type: "recorder/statistic_during_period", statistic_id: id,
+                                       calendar: { period: "day", offset: versatz }, types: ["change"] }, function (ok2, r) {
+                            if (ok2 && r && r.change !== undefined && r.change !== null) {
+                                if (versatz === 0) ergebnis[art].heute += r.change;
+                                else ergebnis[art].gestern += r.change;
+                                ergebnis[art].gueltig = true;
+                            }
+                            if (--offen === 0) verbrauchHeute = ergebnis;
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    function historieTageLaden(plan) {
+        // Ohne WebSocket gehen nur Entitäten (keine externen Statistiken)
+        const ids = [].concat(...Object.values(plan)).filter(id => id.indexOf(".") > 0 && id.indexOf(":") < 0);
+        if (!ids.length) { verbrauchHeute = {}; return; }
+        const mitternacht = new Date();
+        mitternacht.setHours(0, 0, 0, 0);
+        const start = new Date(mitternacht.getTime() - 86400000).toISOString();
+        anfrage("GET", "/api/history/period/" + encodeURIComponent(start) + "?filter_entity_id=" + encodeURIComponent(ids.join(","))
+                + "&minimal_response&no_attributes", null, function (antwort, fehlertext) {
+            if (fehlertext || !antwort) return;
+            const jeEntitaet = {};
+            for (const liste of antwort) if (liste && liste.length && liste[0].entity_id) jeEntitaet[liste[0].entity_id] = liste;
+            const ergebnis = {};
+            for (const art in plan) {
+                let heute = 0, gestern = 0, gueltig = false;
+                for (const id of plan[art]) {
+                    const v = Logik.tagesVerbrauch(jeEntitaet[id], mitternacht.getTime());
+                    if (!v) continue;
+                    heute += v.heute;
+                    if (v.gestern !== null) gestern += v.gestern;
+                    gueltig = true;
+                }
+                ergebnis[art] = { heute: heute, gestern: gestern, einheit: einheitVon(plan[art][0]), zaehler: plan[art], gueltig: gueltig };
+            }
+            verbrauchHeute = ergebnis;
+        });
+    }
+
     function verlaufLaden(entityId, stunden) {
         if (!entityId) return;
         const start = new Date(Date.now() - stunden * 3600 * 1000).toISOString();
@@ -336,6 +429,8 @@ Item {
             ha.abgelehnt = false;
             ha.zustaende = {};
             ha.bereiche = null;
+            ha.energiePrefs = null;
+            ha.verbrauchHeute = {};
             ha._json = {};
             ha.neuBerechnen();
             ha.aktualisieren();

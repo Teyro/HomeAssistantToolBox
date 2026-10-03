@@ -25,6 +25,25 @@ KCM.SimpleKCM {
     property alias cfg_symbolPanelhoehe: symbolPanelhoehe.checked
     property string cfg_hauptzaehler
     property alias cfg_ausgeblendet: ausgeblendet.text
+    property alias cfg_zeigeStromHeute: zeigeStrom.checked
+    property alias cfg_zeigeWasserHeute: zeigeWasser.checked
+    property alias cfg_zeigeGasHeute: zeigeGas.checked
+    property string cfg_zaehlerStrom
+    property string cfg_zaehlerWasser
+    property string cfg_zaehlerGas
+
+    // Zählerstände (total_increasing) einer Art aus dem Verbindungstest
+    function zaehlerListe(klasse, gespeichert) {
+        const liste = [{ id: "", name: i18n("Automatisch (Energie-Dashboard)") }];
+        if (gespeichert && !probe.zustaende[gespeichert]) liste.push({ id: gespeichert, name: gespeichert });
+        for (const id in probe.zustaende) {
+            const e = probe.zustaende[id];
+            if (!id.startsWith("sensor.") || !e.attributes || e.attributes.device_class !== klasse) continue;
+            const einheit = e.attributes.unit_of_measurement || "";
+            liste.push({ id: id, name: Logik.name(e) + " (" + e.state + (einheit ? " " + einheit : "") + ")" });
+        }
+        return liste;
+    }
 
     // Eigene Verbindung nur für den Test und die Auswahl des Hauptzählers
     HaVerbindung {
@@ -146,6 +165,52 @@ KCM.SimpleKCM {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Verbrauch heute")
+        }
+        QQC2.CheckBox {
+            id: zeigeStrom
+            Kirigami.FormData.label: i18n("Anzeigen:")
+            text: i18n("Strom")
+        }
+        QQC2.CheckBox {
+            id: zeigeWasser
+            text: i18n("Wasser")
+        }
+        QQC2.CheckBox {
+            id: zeigeGas
+            text: i18n("Gas")
+        }
+        ZaehlerWahl {
+            Kirigami.FormData.label: i18n("Stromzähler:")
+            enabled: zeigeStrom.checked
+            klasse: "energy"
+            wert: seite.cfg_zaehlerStrom
+            onGewaehlt: id => seite.cfg_zaehlerStrom = id
+        }
+        ZaehlerWahl {
+            Kirigami.FormData.label: i18n("Wasserzähler:")
+            enabled: zeigeWasser.checked
+            klasse: "water"
+            wert: seite.cfg_zaehlerWasser
+            onGewaehlt: id => seite.cfg_zaehlerWasser = id
+        }
+        ZaehlerWahl {
+            Kirigami.FormData.label: i18n("Gaszähler:")
+            enabled: zeigeGas.checked
+            klasse: "gas"
+            wert: seite.cfg_zaehlerGas
+            onGewaehlt: id => seite.cfg_zaehlerGas = id
+        }
+        QQC2.Label {
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 22
+            wrapMode: Text.Wrap
+            font: Kirigami.Theme.smallFont
+            color: Kirigami.Theme.disabledTextColor
+            text: i18n("„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“.")
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Sonstiges")
         }
         QQC2.CheckBox {
@@ -176,5 +241,18 @@ KCM.SimpleKCM {
             color: Kirigami.Theme.disabledTextColor
             text: i18n("Normalerweise aktualisiert sich das Widget sofort über die Live-Verbindung. Das Intervall gilt nur, falls die nicht möglich ist.")
         }
+    }
+
+    component ZaehlerWahl: QQC2.ComboBox {
+        id: wahl
+        property string klasse
+        property string wert
+        signal gewaehlt(string id)
+        Layout.minimumWidth: Kirigami.Units.gridUnit * 18
+        model: seite.zaehlerListe(klasse, wert)
+        textRole: "name"
+        valueRole: "id"
+        currentIndex: Math.max(0, model.findIndex(e => e.id === wahl.wert))
+        onActivated: wahl.gewaehlt(currentValue)
     }
 }

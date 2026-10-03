@@ -12,7 +12,9 @@ var PFADE = {
     "raum": "<path d=\"M2.5 10.2 11 3l8.5 7.2\"/><path d=\"M4.5 8.8v10.7h13V8.8\"/><path d=\"M9 19.5v-5.5h4v5.5\"/>",
     "steckdose": "<rect x=\"3\" y=\"3\" width=\"16\" height=\"16\" rx=\"4\"/><circle cx=\"11\" cy=\"11\" r=\"4.6\"/><circle cx=\"9.2\" cy=\"11\" r=\".5\" fill=\"currentColor\"/><circle cx=\"12.8\" cy=\"11\" r=\".5\" fill=\"currentColor\"/>",
     "steckdosenleiste": "<rect x=\"2.5\" y=\"7\" width=\"17\" height=\"8\" rx=\"2.5\"/><circle cx=\"6.6\" cy=\"11\" r=\"1.5\"/><circle cx=\"11\" cy=\"11\" r=\"1.5\"/><circle cx=\"15.4\" cy=\"11\" r=\"1.5\"/><path d=\"M19.5 11h1.2\"/>",
-    "energie": "<path d=\"M12.5 2.8 5.5 12.3h5l-1 6.9 7-9.5h-5z\" stroke-linejoin=\"round\"/>"
+    "energie": "<path d=\"M12.5 2.8 5.5 12.3h5l-1 6.9 7-9.5h-5z\" stroke-linejoin=\"round\"/>",
+    "wasser": "<path d=\"M11 3.2c-2.6 3.6-5.2 6.6-5.2 9.9a5.2 5.2 0 0 0 10.4 0c0-3.3-2.6-6.3-5.2-9.9z\"/><path d=\"M8.6 13.6a2.5 2.5 0 0 0 2.2 2.4\"/>",
+    "gas": "<path d=\"M11 2.8c.4 3-3.2 4.4-4.6 7.9a5.3 5.3 0 0 0 4.6 8.5 5.3 5.3 0 0 0 4.9-7c-.5 1.3-1.4 2-2.3 2.1.9-3.7-.4-8.6-2.6-11.5z\"/><path d=\"M11 19.2a2.2 2.2 0 0 1-2.1-2.9c.4-1.2 1.6-1.8 2-3.1.9 1 2.3 2.4 2.1 3.8a2.1 2.1 0 0 1-2 2.2z\"/>"
 };
 
 function farbeText(c) {

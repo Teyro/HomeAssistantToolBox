@@ -354,7 +354,7 @@ function relevant(id, e, hauptzaehler) {
     if (d !== "sensor") return false;
     if (id === hauptzaehler) return true;
     var k = e && e.attributes ? e.attributes.device_class : null;
-    return k === "power" || k === "energy";
+    return k === "power" || k === "energy" || k === "water" || k === "gas";
 }
 
 /** Kennzahlen aus dem Verlauf: Energie (Fläche unter der Kurve), Spitze, Durchschnitt. */
@@ -370,4 +370,63 @@ function verlaufKennzahlen(punkte, ende) {
     }
     var dauer = (ende - punkte[0].t) / 3600000;
     return { kwh: wh / 1000, spitze: spitze, minimum: minimum, schnitt: dauer > 0 ? wh / dauer : 0 };
+}
+
+/** Zählerarten für "Verbrauch heute" */
+var VERBRAUCH_ARTEN = ["strom", "wasser", "gas"];
+
+/** Zähler aus den Einstellungen des Energie-Dashboards von Home Assistant (energy/get_prefs). */
+function zaehlerAusEnergieDashboard(prefs) {
+    var z = { strom: [], wasser: [], gas: [] };
+    if (!prefs || !prefs.energy_sources) return z;
+    prefs.energy_sources.forEach(function (q) {
+        if (q.type === "grid") (q.flow_from || []).forEach(function (f) { if (f.stat_energy_from) z.strom.push(f.stat_energy_from); });
+        else if (q.type === "gas" && q.stat_energy_from) z.gas.push(q.stat_energy_from);
+        else if (q.type === "water" && q.stat_energy_from) z.wasser.push(q.stat_energy_from);
+    });
+    return z;
+}
+
+/**
+ * Verbrauch eines Zählerstands aus dem Verlauf (REST-History, ohne WebSocket):
+ * Summe der Zunahmen ab [heuteStart] bzw. im Tag davor. Ein Zurückspringen auf (fast) 0 gilt als
+ * Neustart des Zählers, kleines Zittern nach unten wird ignoriert.
+ */
+function tagesVerbrauch(liste, heuteStart) {
+    var gesternStart = heuteStart - 86400000;
+    var heute = 0, gestern = 0, vorher = null, hatHeute = false, hatGestern = false;
+    if (!liste || !liste.length) return null;
+    liste.forEach(function (p) {
+        var w = parseFloat(p.state);
+        var t = Date.parse(p.last_changed || "");
+        if (isNaN(w) || isNaN(t)) return;
+        if (vorher !== null) {
+            var d = w - vorher;
+            if (d < 0) d = w < vorher * 0.5 ? w : 0;
+            if (t >= heuteStart) { heute += d; hatHeute = true; }
+            else if (t >= gesternStart) { gestern += d; hatGestern = true; }
+        }
+        if (t >= heuteStart) hatHeute = true;
+        vorher = w;
+    });
+    if (vorher === null) return null;
+    return { heute: heute, gestern: hatGestern || hatHeute ? gestern : null };
+}
+
+/** Menge mit passender Einheit: Strom in kWh, Wasser in Litern bzw. m³, Gas in m³ oder kWh. */
+function formatMenge(wert, einheit, art) {
+    if (wert === null || wert === undefined || isNaN(wert)) return "–";
+    var e = einheit || "";
+    if (art === "strom") {
+        var kwh = e === "Wh" ? wert / 1000 : e === "MWh" ? wert * 1000 : wert;
+        return formatKwh(kwh);
+    }
+    if (art === "wasser") {
+        var liter = e === "m³" || e === "m3" ? wert * 1000 : e === "gal" ? wert * 3.785 : e === "ft³" ? wert * 28.317 : wert;
+        if (liter >= 1000) return (liter / 1000).toFixed(2).replace(".", ",") + " m³";
+        return Math.round(liter) + " L";
+    }
+    // Gas
+    if (e === "kWh" || e === "Wh" || e === "MWh") return formatKwh(e === "Wh" ? wert / 1000 : e === "MWh" ? wert * 1000 : wert);
+    return wert.toFixed(wert >= 10 ? 1 : 2).replace(".", ",") + " " + (e || "m³");
 }

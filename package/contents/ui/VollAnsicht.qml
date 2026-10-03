@@ -16,6 +16,8 @@ PlasmaExtras.Representation {
     property bool zeigeGruppen: true
     property bool zeigeRaeume: true
     property string hauptzaehler: ""
+    property var verbrauchAnzeige: ({ strom: true, wasser: true, gas: true })
+    property var eigeneZaehler: ({})
     property bool offen: false
 
     signal einrichten()
@@ -159,6 +161,8 @@ PlasmaExtras.Representation {
             EnergieSeite {
                 ha: voll.ha
                 hauptzaehler: voll.hauptzaehler
+                verbrauchAnzeige: voll.verbrauchAnzeige
+                eigeneZaehler: voll.eigeneZaehler
                 aktiv: voll.offen && reiter.currentIndex === 2
             }
         }

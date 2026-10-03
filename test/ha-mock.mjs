@@ -64,6 +64,8 @@ sensor('sensor.waermepumpe_leistung', 'Wärmepumpe', 1.24, 'kW', 'power');
 sensor('sensor.stromzaehler_bezug', 'Stromzähler Bezug', 12456.31, 'kWh', 'energy');
 sensor('sensor.pv_heute', 'PV-Ertrag heute', 8.42, 'kWh', 'energy');
 sensor('sensor.waschmaschine_energie', 'Waschmaschine Energie', 210.5, 'kWh', 'energy');
+sensor('sensor.wasserzaehler', 'Wasserzähler', 412.873, 'm³', 'water');
+sensor('sensor.gaszaehler', 'Gaszähler', 3021.44, 'm³', 'gas');
 sensor('sensor.temperatur', 'Temperatur Wohnzimmer', 21.4, '°C', 'temperature');
 
 const BEREICHE = [
@@ -79,7 +81,24 @@ const BEREICHE = [
 const GERAETE = Object.keys(z).filter((id) => id.startsWith('switch.') && !z[id].attributes.entity_id).map((id) => id.startsWith('switch.leiste_') ? [id, 'leiste1', 'Schreibtischleiste'] : [id, 'dev_' + id, z[id].attributes.friendly_name]);
 const LEISTUNG = [['switch.leiste_dose_1', 'sensor.leiste_leistung'], ['switch.leiste_dose_2', 'sensor.leiste_leistung'], ['switch.leiste_dose_3', 'sensor.leiste_leistung'], ['switch.kaffeemaschine', 'sensor.kaffeemaschine_leistung'], ['switch.tv', 'sensor.tv_power'], ['switch.pc', 'sensor.pc_leistung'], ['switch.waschmaschine', 'sensor.waschmaschine_power']];
 
+// Zählerstände für "Verbrauch heute" ohne Live-Verbindung (seit gestern 0 Uhr)
+const ZUWACHS = { 'sensor.stromzaehler_bezug': 0.35, 'sensor.wasserzaehler': 0.006, 'sensor.gaszaehler': 0.08 };
+function zaehlerVerlauf(id) {
+  const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - 1);
+  const ende = Date.now(), schritte = Math.floor((ende - start) / 3600e3);
+  const jetztWert = parseFloat(z[id].state);
+  const punkte = [];
+  for (let i = 0; i <= schritte; i++) {
+    const t = start.getTime() + i * 3600e3;
+    const p = { state: (jetztWert - (schritte - i) * ZUWACHS[id]).toFixed(3), last_changed: new Date(t).toISOString() };
+    if (i === 0) p.entity_id = id;
+    punkte.push(p);
+  }
+  return punkte;
+}
 function verlauf(id) {
+  const ids = (id || '').split(',');
+  if (ids.some((x) => ZUWACHS[x])) return ids.filter((x) => ZUWACHS[x]).map(zaehlerVerlauf);
   const punkte = [];
   const ende = Date.now();
   let w = 400;
@@ -197,6 +216,19 @@ server.on('upgrade', (req, sock) => {
         wsSenden(sock, { id: m.id, type: 'result', success: true, result: { entity_categories: { 0: 'config', 1: 'diagnostic' }, entities: [
           { ei: 'switch.kaffeemaschine_led', ec: 0 }, { ei: 'switch.tv_kindersicherung', ec: 0 }, { ei: 'light.alter_strahler', hb: true },
           { ei: 'switch.kaffeemaschine', di: 'd1' }, { ei: 'light.wz_decke', ai: 'wohnzimmer' } ] } });
+      } else if (m.type === 'energy/get_prefs') {
+        wsSenden(sock, { id: m.id, type: 'result', success: true, result: { energy_sources: [
+          { type: 'grid', flow_from: [{ stat_energy_from: 'sensor.stromzaehler_bezug' }], flow_to: [] },
+          { type: 'solar', stat_energy_from: 'sensor.pv_heute' },
+          { type: 'gas', stat_energy_from: 'sensor.gaszaehler' },
+          { type: 'water', stat_energy_from: 'sensor.wasserzaehler' } ], device_consumption: [] } });
+      } else if (m.type === 'recorder/get_statistics_metadata') {
+        wsSenden(sock, { id: m.id, type: 'result', success: true, result: (m.statistic_ids || []).filter((x) => z[x]).map((x) => ({ statistic_id: x, statistics_unit_of_measurement: z[x].attributes.unit_of_measurement })) });
+      } else if (m.type === 'recorder/statistic_during_period') {
+        const h = new Date().getHours() + new Date().getMinutes() / 60;
+        const f = { 'sensor.stromzaehler_bezug': 0.35, 'sensor.wasserzaehler': 0.006, 'sensor.gaszaehler': 0.08 }[m.statistic_id] || 0;
+        const change = m.calendar && m.calendar.offset === -1 ? f * 24 * 1.08 : f * h;
+        wsSenden(sock, { id: m.id, type: 'result', success: true, result: { change } });
       } else if (m.type === 'subscribe_events') { c.abo = m.id; wsSenden(sock, { id: m.id, type: 'result', success: true, result: null }); }
     }
   });

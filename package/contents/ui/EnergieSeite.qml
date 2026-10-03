@@ -1,6 +1,7 @@
 /*
  * Reiter "Energie": aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden und Verlauf,
- * größte Verbraucher mit Anteil am Gesamtverbrauch, Zählerstände als Kacheln.
+ * Verbrauch heute (Strom, Wasser, Gas), größte Verbraucher mit Anteil am Gesamtverbrauch,
+ * Zählerstände als Kacheln.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
@@ -17,6 +18,8 @@ PC3.ScrollView {
     required property var ha
     property string hauptzaehler: ""
     property bool aktiv: false
+    property var verbrauchAnzeige: ({ strom: true, wasser: true, gas: true })
+    property var eigeneZaehler: ({})
 
     property var verlauf: []
     readonly property real aktuell: ha.hauptWatt !== null ? ha.hauptWatt : ha.summeWatt
@@ -24,13 +27,31 @@ PC3.ScrollView {
     readonly property real maxWatt: verbraucher.length ? verbraucher[0].watt : 1
     readonly property var kennzahlen: Logik.verlaufKennzahlen(verlauf, Date.now())
 
+    readonly property var verbrauchArten: [
+        { art: "strom", titel: i18n("Strom"), symbol: "energie", farbe: "#fdbc4b" },
+        { art: "wasser", titel: i18n("Wasser"), symbol: "wasser", farbe: "#3daee9" },
+        { art: "gas", titel: i18n("Gas"), symbol: "gas", farbe: "#f67400" }
+    ]
+    readonly property bool verbrauchGewuenscht: Logik.VERBRAUCH_ARTEN.some(a => verbrauchAnzeige[a])
+    readonly property var verbrauchKacheln: verbrauchArten.filter(k => verbrauchAnzeige[k.art] && ha.verbrauchHeute[k.art])
+
     contentWidth: availableWidth
     PC3.ScrollBar.horizontal.policy: PC3.ScrollBar.AlwaysOff
 
     function verlaufHolen() {
         if (aktiv && hauptzaehler !== "" && ha) ha.verlaufLaden(hauptzaehler, 24);
     }
-    onAktivChanged: verlaufHolen()
+    function verbrauchHolen() {
+        if (aktiv && verbrauchGewuenscht && ha) ha.verbrauchHeuteLaden(eigeneZaehler, verbrauchAnzeige);
+    }
+    onAktivChanged: { verlaufHolen(); verbrauchHolen(); }
+    onVerbrauchAnzeigeChanged: verbrauchHolen()
+    onEigeneZaehlerChanged: verbrauchHolen()
+    Connections {
+        // Nach dem Aufbau der Live-Verbindung genauer über die Langzeitstatistik nachladen
+        target: seite.ha
+        function onLiveChanged() { if (seite.ha.live) seite.verbrauchHolen(); }
+    }
     onHauptzaehlerChanged: { verlauf = []; verlaufHolen(); }
     Connections {
         target: seite.ha
@@ -43,6 +64,12 @@ PC3.ScrollView {
         running: seite.aktiv && seite.hauptzaehler !== ""
         repeat: true
         onTriggered: seite.verlaufHolen()
+    }
+    Timer {
+        interval: 5 * 60 * 1000
+        running: seite.aktiv && seite.verbrauchGewuenscht
+        repeat: true
+        onTriggered: seite.verbrauchHolen()
     }
 
     ColumnLayout {
@@ -134,6 +161,96 @@ PC3.ScrollView {
             wrapMode: Text.Wrap
             font: Kirigami.Theme.smallFont
             color: Kirigami.Theme.disabledTextColor
+        }
+
+        // ---- Verbrauch heute ----
+        Kirigami.ListSectionHeader {
+            Layout.fillWidth: true
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            visible: seite.verbrauchGewuenscht
+            text: i18n("Verbrauch heute")
+        }
+        PC3.Label {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            visible: seite.verbrauchGewuenscht && seite.verbrauchKacheln.length === 0
+            text: i18n("Keine Zähler gefunden. In Home Assistant das Energie-Dashboard einrichten oder in den Einstellungen Zähler wählen.")
+            wrapMode: Text.Wrap
+            font: Kirigami.Theme.smallFont
+            color: Kirigami.Theme.disabledTextColor
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            visible: seite.verbrauchGewuenscht && seite.verbrauchKacheln.length > 0
+            columns: Math.max(1, seite.verbrauchKacheln.length)
+            columnSpacing: Kirigami.Units.smallSpacing
+            rowSpacing: Kirigami.Units.smallSpacing
+            Repeater {
+                model: seite.verbrauchKacheln.length
+                delegate: Rectangle {
+                    id: tag
+                    required property int index
+                    readonly property var art: seite.verbrauchKacheln[index] || seite.verbrauchArten[0]
+                    readonly property var wert: seite.ha.verbrauchHeute[art.art] || null
+                    objectName: "verbrauch-" + art.art
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    implicitHeight: tagInhalt.implicitHeight + Kirigami.Units.largeSpacing * 2
+                    radius: Kirigami.Units.cornerRadius
+                    color: Qt.alpha(Kirigami.Theme.textColor, 0.05)
+                    border.color: Qt.alpha(Kirigami.Theme.textColor, 0.08)
+                    ColumnLayout {
+                        id: tagInhalt
+                        anchors.fill: parent
+                        anchors.margins: Kirigami.Units.largeSpacing
+                        spacing: 2
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing
+                            Rectangle {
+                                implicitWidth: Kirigami.Units.iconSizes.smallMedium + 4
+                                implicitHeight: implicitWidth
+                                radius: width / 2
+                                color: Qt.alpha(tag.art.farbe, 0.2)
+                                Glyphe {
+                                    anchors.centerIn: parent
+                                    width: Kirigami.Units.iconSizes.small
+                                    height: width
+                                    name: tag.art.symbol
+                                    farbe: tag.art.farbe
+                                }
+                            }
+                            PC3.Label {
+                                Layout.fillWidth: true
+                                text: tag.art.titel
+                                elide: Text.ElideRight
+                                font: Kirigami.Theme.smallFont
+                                color: Kirigami.Theme.disabledTextColor
+                            }
+                        }
+                        PC3.Label {
+                            Layout.fillWidth: true
+                            Layout.topMargin: Kirigami.Units.smallSpacing
+                            text: tag.wert && tag.wert.gueltig ? Logik.formatMenge(tag.wert.heute, tag.wert.einheit, tag.art.art) : "–"
+                            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.3
+                            font.weight: Font.DemiBold
+                            font.features: { "tnum": 1 }
+                            elide: Text.ElideRight
+                        }
+                        PC3.Label {
+                            Layout.fillWidth: true
+                            visible: !!tag.wert && tag.wert.gueltig
+                            text: tag.wert ? i18n("gestern %1", Logik.formatMenge(tag.wert.gestern, tag.wert.einheit, tag.art.art)) : ""
+                            font: Kirigami.Theme.smallFont
+                            color: Kirigami.Theme.disabledTextColor
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+            }
         }
 
         // ---- Größte Verbraucher ----
