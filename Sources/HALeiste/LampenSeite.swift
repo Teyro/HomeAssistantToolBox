@@ -138,8 +138,8 @@ struct GruppenKarte: View {
 
     private func untertitel(_ s: GruppenStatus) -> String {
         if s.verfuegbar == 0 { return "nicht erreichbar" }
-        if s.an == 0 { return "\(s.gesamt) Lampen · alle aus" }
-        let teil = s.an == s.gesamt ? "alle \(s.gesamt) an" : "\(s.an) von \(s.gesamt) an"
+        if s.an == 0 { return s.gesamt == 1 ? "1 Lampe · aus" : "\(s.gesamt) Lampen · alle aus" }
+        let teil = s.gesamt == 1 ? "an" : s.an == s.gesamt ? "alle \(s.gesamt) an" : "\(s.an) von \(s.gesamt) an"
         return s.dimmbar ? "\(teil) · \(s.helligkeit) %" : teil
     }
 

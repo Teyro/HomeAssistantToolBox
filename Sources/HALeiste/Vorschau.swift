@@ -17,7 +17,7 @@ enum Vorschau {
         // Hintergrund wie ein Schreibtisch, damit das Glas etwas zum Durchscheinen hat
         let panel = PanelAnsicht(ha: kern.ha, einstellungen: kern.einstellungen, zustand: kern.panel) {}
             .background(Hintergrund())
-        let f = fensterMit(panel, titel: "HA Leiste", groesse: NSSize(width: 400, height: 640))
+        let f = fensterMit(panel, titel: "HA Leiste", groesse: NSSize(width: 420, height: 640))
         f.setFrameOrigin(NSPoint(x: 60, y: 120))
 
         Task {

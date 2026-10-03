@@ -240,10 +240,11 @@ struct VerlaufDiagramm: View {
                         }
                 }
             }
+            .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 18))
             .chartXAxis {
                 AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
-                    AxisValueLabel(format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute())
+                    AxisValueLabel(format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute(), collisionResolution: .greedy)
                 }
             }
             .chartYAxis {

@@ -80,7 +80,8 @@ struct PanelAnsicht: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             fuss
         }
-        .frame(width: 400, height: 640)
+        .frame(width: 420, height: 640)
+        .environment(\.locale, Locale(identifier: "de_DE"))
         .animation(.snappy, value: ha.meldung)
         .onAppear { ha.sichtbar = true }
         .onDisappear { ha.sichtbar = false }
@@ -100,9 +101,9 @@ struct PanelAnsicht: View {
 
             GlasGruppe(abstand: 6) {
                 HStack(spacing: 6) {
-                    Button { ha.erneutVersuchen() } label: { Image(systemName: "arrow.clockwise") }
-                        .help("Aktualisieren")
                     Menu {
+                        Button("Aktualisieren") { ha.erneutVersuchen() }
+                        Divider()
                         Button("Home Assistant öffnen") { if let u = URL(string: ha.basis) { NSWorkspace.shared.open(u) } }
                             .disabled(!ha.eingerichtet)
                         Button("Alle Lampen aus") { ha.alleLichterAus() }
@@ -140,7 +141,10 @@ struct PanelAnsicht: View {
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: r.symbol).font(.system(size: 12, weight: .semibold))
-                Text(r.titel).font(.system(size: 12, weight: gewaehlt ? .semibold : .medium))
+                Text(r.titel)
+                    .font(.system(size: 12, weight: gewaehlt ? .semibold : .medium))
+                    .lineLimit(1)
+                    .fixedSize()
                 if let anzahl, anzahl > 0 {
                     Text("\(anzahl)")
                         .font(.system(size: 10, weight: .bold))
@@ -151,7 +155,7 @@ struct PanelAnsicht: View {
                         .foregroundStyle(.white)
                 }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 9)
             .padding(.vertical, 6)
             .foregroundStyle(gewaehlt ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
             .background {

@@ -132,7 +132,7 @@ struct SteckdosenGruppe: View {
     private func untertitel(_ s: SchalterGruppenStatus) -> String {
         var teile: [String] = []
         if s.verfuegbar == 0 { teile.append("nicht erreichbar") }
-        else if s.an == 0 { teile.append("\(s.gesamt) Dosen · alle aus") }
+        else if s.an == 0 { teile.append(s.gesamt == 1 ? "1 Dose · aus" : "\(s.gesamt) Dosen · alle aus") }
         else if s.an == s.gesamt { teile.append("alle \(s.gesamt) an") }
         else { teile.append("\(s.an) von \(s.gesamt) an") }
         if let w = s.watt { teile.append(Logik.formatWatt(w)) }
