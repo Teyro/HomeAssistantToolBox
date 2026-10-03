@@ -63,6 +63,11 @@ und alles ist da.
   Template-Schnittstelle (`/api/template`).
 - Welcher Verbrauch zu welcher Steckdose gehört, erkennt das Widget über das Gerät
   (Steckdose und Leistungssensor am selben Gerät) – sonst am Namen.
+- **Steckdosen-Liste**: Geräte-Einstellungen, die Home Assistant als Schalter führt (z. B.
+  „LED an der Steckdose“, „Kindersicherung“, Firmware-Updates), werden ausgeblendet – genau
+  über das Entitäten-Register von Home Assistant, wenn `qt6-websockets` installiert ist,
+  sonst anhand typischer Namen. Weitere lassen sich in den Einstellungen unter „Ausblenden“
+  entfernen, oder „Nur Schalter vom Typ Steckdose“ wählen.
 - Lehnt Home Assistant den Token ab, hört das Widget auf zu fragen, damit deine IP nicht
   gesperrt wird (`ip_ban`). Nach einer Änderung in den Einstellungen geht es weiter.
 - Der Token steht – wie alle Widget-Einstellungen – in

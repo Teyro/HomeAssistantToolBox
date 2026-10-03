@@ -26,7 +26,7 @@ MouseArea {
         id: symbol
         anchors.centerIn: parent
         // Wie Plasma-Symbole: auf die nächste Standardgröße, damit es nicht verschwimmt
-        width: Kirigami.Units.iconSizes.roundedIconSize(Math.min(parent.width, parent.height))
+        width: Math.round(Math.min(parent.width, parent.height) * 0.86)
         height: width
         name: kompakt.lichterAn > 0 ? "ha-licht-an" : "ha-licht-aus"
         farbe: kompakt.containsMouse ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
@@ -39,7 +39,7 @@ MouseArea {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         width: Math.max(height, zahl.implicitWidth + Kirigami.Units.smallSpacing)
-        height: Math.round(Math.min(parent.width, parent.height) * 0.45)
+        height: Math.max(9, Math.round(Math.min(parent.width, parent.height) * 0.4))
         radius: height / 2
         color: Kirigami.Theme.highlightColor
         border.color: Kirigami.Theme.backgroundColor
@@ -49,7 +49,7 @@ MouseArea {
             id: zahl
             anchors.centerIn: parent
             text: kompakt.lichterAn > 99 ? "99+" : kompakt.lichterAn
-            font.pixelSize: Math.max(7, parent.height * 0.7)
+            font.pixelSize: Math.max(7, parent.height * 0.72)
             font.weight: Font.Bold
             color: Kirigami.Theme.highlightedTextColor
         }

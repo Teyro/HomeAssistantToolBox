@@ -21,6 +21,8 @@ Item {
     // --- Zustand ---
     property var zustaende: ({})
     property var bereiche: null
+    // Aus dem Entitäten-Register: Einstellungs-/Diagnose-Entitäten und versteckte (nur per WebSocket)
+    property var register: ({})
     // Anzeigemodell – jede Liste einzeln und nur neu gesetzt, wenn sie sich wirklich ändert.
     // So bauen die Listen ihre Zeilen nicht bei jedem Sensorwert neu auf (z. B. mitten im Schieben).
     property var gruppen: []
@@ -128,7 +130,7 @@ Item {
     }
 
     function neuBerechnen() {
-        const m = Logik.baueModell(zustaende, bereiche, optionen);
+        const m = Logik.baueModell(zustaende, bereiche, Object.assign({}, optionen, { register: register }));
         for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "leistung", "energie"]) {
             const j = JSON.stringify(m[schluessel]);
             if (_json[schluessel] !== j) {
@@ -304,5 +306,6 @@ Item {
         ignoreUnknownSignals: true
         function onZustandGeaendert(entityId, neu) { ha.setzeZustand(entityId, neu); }
         function onWiederVerbunden() { ha.aktualisieren(); }
+        function onRegisterGeladen(eintraege) { ha.register = eintraege; ha.neuBerechnen(); }
     }
 }

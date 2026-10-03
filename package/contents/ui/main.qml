@@ -14,8 +14,9 @@ import "logik.js" as Logik
 PlasmoidItem {
     id: root
 
+    // Eindeutiger Name: in der Popup-Komponente würde "ha: ha" auf die eigene Eigenschaft zeigen
     HaVerbindung {
-        id: ha
+        id: verbindung
         adresse: Plasmoid.configuration.adresse
         token: Plasmoid.configuration.token
         abfrageSekunden: Plasmoid.configuration.abfrageSekunden
@@ -28,20 +29,20 @@ PlasmoidItem {
         })
     }
 
-    readonly property int lichterAn: ha.lichterAn
-    readonly property real watt: ha.hauptWatt !== null ? ha.hauptWatt : ha.summeWatt
+    readonly property int lichterAn: verbindung.lichterAn
+    readonly property real watt: verbindung.hauptWatt !== null ? verbindung.hauptWatt : verbindung.summeWatt
 
     Plasmoid.icon: Qt.resolvedUrl("../icons/" + (lichterAn > 0 ? "ha-licht-an.svg" : "ha-licht-aus.svg"))
-    Plasmoid.status: ha.eingerichtet ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.PassiveStatus
+    Plasmoid.status: verbindung.eingerichtet ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.PassiveStatus
 
     toolTipMainText: i18n("Home Assistant")
     toolTipSubText: {
-        if (!ha.eingerichtet) return i18n("Noch nicht eingerichtet – Rechtsklick → Einrichten");
-        if (ha.fehler) return ha.fehler;
+        if (!verbindung.eingerichtet) return i18n("Noch nicht eingerichtet – Rechtsklick → Einrichten");
+        if (verbindung.fehler) return verbindung.fehler;
         const teile = [];
         teile.push(lichterAn === 1 ? i18n("1 Lampe an") : i18n("%1 Lampen an", lichterAn));
-        if (ha.schalter.length) teile.push(i18n("%1 von %2 Steckdosen an", ha.schalterAn, ha.schalter.length));
-        if (ha.leistung.length || ha.hauptWatt !== null) teile.push(i18n("Verbrauch %1", Logik.formatWatt(watt)));
+        if (verbindung.schalter.length) teile.push(i18n("%1 von %2 Steckdosen an", verbindung.schalterAn, verbindung.schalter.length));
+        if (verbindung.leistung.length || verbindung.hauptWatt !== null) teile.push(i18n("Verbrauch %1", Logik.formatWatt(watt)));
         return teile.join("\n");
     }
 
@@ -51,13 +52,13 @@ PlasmoidItem {
     compactRepresentation: KompaktAnsicht {
         lichterAn: root.lichterAn
         zeigeAnzahl: Plasmoid.configuration.zeigeAnzahl
-        verbunden: ha.verbunden
-        eingerichtet: ha.eingerichtet
+        verbunden: verbindung.verbunden
+        eingerichtet: verbindung.eingerichtet
         onGeklickt: root.expanded = !root.expanded
     }
 
     fullRepresentation: VollAnsicht {
-        ha: ha
+        ha: verbindung
         zeigeGruppen: Plasmoid.configuration.zeigeGruppen
         zeigeRaeume: Plasmoid.configuration.zeigeRaeume
         hauptzaehler: Plasmoid.configuration.hauptzaehler
@@ -70,19 +71,19 @@ PlasmoidItem {
             text: i18n("Alle Lampen aus")
             icon.name: "system-shutdown"
             enabled: root.lichterAn > 0
-            onTriggered: ha.alleLichterAus()
+            onTriggered: verbindung.alleLichterAus()
         },
         PlasmaCore.Action {
             text: i18n("Home Assistant öffnen")
             icon.name: "internet-web-browser"
-            enabled: ha.basis !== ""
-            onTriggered: Qt.openUrlExternally(ha.basis)
+            enabled: verbindung.basis !== ""
+            onTriggered: Qt.openUrlExternally(verbindung.basis)
         },
         PlasmaCore.Action {
             text: i18n("Neu laden")
             icon.name: "view-refresh"
-            enabled: ha.eingerichtet
-            onTriggered: { ha.bereicheLaden(); ha.aktualisieren(); }
+            enabled: verbindung.eingerichtet
+            onTriggered: { verbindung.bereicheLaden(); verbindung.aktualisieren(); }
         }
     ]
 }

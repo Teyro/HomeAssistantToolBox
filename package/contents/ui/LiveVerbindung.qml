@@ -19,6 +19,9 @@ Item {
     onAdresseChanged: abgelehnt = false
 
     signal zustandGeaendert(string entityId, var neu)
+    // Register: entity_id -> { ec: Kategorie (config/diagnostic), hb: versteckt }
+    signal registerGeladen(var eintraege)
+    property int registerAnfrage: -1
     signal wiederVerbunden()
 
     function wsAdresse() {
@@ -42,11 +45,21 @@ Item {
                 live.senden({ type: "auth", access_token: live.token });
             } else if (m.type === "auth_ok") {
                 live.senden({ type: "subscribe_events", event_type: "state_changed" });
+                live.registerAnfrage = live.naechsteId;
+                live.senden({ type: "config/entity_registry/list_for_display" });
                 live.verbunden = true;
                 live.wiederVerbunden();
             } else if (m.type === "auth_invalid") {
                 live.verbunden = false;
                 live.abgelehnt = true;
+            } else if (m.type === "result" && m.id === live.registerAnfrage) {
+                if (m.success && m.result && m.result.entities) {
+                    const liste = {};
+                    for (const e of m.result.entities) {
+                        if (e.ec !== undefined && e.ec !== null || e.hb) liste[e.ei] = { ec: e.ec !== undefined && e.ec !== null, hb: !!e.hb };
+                    }
+                    live.registerGeladen(liste);
+                }
             } else if (m.type === "event" && m.event && m.event.data) {
                 live.zustandGeaendert(m.event.data.entity_id, m.event.data.new_state);
             }

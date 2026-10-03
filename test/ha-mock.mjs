@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const TOKEN = 'test-token';
 const PORT = Number(process.argv[2] || 8123);
-const LOG = process.env.HA_MOCK_LOG || '/tmp/ha-mock.log';
+const LOG = '/tmp/hatest/mock.log';
 fs.writeFileSync(LOG, '');
 const log = (s) => fs.appendFileSync(LOG, s + '\n');
 
@@ -41,6 +41,10 @@ schalter('switch.waschmaschine', 'Waschmaschine', false);
 schalter('switch.heizluefter', 'Heizlüfter Bad', false);
 schalter('switch.weihnachtsbaum', 'Weihnachtsbaum', false);
 schalter('switch.router_neustart', 'Router-Neustart', false, 'switch');
+// Einstellungs-Schalter von Geräten (entity_category: config) – dürfen nicht als Steckdose erscheinen
+schalter('switch.kaffeemaschine_led', 'Kaffeemaschine LED', true, 'switch');
+schalter('switch.tv_kindersicherung', 'Fernseher Kindersicherung', false, 'switch');
+lampe('light.alter_strahler', 'Alter Strahler (versteckt)', true, { brightness: 200 });
 // Sensoren
 function sensor(id, name, wert, einheit, klasse) { z[id] = { entity_id: id, state: String(wert), last_changed: jetzt(), attributes: { friendly_name: name, unit_of_measurement: einheit, device_class: klasse, state_class: 'measurement' } }; }
 sensor('sensor.kaffeemaschine_leistung', 'Kaffeemaschine Leistung', 4.2, 'W', 'power');
@@ -181,6 +185,10 @@ server.on('upgrade', (req, sock) => {
       if (m.type === 'auth') {
         if (m.access_token === TOKEN) { c.auth = true; wsSenden(sock, { type: 'auth_ok', ha_version: '2026.10.0' }); }
         else { wsSenden(sock, { type: 'auth_invalid', message: 'Invalid access token' }); sock.end(); }
+      } else if (m.type === 'config/entity_registry/list_for_display') {
+        wsSenden(sock, { id: m.id, type: 'result', success: true, result: { entity_categories: { 0: 'config', 1: 'diagnostic' }, entities: [
+          { ei: 'switch.kaffeemaschine_led', ec: 0 }, { ei: 'switch.tv_kindersicherung', ec: 0 }, { ei: 'light.alter_strahler', hb: true },
+          { ei: 'switch.kaffeemaschine', di: 'd1' }, { ei: 'light.wz_decke', ai: 'wohnzimmer' } ] } });
       } else if (m.type === 'subscribe_events') { c.abo = m.id; wsSenden(sock, { id: m.id, type: 'result', success: true, result: null }); }
     }
   });

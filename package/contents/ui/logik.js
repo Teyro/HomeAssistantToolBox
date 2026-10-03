@@ -15,6 +15,8 @@ var BEREICHE_TEMPLATE =
     "{%- endfor -%}" +
     "{{ {'bereiche': ns.a, 'leistung': ns.p} | tojson }}";
 
+var EINSTELLUNGS_SCHALTER = /(^|[\s_.-])(led|leds|indikator|indicator|kindersicherung|child[\s_]?lock|tastensperre|button[\s_]?lock|nachtmodus|night[\s_]?mode|do[\s_]?not[\s_]?disturb|auto[\s_-]?update|firmware|beta|ota|neustart|restart|reboot|identify|identifizieren|power[\s_]?on[\s_]?behavio(u)?r|einschaltverhalten|überlastschutz|overload|benachrichtigung|notification|signalton|beep|buzzer|statuslicht|status[\s_]?light|ecomodus|eco[\s_]?mode)($|[\s_.-])/i;
+
 function domain(id) { return id.split(".")[0]; }
 
 function name(e) {
@@ -97,10 +99,16 @@ function baueModell(zustaende, bereiche, opt) {
     var lichter = [], gruppen = [], schalter = [], leistung = [], energie = [];
     var inGruppe = {};
 
+    var register = opt.register || {};
     ids.forEach(function (id) {
         if (ausgeblendet(id, versteckt)) return;
         var e = zustaende[id];
         var d = domain(id);
+        var reg = register[id];
+        // In Home Assistant versteckt: nirgends zeigen. Einstellungs-/Diagnose-Entitäten
+        // (z. B. "LED an der Steckdose", "Kindersicherung"): keine Lampen/Steckdosen.
+        if (reg && reg.hb) return;
+        if (reg && reg.ec && (d === "light" || d === "switch")) return;
         var a = e.attributes || {};
         if (d === "light") {
             // Lichtgruppe: hat eine Liste von Mitgliedern
@@ -116,6 +124,11 @@ function baueModell(zustaende, bereiche, opt) {
             }
         } else if (d === "switch") {
             if (opt.nurSteckdosen && a.device_class !== "outlet") return;
+            // Ohne Entitäten-Register (keine WebSocket-Verbindung): typische Geräte-Einstellungen
+            // am Namen erkennen, damit nicht jede "LED"- oder "Kindersicherung"-Option erscheint.
+            if (!opt.register || !Object.keys(opt.register).length) {
+                if (EINSTELLUNGS_SCHALTER.test(name(e)) || EINSTELLUNGS_SCHALTER.test(id)) return;
+            }
             schalter.push({ id: id, name: name(e) });
         } else if (d === "sensor" && istVerfuegbar(e)) {
             var wert = parseFloat(e.state);
@@ -146,6 +159,7 @@ function baueModell(zustaende, bereiche, opt) {
                     && !(zustaende[id].attributes && zustaende[id].attributes.entity_id && zustaende[id].attributes.entity_id.length);
             });
             var s = (b.e || []).filter(function (id) { return schalter.some(function (x) { return x.id === id; }); });
+            l = l.filter(function (id) { return lichter.some(function (x) { return x.id === id; }); });
             l.forEach(function (id) { imRaum[id] = true; });
             s.forEach(function (id) { imRaum[id] = true; });
             if (l.length || s.length) {

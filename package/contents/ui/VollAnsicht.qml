@@ -12,7 +12,7 @@ import org.kde.plasma.extras as PlasmaExtras
 PlasmaExtras.Representation {
     id: voll
 
-    required property var ha
+    required property var ha    // HaVerbindung
     property bool zeigeGruppen: true
     property bool zeigeRaeume: true
     property string hauptzaehler: ""

@@ -31,7 +31,6 @@ KCM.SimpleKCM {
         adresse: ""
         token: ""
         abfrageSekunden: 600
-        liveErlaubt: false
     }
     property bool getestet: false
     function testen() {
