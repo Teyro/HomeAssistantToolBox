@@ -44,6 +44,7 @@ jobs:
             "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark || true
           N=$(( $(wc -l < mock.log) - $(wc -l < mock.log.vorher) ))
           echo "Anfragen mit falschem Token: $N"
+          tail -n $N mock.log | cut -c1-120
           test "$N" -le 4
           ls -la bilder-ci || true
           tail -20 mock.log
