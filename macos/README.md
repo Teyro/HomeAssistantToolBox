@@ -2,7 +2,7 @@
 
 Lampen, Steckdosen und Energieverbrauch aus [Home Assistant](https://www.home-assistant.io/) mit einem Klick
 in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstück zum
-[Plasma-Widget für KDE](https://github.com/Teyro/plasma-homeassistant) mit dem gleichen Funktionsumfang.
+[Plasma-Widget für KDE](../plasma/README.md) mit dem gleichen Funktionsumfang.
 
 | Lampen (Dunkel) | Steckdosen (Hell) | Energie (Dunkel) |
 |---|---|---|
@@ -28,7 +28,7 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
 
 ## Installation
 
-1. `HA-Leiste-x.y.z.zip` aus den [Releases](https://github.com/Teyro/macos-homeassistant/releases) laden,
+1. `HA-Leiste-x.y.z.zip` aus den [Releases](https://github.com/Teyro/homeassistant-leiste/releases) laden,
    entpacken und **HA Leiste** in den Ordner *Programme* ziehen.
 2. Die App ist nicht bei Apple beglaubigt (dafür bräuchte es ein kostenpflichtiges Entwicklerkonto).
    Beim ersten Start meldet macOS deshalb, dass sie nicht geöffnet werden kann. Dann einmal im Terminal:
@@ -65,15 +65,16 @@ Nach einem Update fragt macOS evtl. einmal, ob HA Leiste den Token im Schlüssel
 ## Entwicklung
 
 ```bash
+cd macos
 swift test                 # Logik prüfen
 ./scripts/baue-app.sh      # build/HA Leiste.app und ZIP (Apple Silicon + Intel)
-node test/ha-mock.mjs &    # nachgebautes Home Assistant auf Port 8123 (Token: test-token)
+node ../test/ha-mock.mjs & # nachgebautes Home Assistant auf Port 8123 (Token: test-token)
 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
   "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark   # Bildschirmfotos
 ```
 
 Der GitHub-Workflow baut auf macOS 26, testet, macht die Bildschirmfotos und hängt bei einem
-Tag `v*` das ZIP an das Release.
+Tag `v*` das ZIP (zusammen mit dem KDE-Widget) an das Release.
 
 ## Lizenz
 

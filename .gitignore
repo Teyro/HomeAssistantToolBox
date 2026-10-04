@@ -1,0 +1,9 @@
+# macOS
+macos/.build/
+macos/build/
+macos/bilder-ci/
+*.zip
+.DS_Store
+# KDE
+build/
+*.plasmoid

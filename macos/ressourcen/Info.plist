@@ -23,6 +23,6 @@
 		<key>NSAllowsLocalNetworking</key><true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key><string>HA Leiste verbindet sich mit Home Assistant in deinem Heimnetz.</string>
-	<key>NSHumanReadableCopyright</key><string>GPL-3.0-or-later · github.com/Teyro/macos-homeassistant</string>
+	<key>NSHumanReadableCopyright</key><string>GPL-3.0-or-later · github.com/Teyro/homeassistant-leiste</string>
 </dict>
 </plist>

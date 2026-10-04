@@ -38,7 +38,7 @@ und alles ist da.
    ```
    (Ohne das Paket funktioniert das Widget auch – es fragt dann regelmäßig ab.)
 2. Die Datei `home-assistant.plasmoid` aus den
-   [Releases](https://github.com/Teyro/plasma-homeassistant/releases) laden und installieren:
+   [Releases](https://github.com/Teyro/homeassistant-leiste/releases) laden und installieren:
    ```bash
    kpackagetool6 -t Plasma/Applet -i home-assistant.plasmoid
    ```
@@ -86,15 +86,15 @@ und alles ist da.
 
 ## Entwicklung
 
-Der Ordner `test/` enthält einen nachgebauten Home-Assistant-Server (REST + WebSocket) mit
-Beispielwohnung und einen Test der Logik:
+Im Hauptordner liegt unter `test/` ein nachgebauter Home-Assistant-Server (REST + WebSocket)
+mit Beispielwohnung (für KDE-Widget und Mac-App gemeinsam), hier ein Test der Logik:
 
 ```bash
-node test/ha-mock.mjs 8123 &      # Token: test-token
-node test/logik-test.mjs
+node test/ha-mock.mjs 8123 &      # im Hauptordner; Token: test-token
+node plasma/test/logik-test.mjs
 ```
 
-Mit `plasmoidviewer -a package` (aus `plasma-sdk`) lässt sich das Widget ohne Installation
+Mit `plasmoidviewer -a plasma/package` (aus `plasma-sdk`) lässt sich das Widget ohne Installation
 ausprobieren.
 
 ## Lizenz

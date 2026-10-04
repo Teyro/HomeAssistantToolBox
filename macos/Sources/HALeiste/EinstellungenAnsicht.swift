@@ -122,7 +122,7 @@ struct EinstellungenAnsicht: View {
             }
 
             Section {
-                Link(destination: URL(string: "https://github.com/Teyro/macos-homeassistant")!) {
+                Link(destination: URL(string: "https://github.com/Teyro/homeassistant-leiste")!) {
                     Label("Projektseite und Updates auf GitHub", systemImage: "arrow.up.forward.square")
                 }
             }
