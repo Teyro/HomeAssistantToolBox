@@ -1,13 +1,14 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
+// Nur die Logik (wie logik.js im Plasma-Widget) – mit XCTest geprüft.
+// Die App selbst und die Widgets baut das Xcode-Projekt (project.yml, erzeugt mit XcodeGen).
 let package = Package(
     name: "HALeiste",
     platforms: [.macOS(.v14)],
+    products: [.library(name: "HALogik", targets: ["HALogik"])],
     targets: [
-        // Reine Logik ohne Oberfläche (wie logik.js im Plasma-Widget) – wird mit XCTest geprüft
         .target(name: "HALogik"),
-        .executableTarget(name: "HALeiste", dependencies: ["HALogik"]),
         .testTarget(name: "HALogikTests", dependencies: ["HALogik"]),
     ],
     swiftLanguageModes: [.v5]

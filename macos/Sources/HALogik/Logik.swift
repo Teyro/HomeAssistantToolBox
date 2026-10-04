@@ -7,7 +7,9 @@ public enum Logik {
     /// und Gerät je Schalter.
     public static let bereicheTemplate = #"{%- set ns = namespace(a=[], p=[], g=[]) -%}"#
         + #"{%- for ar in areas() -%}"#
-        + #"{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch)\\.') | list}] -%}"#
+        + #"{%- set se = area_entities(ar) | select('match', 'sensor\\.') | list -%}"#
+        + #"{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate)\\.') | list,"#
+        + #" 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list}] -%}"#
         + #"{%- endfor -%}"#
         + #"{%- for s in states.switch -%}"#
         + #"{%- set d = device_id(s.entity_id) -%}"#
@@ -294,11 +296,11 @@ public enum Logik {
     /// Ist diese Entität für die App überhaupt interessant? (alles andere wird ignoriert)
     public static func relevant(_ id: String, _ e: Entitaet?, _ hauptzaehler: String) -> Bool {
         let d = domain(id)
-        if d == "light" || d == "switch" || d == "group" { return true }
+        if ["light", "switch", "group", "climate", "person", "zone"].contains(d) { return true }
         if d != "sensor" { return false }
         if id == hauptzaehler { return true }
         let k = e?.klasse
-        return k == "power" || k == "energy" || k == "water" || k == "gas"
+        return ["power", "energy", "water", "gas", "temperature", "humidity"].contains(k ?? "")
     }
 
     // MARK: Zahlen

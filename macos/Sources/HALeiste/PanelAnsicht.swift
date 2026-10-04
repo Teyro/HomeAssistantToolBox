@@ -2,20 +2,24 @@ import SwiftUI
 import HALogik
 
 enum Reiter: Int, CaseIterable, Identifiable {
-    case lampen, steckdosen, energie
+    case lampen, steckdosen, heizung, energie, personen
     var id: Int { rawValue }
     var titel: String {
         switch self {
         case .lampen: "Lampen"
         case .steckdosen: "Steckdosen"
+        case .heizung: "Heizung"
         case .energie: "Energie"
+        case .personen: "Personen"
         }
     }
     var symbol: String {
         switch self {
         case .lampen: "lightbulb.fill"
         case .steckdosen: "poweroutlet.type.f.fill"
+        case .heizung: "heater.vertical.fill"
         case .energie: "bolt.fill"
+        case .personen: "person.2.fill"
         }
     }
 }
@@ -36,10 +40,22 @@ final class PanelZustand {
 
 /// Das Fenster unter dem Menüleisten-Symbol.
 struct PanelAnsicht: View {
-    let ha: HaVerbindung
-    let einstellungen: Einstellungen
-    @Bindable var zustand: PanelZustand
+    let kern: Kern
     var einrichten: () -> Void
+    private var ha: HaVerbindung { kern.ha }
+    private var einstellungen: Einstellungen { kern.einstellungen }
+    private var zustand: PanelZustand { kern.panel }
+
+    /// Sichtbare Reiter (Heizung/Personen nur, wenn es etwas zu zeigen gibt)
+    private var reiter: [Reiter] {
+        Reiter.allCases.filter { r in
+            switch r {
+            case .heizung: einstellungen.zeigeHeizung && !ha.heizungen.isEmpty
+            case .personen: einstellungen.zeigePersonen && !ha.personen.isEmpty
+            default: true
+            }
+        }
+    }
 
     @Namespace private var reiterRaum
 
@@ -72,17 +88,19 @@ struct PanelAnsicht: View {
                                     aktion: ha.abgelehnt ? einrichten : { ha.erneutVersuchen() })
                     }
                 } else {
-                    switch zustand.reiter {
+                    switch reiter.contains(zustand.reiter) ? zustand.reiter : .lampen {
                     case .lampen: LampenSeite(ha: ha, einstellungen: einstellungen, zustand: zustand)
                     case .steckdosen: SteckdosenSeite(ha: ha, zustand: zustand)
-                    case .energie: EnergieSeite(ha: ha, einstellungen: einstellungen)
+                    case .heizung: HeizungSeite(kern: kern)
+                    case .energie: EnergieSeite(ha: ha, einstellungen: einstellungen, instanz: kern.aktiv)
+                    case .personen: PersonenSeite(ha: ha)
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             fuss
         }
-        .frame(width: 420, height: 640)
+        .frame(width: 470, height: 700)
         .environment(\.locale, Locale(identifier: "de_DE"))
         .animation(.snappy, value: ha.meldung)
         .onAppear { ha.sichtbar = true }
@@ -94,7 +112,7 @@ struct PanelAnsicht: View {
     private var kopf: some View {
         HStack(spacing: 8) {
             HStack(spacing: 2) {
-                ForEach(Reiter.allCases) { r in reiterKnopf(r) }
+                ForEach(reiter) { r in reiterKnopf(r) }
             }
             .padding(3)
             .glas(Capsule())
@@ -104,6 +122,19 @@ struct PanelAnsicht: View {
             GlasGruppe(abstand: 6) {
                 HStack(spacing: 6) {
                     Menu {
+                        if einstellungen.instanzen.count > 1 {
+                            Menu("Instanz wechseln") {
+                                ForEach(einstellungen.instanzen) { i in
+                                    Button {
+                                        kern.wechseln(i.id)
+                                    } label: {
+                                        if i.id == kern.aktiv?.id { Label(i.anzeigename + (i.favorit ? "  ★" : ""), systemImage: "checkmark") }
+                                        else { Text(i.anzeigename + (i.favorit ? "  ★" : "")) }
+                                    }
+                                }
+                            }
+                            Divider()
+                        }
                         Button("Aktualisieren") { ha.erneutVersuchen() }
                             .keyboardShortcut("r")
                         Divider()
@@ -139,17 +170,23 @@ struct PanelAnsicht: View {
         let anzahl: Int? = switch r {
         case .lampen: ha.lichterAn
         case .steckdosen: ha.schalterAn
+        case .heizung: ha.heizungen.filter { Logik.raumKlima($0, ha.zustaende).heizt }.count
         case .energie: nil
+        case .personen: ha.personen.filter { $0.zustand == "home" }.count
         }
         return Button {
             withAnimation(.snappy(duration: 0.3)) { zustand.reiter = r }
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: r.symbol).font(.system(size: 12, weight: .semibold))
-                Text(r.titel)
-                    .font(.system(size: 12, weight: gewaehlt ? .semibold : .medium))
-                    .lineLimit(1)
-                    .fixedSize()
+                // Bei fünf Reitern nur beim gewählten den Namen zeigen
+                if gewaehlt || reiter.count <= 3 {
+                    Text(r.titel)
+                        .font(.system(size: 12, weight: gewaehlt ? .semibold : .medium))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
+                }
                 if let anzahl, anzahl > 0 {
                     Text("\(anzahl)")
                         .font(.system(size: 10, weight: .bold))
@@ -177,6 +214,7 @@ struct PanelAnsicht: View {
         .buttonStyle(.plain)
         .keyboardShortcut(KeyEquivalent(Character("\(r.rawValue + 1)")), modifiers: .command)
         .help("\(r.titel) (⌘\(r.rawValue + 1))")
+        .accessibilityLabel(r.titel)
     }
 
     // MARK: Fuß: Verbindungsstatus
@@ -198,7 +236,8 @@ struct PanelAnsicht: View {
 
     private var statusText: String {
         if !ha.eingerichtet { return "Nicht eingerichtet" }
-        let host = URL(string: ha.basis)?.host() ?? ha.basis
+        // Bei mehreren Instanzen deren Namen zeigen, sonst den Rechner
+        let host = einstellungen.instanzen.count > 1 ? (kern.aktiv?.anzeigename ?? "") : (URL(string: ha.basis)?.host() ?? ha.basis)
         if ha.live { return "Live verbunden mit \(host)" }
         if ha.verbunden { return "Verbunden mit \(host) · \(ha.stand.formatted(date: .omitted, time: .shortened))" }
         return ha.fehler.isEmpty ? "Verbinde …" : ha.fehler

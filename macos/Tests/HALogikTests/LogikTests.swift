@@ -124,3 +124,54 @@ final class LogikTests: XCTestCase {
         XCTAssertTrue(n.zeichenkette.contains("\"id\":3"))
     }
 }
+
+final class HeizungPersonenTests: XCTestCase {
+    func testHeizung() {
+        let z: [String: Entitaet] = [
+            "climate.wz": Entitaet(id: "climate.wz", state: "heat", attribute: ["friendly_name": "Heizung Wohnzimmer", "current_temperature": 20.5, "temperature": 21.5,
+                                                                         "hvac_action": "heating", "hvac_modes": ["off", "heat"], "preset_modes": ["none", "eco"], "preset_mode": "eco"]),
+            "climate.buero": Entitaet(id: "climate.buero", state: "off", attribute: ["friendly_name": "Thermostat Büro", "current_temperature": 17]),
+            "sensor.wz_t": Entitaet(id: "sensor.wz_t", state: "20.9", attribute: ["device_class": "temperature"]),
+        ]
+        var b = Bereiche()
+        b.bereiche = [.init(id: "wz", name: "Wohnzimmer", entitaeten: ["climate.wz"], temperatur: ["sensor.wz_t"])]
+        let h = Logik.heizungen(z, b)
+        XCTAssertEqual(h.map(\.name), ["Büro", "Wohnzimmer"])
+        let k = Logik.raumKlima(h[1], z)
+        XCTAssertEqual(k.ist, 20.9)           // Raumsensor vor Thermostat
+        XCTAssertEqual(k.ziel, 21.5)
+        XCTAssertTrue(k.heizt)
+        XCTAssertEqual(k.thermostat?.presets, ["eco"])
+        XCTAssertTrue(Logik.raumKlima(h[0], z).aus)
+        XCTAssertEqual(Logik.rundeZiel(21.37, k.thermostat), 21.5)
+        XCTAssertEqual(Logik.formatTemp(21.5), "21,5 °C")
+        XCTAssertEqual(Logik.formatDauer(5400), "1 h 30 min")
+    }
+
+    func testPersonen() {
+        let z: [String: Entitaet] = [
+            "person.b": Entitaet(id: "person.b", state: "not_home", attribute: ["friendly_name": "Ben", "latitude": 53.55, "longitude": 9.99]),
+            "person.a": Entitaet(id: "person.a", state: "home", attribute: ["friendly_name": "Anna Maria", "latitude": 53.5656, "longitude": 10.1172]),
+            "zone.home": Entitaet(id: "zone.home", state: "1", attribute: ["friendly_name": "Zuhause", "latitude": 53.5656, "longitude": 10.1172, "radius": 100]),
+        ]
+        let p = Logik.personen(z)
+        XCTAssertEqual(p.map(\.name), ["Anna Maria", "Ben"])
+        XCTAssertNotEqual(p[0].farbe, p[1].farbe)
+        XCTAssertEqual(Logik.initialen("Anna Maria"), "AM")
+        XCTAssertEqual(Logik.ortText("not_home"), "Unterwegs")
+        let km = Logik.entfernung(p[1].lat, p[1].lon, 53.5656, 10.1172)
+        XCTAssertEqual(km ?? 0, 8.5, accuracy: 0.3)
+        XCTAssertEqual(Logik.zonen(z).first?.heim, true)
+    }
+
+    func testSchnappschuss() {
+        var a = Anzeige()
+        a.lichter = ["light.x"]
+        a.lichterAn = 1
+        let z = ["light.x": Entitaet(id: "light.x", state: "on", attribute: ["friendly_name": "X", "brightness": 255, "supported_color_modes": ["brightness"]])]
+        let s = Logik.schnappschuss(instanz: "Zuhause", verbunden: true, z: z, anzeige: a, heizungen: [], personen: [], zonen: [], verlauf: [], tage: [:])
+        XCTAssertEqual(s.lampen.first?.helligkeit, 100)
+        XCTAssertEqual(s.lichterAn, 1)
+        XCTAssertEqual(s.werte.first?.text, "an")
+    }
+}

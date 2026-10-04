@@ -42,6 +42,11 @@ final class HaVerbindung {
     private(set) var schalterAn = 0
     private(set) var hauptWatt: Double?
     private(set) var summeWatt: Double = 0
+    private(set) var heizungen: [HeizRaum] = []
+    private(set) var personen: [Person] = []
+    private(set) var zonen: [Zone] = []
+    /// Name der Installation aus Home Assistant (Einstellungen → Allgemein)
+    private(set) var standortName = ""
 
     private(set) var verbunden = false
     private(set) var laedt = false
@@ -135,6 +140,7 @@ final class HaVerbindung {
         energiePrefs = nil
         verbrauchHeute = [:]
         verlauf = []
+        standortName = ""
         fehler = ""
         verbunden = false
         laedt = false
@@ -215,7 +221,10 @@ final class HaVerbindung {
             stand = Date()
             neuBerechnen()
             // Räume ändern sich selten: alle 10 Minuten neu laden
-            if bereiche == nil || Date().timeIntervalSince(bereicheStand) > 600 { await bereicheLaden() }
+            if bereiche == nil || Date().timeIntervalSince(bereicheStand) > 600 {
+                await bereicheLaden()
+                await standortLaden()
+            }
         }
     }
 
@@ -251,6 +260,22 @@ final class HaVerbindung {
         if schalterAn != m.schalterAn { schalterAn = m.schalterAn }
         if hauptWatt != m.hauptWatt { hauptWatt = m.hauptWatt }
         if summeWatt != m.summeWatt { summeWatt = m.summeWatt }
+        let versteckt = optionen.ausgeblendet.split(whereSeparator: { " \t\n,;".contains($0) }).map(String.init)
+        let h = Logik.heizungen(zustaende, bereiche, versteckt: versteckt)
+        if heizungen != h { heizungen = h }
+        let p = Logik.personen(zustaende, versteckt: versteckt)
+        if personen != p { personen = p }
+        let zo = Logik.zonen(zustaende)
+        if zonen != zo { zonen = zo }
+    }
+
+    /// Anzeigemodell als Ganzes (für die Widgets)
+    var anzeige: Anzeige {
+        var a = Anzeige()
+        a.gruppen = gruppen; a.raeume = raeume; a.ohneRaum = ohneRaum; a.lichter = lichter; a.lichterAn = lichterAn
+        a.schalter = schalter; a.schalterAn = schalterAn; a.schalterGruppen = schalterGruppen; a.einzelneSchalter = einzelneSchalter
+        a.leistung = leistung; a.energie = energie; a.hauptWatt = hauptWatt; a.summeWatt = summeWatt
+        return a
     }
 
     // MARK: Änderungen sammeln
@@ -281,7 +306,7 @@ final class HaVerbindung {
             if let neu { z[id] = neu } else { z.removeValue(forKey: id) }
             // Neu aufbauen nur, wenn sich die Struktur ändern kann: neue/entfernte Entität,
             // geänderte Gruppenmitglieder oder Namen, Messwerte (Energie-Reiter)
-            if alt == nil || neu == nil || id.hasPrefix("sensor.") || alt?.mitglieder != neu?.mitglieder || alt?.name != neu?.name {
+            if alt == nil || neu == nil || id.hasPrefix("sensor.") || id.hasPrefix("person.") || alt?.mitglieder != neu?.mitglieder || alt?.name != neu?.name {
                 struktur = true
             }
         }
@@ -406,6 +431,44 @@ final class HaVerbindung {
         if p <= 0 { schalteMehrere(ids, false); return }
         ids.forEach { vorab($0, true, p) }
         dienst("light", "turn_on", ["entity_id": .texte(ids), "brightness_pct": .zahl(Double(p))])
+    }
+
+    // MARK: Heizung
+
+    private func standortLaden() async {
+        if case .ok(let j) = await anfrage("GET", "/api/config"), let n = j?["location_name"]?.text { standortName = n }
+    }
+
+    /// Thermostat sofort sichtbar ändern, dann an Home Assistant schicken
+    private func vorabKlima(_ id: String, _ attribute: [String: JSON], zustand: String? = nil) {
+        guard var e = zustaende[id] else { return }
+        for (k, v) in attribute { e.attribute[k] = v }
+        if let zustand { e.state = zustand }
+        setzeZustand(id, e, sofort: true)
+    }
+
+    func setzeTemperatur(_ id: String, _ grad: Double) {
+        let e = zustaende[id]
+        // Ein ausgeschaltetes Thermostat mit neuer Zieltemperatur soll auch heizen
+        var modus: String?
+        if e?.state == "off" {
+            let modi = (e?.attribute["hvac_modes"]?.liste ?? []).compactMap { $0.text }
+            modus = modi.contains("heat") ? "heat" : modi.first { $0 != "off" }
+        }
+        vorabKlima(id, ["temperature": .zahl(grad)], zustand: modus)
+        var daten: [String: JSON] = ["entity_id": .text(id), "temperature": .zahl(grad)]
+        if let modus { daten["hvac_mode"] = .text(modus) }
+        dienst("climate", "set_temperature", .objekt(daten))
+    }
+
+    func setzeModus(_ id: String, _ modus: String) {
+        vorabKlima(id, [:], zustand: modus)
+        dienst("climate", "set_hvac_mode", ["entity_id": .text(id), "hvac_mode": .text(modus)])
+    }
+
+    func setzePreset(_ id: String, _ preset: String) {
+        vorabKlima(id, ["preset_mode": .text(preset)])
+        dienst("climate", "set_preset_mode", ["entity_id": .text(id), "preset_mode": .text(preset)])
     }
 
     func alleLichterAus() {

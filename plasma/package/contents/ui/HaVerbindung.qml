@@ -34,6 +34,11 @@ Item {
     property var einzelneSchalter: []
     property var leistung: []
     property var energie: []
+    property var heizungen: []
+    property var personen: []
+    property var zonen: []
+    // Name der Installation aus Home Assistant (Einstellungen → Allgemein), z. B. "Zuhause"
+    property string standortName: ""
     property int lichterAn: 0
     property int schalterAn: 0
     property var hauptWatt: null
@@ -128,7 +133,7 @@ Item {
             verbunden = true;
             stand = new Date();
             neuBerechnen();
-            if (bereiche === null) bereicheLaden();
+            if (bereiche === null) { bereicheLaden(); standortLaden(); }
         });
     }
 
@@ -150,7 +155,11 @@ Item {
 
     function neuBerechnen() {
         const m = Logik.baueModell(zustaende, bereiche, Object.assign({}, optionen, { register: register }));
-        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie"]) {
+        const versteckt = (optionen.ausgeblendet || "").split(/[\s,;]+/).filter(x => x);
+        m.heizungen = Logik.heizungen(zustaende, bereiche, versteckt);
+        m.personen = Logik.personen(zustaende, versteckt);
+        m.zonen = Logik.zonen(zustaende);
+        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie", "heizungen", "personen", "zonen"]) {
             const j = JSON.stringify(m[schluessel]);
             if (_json[schluessel] !== j) {
                 _json[schluessel] = j;
@@ -187,7 +196,7 @@ Item {
             if (neu) z[id] = neu; else delete z[id];
             // Neu aufbauen nur, wenn sich die Struktur ändern kann: neue/entfernte Entität,
             // geänderte Gruppenmitglieder oder Namen, Messwerte (Energie-Reiter)
-            if (!alt || !neu || id.startsWith("sensor.")
+            if (!alt || !neu || id.startsWith("sensor.") || id.startsWith("person.")
                     || String(alt.attributes && alt.attributes.entity_id) !== String(neu.attributes && neu.attributes.entity_id)
                     || (alt.attributes && alt.attributes.friendly_name) !== (neu.attributes && neu.attributes.friendly_name)) {
                 struktur = true;
@@ -287,6 +296,44 @@ Item {
         }
         ids.forEach(id => vorab(id, true, p));
         dienst("light", "turn_on", { entity_id: ids, brightness_pct: p });
+    }
+
+    // ------------------------------------------------------------------ Heizung
+    /** Thermostat sofort sichtbar ändern, dann an Home Assistant schicken */
+    function vorabKlima(entityId, attribute, zustand) {
+        const e = zustaende[entityId];
+        if (!e) return;
+        const neu = Object.assign({}, e, { attributes: Object.assign({}, e.attributes, attribute) });
+        if (zustand) neu.state = zustand;
+        setzeZustand(entityId, neu, true);
+    }
+
+    function setzeTemperatur(entityId, grad) {
+        const e = zustaende[entityId];
+        // Ein ausgeschaltetes Thermostat mit neuer Zieltemperatur soll auch heizen
+        const aus = e && e.state === "off";
+        const modus = aus ? ((e.attributes.hvac_modes || []).indexOf("heat") >= 0 ? "heat" : (e.attributes.hvac_modes || [])[1]) : "";
+        vorabKlima(entityId, { temperature: grad }, modus || undefined);
+        const daten = { entity_id: entityId, temperature: grad };
+        if (modus) daten.hvac_mode = modus;
+        dienst("climate", "set_temperature", daten);
+    }
+
+    function setzeModus(entityId, modus) {
+        vorabKlima(entityId, {}, modus);
+        dienst("climate", "set_hvac_mode", { entity_id: entityId, hvac_mode: modus });
+    }
+
+    function setzePreset(entityId, preset) {
+        vorabKlima(entityId, { preset_mode: preset });
+        dienst("climate", "set_preset_mode", { entity_id: entityId, preset_mode: preset });
+    }
+
+    /** Name der Installation holen (für die Instanzliste) */
+    function standortLaden() {
+        anfrage("GET", "/api/config", null, function (antwort, meldung) {
+            if (!meldung && antwort && antwort.location_name) standortName = antwort.location_name;
+        });
     }
 
     function alleLichterAus() {
@@ -431,6 +478,7 @@ Item {
             ha.bereiche = null;
             ha.energiePrefs = null;
             ha.verbrauchHeute = {};
+            ha.standortName = "";
             ha._json = {};
             ha.neuBerechnen();
             ha.aktualisieren();

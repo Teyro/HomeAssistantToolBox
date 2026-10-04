@@ -60,9 +60,11 @@ jobs:
         timeout-minutes: 6
         run: |
           HA_MOCK_LOG="$PWD/mock.log" node ../test/ha-mock.mjs 8123 > /dev/null 2>&1 &
+          HA_MOCK_NAME=Ferienhaus HA_MOCK_TOKEN=ferien-token HA_MOCK_LOG="$PWD/mock2.log" node ../test/ha-mock.mjs 8124 > /dev/null 2>&1 &
           sleep 2
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
+            HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token \
             HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
           done
           # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)
@@ -74,6 +76,14 @@ jobs:
           tail -n $N mock.log | cut -c1-120
           test "$N" -le 4
           ls -la bilder-ci
+
+      - name: Widgets beim System angemeldet?
+        run: |
+          cp -R "build/HA Leiste.app" /Applications/
+          open "/Applications/HA Leiste.app" --args --nur-starten || true
+          sleep 8
+          pluginkit -mAvvv -p com.apple.widgetkit-extension 2>&1 | grep -i -A3 haleiste || echo "WARNUNG: Widget-Erweiterung nicht gefunden"
+          pkill -f "HA Leiste.app" || true
 
       - uses: actions/upload-artifact@v5
         with:

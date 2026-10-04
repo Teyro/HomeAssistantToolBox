@@ -1,7 +1,8 @@
 import SwiftUI
+import WidgetKit
 import HALogik
 
-/// Menüleisten-App für Home Assistant: Lampen, Steckdosen und Energie mit einem Klick.
+/// Menüleisten-App für Home Assistant: Lampen, Steckdosen, Heizung, Energie und Personen.
 @main
 struct HALeisteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
@@ -16,14 +17,14 @@ struct HALeisteApp: App {
         .menuBarExtraStyle(.window)
 
         Window("HA Leiste – Einstellungen", id: "einstellungen") {
-            EinstellungenAnsicht(ha: kern.ha, einstellungen: kern.einstellungen)
+            EinstellungenAnsicht(kern: kern)
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
     }
 }
 
-/// Alles, was die App einmal braucht: Einstellungen, Verbindung, Panelzustand.
+/// Alles, was die App einmal braucht: Einstellungen, Verbindung, Panelzustand, Instanzen.
 @MainActor
 @Observable
 final class Kern {
@@ -33,37 +34,147 @@ final class Kern {
     let einstellungen: Einstellungen
     let ha = HaVerbindung()
     let panel = PanelZustand()
+    /// Gewählte Instanz (bis zum Neustart; danach wieder der Favorit)
+    var gewaehlteId = "" { didSet { if gewaehlteId != oldValue { uebernehmen(sofort: true) } } }
     @ObservationIgnored private var verzoegert: Task<Void, Never>?
+    @ObservationIgnored private var letzterSchnappschuss: Schnappschuss?
+    @ObservationIgnored private var letztesNeuLaden = Date.distantPast
+
+    var aktiv: Instanz? {
+        einstellungen.instanzen.first { $0.id == gewaehlteId } ?? Logik.favorit(einstellungen.instanzen)
+    }
 
     private init() {
         einstellungen = Einstellungen(vorschau: vorschau)
         einstellungen.geaendert = { [weak self] in self?.uebernehmen() }
-        let env = ProcessInfo.processInfo.environment
         if vorschau {
-            // Testlauf: Verbindung und Hauptzähler aus Umgebungsvariablen
-            einstellungen.adresse = env["HA_ADRESSE"] ?? "http://127.0.0.1:8123"
-            einstellungen.hauptzaehler = env["HA_HAUPTZAEHLER"] ?? ""
+            // Testlauf: Instanzen aus Umgebungsvariablen (HA_ADRESSE/HA_TOKEN, optional HA_ADRESSE2/HA_TOKEN2)
+            let env = ProcessInfo.processInfo.environment
+            var liste = [Instanz(id: "i1", name: "Zuhause", adresse: env["HA_ADRESSE"] ?? "http://127.0.0.1:8123", favorit: true,
+                                 hauptzaehler: env["HA_HAUPTZAEHLER"] ?? "")]
+            einstellungen.vorschauToken["i1"] = env["HA_TOKEN"] ?? ""
+            if let a2 = env["HA_ADRESSE2"] {
+                liste.append(Instanz(id: "i2", name: "", adresse: a2))
+                einstellungen.vorschauToken["i2"] = env["HA_TOKEN2"] ?? ""
+            }
+            einstellungen.instanzen = liste
         }
         uebernehmen(sofort: true)
+        befehleEmpfangen()
+        Task { await self.dauerlauf() }
     }
 
-    private var token: String {
-        vorschau ? (ProcessInfo.processInfo.environment["HA_TOKEN"] ?? "") : einstellungen.token
-    }
+    func wechseln(_ id: String) { gewaehlteId = id }
 
     /// Einstellungen an die Verbindung geben (Adresse/Token kurz verzögert)
     func uebernehmen(sofort: Bool = false) {
-        ha.setzeOptionen(einstellungen.optionen)
+        var o = einstellungen.optionenBasis
+        o.hauptzaehler = aktiv?.hauptzaehler ?? ""
+        ha.setzeOptionen(o)
         ha.abfrageSekunden = einstellungen.abfrageSekunden
         verzoegert?.cancel()
+        let verbinden = { [weak self] in
+            guard let self else { return }
+            let i = self.aktiv
+            self.ha.verbinde(adresse: i?.adresse ?? "", token: i.map { self.einstellungen.token($0.id) } ?? "")
+        }
         if sofort {
-            ha.verbinde(adresse: einstellungen.adresse, token: token)
+            verbinden()
         } else {
             verzoegert = Task {
                 try? await Task.sleep(for: .milliseconds(400))
                 guard !Task.isCancelled else { return }
-                self.ha.verbinde(adresse: self.einstellungen.adresse, token: self.token)
+                verbinden()
             }
+        }
+    }
+
+    // MARK: Extra heizen
+
+    func boostStarten(_ ids: [String], grad: Double, minuten: Int) {
+        guard let instanz = aktiv?.id else { return }
+        var liste = einstellungen.boosts.filter { !($0.instanz == instanz && ids.contains($0.id)) }
+        let bis = Date().addingTimeInterval(Double(minuten) * 60)
+        for id in ids {
+            guard let k = Logik.klimaStatus(ha.zustaende[id]) else { continue }
+            liste.append(Boost(instanz: instanz, id: id, bis: bis, vorher: k.ziel ?? grad, modus: k.modus))
+            ha.setzeTemperatur(id, grad)
+        }
+        einstellungen.boosts = liste
+    }
+
+    func boostBeenden(_ b: Boost) {
+        // alle Thermostate, die gemeinsam gestartet wurden, zurücksetzen
+        let betroffen = einstellungen.boosts.filter { $0.instanz == b.instanz && abs($0.bis.timeIntervalSince(b.bis)) < 1 }
+        if b.instanz == aktiv?.id {
+            for x in betroffen {
+                if x.modus == "off" { ha.setzeModus(x.id, "off") } else { ha.setzeTemperatur(x.id, x.vorher) }
+            }
+        }
+        einstellungen.boosts.removeAll { x in betroffen.contains(x) }
+    }
+
+    func boost(fuer klima: [String]) -> Boost? {
+        einstellungen.boosts.first { klima.contains($0.id) && $0.instanz == aktiv?.id }
+    }
+
+    // MARK: Alle paar Sekunden: abgelaufenes Extra heizen, Instanzname, Widgets
+
+    private func dauerlauf() async {
+        while true {
+            try? await Task.sleep(for: .seconds(5))
+            if ha.verbunden, let b = einstellungen.boosts.first(where: { $0.instanz == aktiv?.id && $0.bis <= Date() }) {
+                boostBeenden(b)
+            }
+            // Ohne eigenen Namen den Namen der Installation aus Home Assistant übernehmen
+            if let i = aktiv, i.name.isEmpty, !ha.standortName.isEmpty {
+                einstellungen.aendern(i.id) { $0.name = ha.standortName }
+            }
+            widgetsAktualisieren()
+        }
+    }
+
+    /// Datenpaket für die Widgets schreiben und sie neu laden lassen (gebremst)
+    func widgetsAktualisieren(sofort: Bool = false) {
+        guard ha.verbunden else { return }
+        let s = Logik.schnappschuss(instanz: aktiv?.anzeigename ?? "", verbunden: ha.verbunden, z: ha.zustaende, anzeige: ha.anzeige,
+                                    heizungen: ha.heizungen, personen: ha.personen, zonen: ha.zonen, verlauf: ha.verlauf,
+                                    tage: ha.verbrauchHeute)
+        var vergleich = s
+        vergleich.stand = letzterSchnappschuss?.stand ?? s.stand
+        guard sofort || vergleich != letzterSchnappschuss else { return }
+        letzterSchnappschuss = s
+        try? s.schreiben()
+        if sofort || Date().timeIntervalSince(letztesNeuLaden) > 15 {
+            letztesNeuLaden = Date()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+
+    // MARK: Befehle der Widgets (Lampe schalten, Temperatur …)
+
+    private func befehleEmpfangen() {
+        DistributedNotificationCenter.default().addObserver(forName: .init(Schnappschuss.befehlsName), object: nil, queue: .main) { n in
+            guard let text = n.object as? String else { return }
+            MainActor.assumeIsolated { Kern.shared.ausfuehren(text) }
+        }
+    }
+
+    func ausfuehren(_ befehl: String) {
+        let teile = befehl.split(separator: "|").map(String.init)
+        switch teile.first {
+        case "schalte" where teile.count >= 3:
+            ha.schalte(teile[1], teile[2] == "1")
+        case "temp" where teile.count >= 3:
+            if let t = Double(teile[2]) { ha.setzeTemperatur(teile[1], t) }
+        case "alleaus":
+            ha.alleLichterAus()
+        default:
+            return
+        }
+        Task {
+            try? await Task.sleep(for: .milliseconds(800))
+            self.widgetsAktualisieren(sofort: true)
         }
     }
 }
@@ -74,7 +185,7 @@ struct PanelMitFenster: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        PanelAnsicht(ha: kern.ha, einstellungen: kern.einstellungen, zustand: kern.panel) {
+        PanelAnsicht(kern: kern) {
             openWindow(id: "einstellungen")
             NSApp.activate(ignoringOtherApps: true)
         }

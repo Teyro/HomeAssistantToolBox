@@ -3,7 +3,8 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
-const TOKEN = 'test-token';
+const TOKEN = process.env.HA_MOCK_TOKEN || 'test-token';
+const NAME = process.env.HA_MOCK_NAME || 'Zuhause';
 const PORT = Number(process.argv[2] || 8123);
 const LOG = process.env.HA_MOCK_LOG || '/tmp/ha-mock.log';
 fs.writeFileSync(LOG, '');
@@ -67,14 +68,42 @@ sensor('sensor.waschmaschine_energie', 'Waschmaschine Energie', 210.5, 'kWh', 'e
 sensor('sensor.wasserzaehler', 'Wasserzähler', 412.873, 'm³', 'water');
 sensor('sensor.gaszaehler', 'Gaszähler', 3021.44, 'm³', 'gas');
 sensor('sensor.temperatur', 'Temperatur Wohnzimmer', 21.4, '°C', 'temperature');
+sensor('sensor.kueche_temperatur', 'Küche Temperatur', 20.7, '°C', 'temperature');
+sensor('sensor.wz_feuchte', 'Wohnzimmer Luftfeuchte', 46, '%', 'humidity');
+sensor('sensor.bad_feuchte', 'Bad Luftfeuchte', 63, '%', 'humidity');
+// Heizung: Thermostate je Raum
+function thermostat(id, name, ist, ziel, modus, extra = {}) {
+  z[id] = { entity_id: id, state: modus, last_changed: jetzt(), attributes: { friendly_name: name, current_temperature: ist, temperature: ziel,
+    hvac_modes: ['off', 'heat', 'auto'], hvac_action: modus === 'off' ? 'off' : ist < ziel - 0.2 ? 'heating' : 'idle',
+    preset_modes: ['none', 'eco', 'comfort', 'boost', 'away'], preset_mode: 'none', min_temp: 5, max_temp: 30, target_temp_step: 0.5,
+    supported_features: 401, ...extra } };
+}
+thermostat('climate.wohnzimmer', 'Heizung Wohnzimmer', 20.6, 21.5, 'heat');
+thermostat('climate.schlafzimmer', 'Heizung Schlafzimmer', 18.2, 18, 'auto');
+thermostat('climate.bad', 'Heizung Bad', 21.9, 23, 'heat');
+thermostat('climate.kinderzimmer', 'Heizung Kinderzimmer', 20.1, 20, 'heat', { preset_mode: 'comfort' });
+thermostat('climate.buero', 'Heizung Büro', 17.4, 19, 'off');
+// Personen und Zonen (Hamburg)
+const HEIM = [53.5656, 10.1172];
+z['zone.home'] = { entity_id: 'zone.home', state: '2', last_changed: jetzt(), attributes: { friendly_name: 'Zuhause', latitude: HEIM[0], longitude: HEIM[1], radius: 120, icon: 'mdi:home' } };
+z['zone.arbeit'] = { entity_id: 'zone.arbeit', state: '1', last_changed: jetzt(), attributes: { friendly_name: 'Arbeit', latitude: 53.5503, longitude: 9.9925, radius: 150, icon: 'mdi:briefcase' } };
+function person(id, name, zustand, lat, lon) { z[id] = { entity_id: id, state: zustand, last_changed: new Date(Date.now() - 3600e3 * (1 + Object.keys(z).length % 5)).toISOString(), attributes: { friendly_name: name, latitude: lat, longitude: lon, gps_accuracy: 12, source: 'device_tracker.' + id.split('.')[1] + '_handy', user_id: 'u_' + id } }; }
+person('person.anna', 'Anna', 'home', HEIM[0] + 0.0002, HEIM[1] - 0.0003);
+person('person.ben', 'Ben', 'not_home', 53.5585, 10.0601);
+person('person.carla', 'Carla', 'Arbeit', 53.5506, 9.9931);
 
+if (NAME !== 'Zuhause') {
+  // Zweite Instanz (z. B. "Ferienhaus"): nur ein paar Geräte, damit der Wechsel sichtbar ist
+  for (const id of Object.keys(z)) if (!/^(light\.(terrasse|einfahrt|kueche_decke)|switch\.(kaffeemaschine|waschmaschine)|sensor\.(kaffeemaschine_leistung|stromzaehler_leistung|temperatur)|climate\.(wohnzimmer|schlafzimmer)|zone\.home|person\.anna)$/.test(id)) delete z[id];
+  z['light.kueche_decke'].attributes.friendly_name = 'Ferienhaus Küche';
+}
 const BEREICHE = [
-  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv']],
-  ['kueche', 'Küche', ['light.kueche_decke', 'light.kueche_spots', 'switch.kaffeemaschine']],
-  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch']],
-  ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter']],
-  ['kinderzimmer', 'Kinderzimmer', ['light.kinderzimmer']],
-  ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc', 'switch.leiste_dose_1', 'switch.leiste_dose_2', 'switch.leiste_dose_3']],
+  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte']],
+  ['kueche', 'Küche', ['light.kueche_decke', 'light.kueche_spots', 'switch.kaffeemaschine'], ['sensor.kueche_temperatur']],
+  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch', 'climate.schlafzimmer']],
+  ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter', 'climate.bad'], [], ['sensor.bad_feuchte']],
+  ['kinderzimmer', 'Kinderzimmer', ['light.kinderzimmer', 'climate.kinderzimmer']],
+  ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc', 'switch.leiste_dose_1', 'switch.leiste_dose_2', 'switch.leiste_dose_3', 'climate.buero']],
   ['flur', 'Flur', ['light.flur']],
   ['keller', 'Keller', ['switch.waschmaschine']],
 ];
@@ -165,11 +194,12 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     const json = (o) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (url.pathname === '/api/states') return json(Object.values(z));
+    if (url.pathname === '/api/config') return json({ location_name: NAME, latitude: HEIM[0], longitude: HEIM[1], unit_system: { temperature: '°C' }, version: '2026.10.0' });
     if (url.pathname === '/api/template') {
       const t = JSON.parse(body).template;
       if (!t.includes('areas()')) { res.writeHead(400); res.end('?'); return; }
       res.writeHead(200, { 'Content-Type': 'text/plain' });
-      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e]) => ({ id, name, e })), leistung: LEISTUNG, geraete: GERAETE }));
+      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e, t = [], h = []]) => ({ id, name, e, t, h })), leistung: LEISTUNG, geraete: GERAETE }));
     }
     if (url.pathname.startsWith('/api/history/period/')) return json(verlauf(url.searchParams.get('filter_entity_id')));
     const m = url.pathname.match(/^\/api\/services\/(\w+)\/(\w+)$/);
@@ -184,6 +214,22 @@ const server = http.createServer((req, res) => {
         else if (m[2] === 'turn_on') geaendert.push(aendern(id, { state: 'on', attributes: d.brightness_pct !== undefined ? { brightness: Math.round(d.brightness_pct * 2.55) } : (z[id].attributes.brightness ? {} : (id.startsWith('light.') && z[id].attributes.supported_color_modes[0] !== 'onoff' ? { brightness: 255 } : {})) }));
         else if (m[2] === 'toggle') geaendert.push(aendern(id, { state: z[id].state === 'on' ? 'off' : 'on' }));
       };
+      if (m[1] === 'climate') {
+        for (const id of ids) {
+          if (!z[id]) continue;
+          const a = {};
+          let st = z[id].state;
+          if (m[2] === 'set_temperature' && d.temperature !== undefined) { a.temperature = d.temperature; if (d.hvac_mode) st = d.hvac_mode; else if (st === 'off') st = 'heat'; }
+          if (m[2] === 'set_hvac_mode') st = d.hvac_mode;
+          if (m[2] === 'set_preset_mode') a.preset_mode = d.preset_mode;
+          if (m[2] === 'turn_off') st = 'off';
+          if (m[2] === 'turn_on') st = 'heat';
+          const ist = z[id].attributes.current_temperature, zielT = a.temperature ?? z[id].attributes.temperature;
+          a.hvac_action = st === 'off' ? 'off' : ist < zielT - 0.2 ? 'heating' : 'idle';
+          geaendert.push(aendern(id, { state: st, attributes: a }));
+        }
+        return json(geaendert.filter(Boolean));
+      }
       ids.forEach(ziel);
       gruppenAktualisieren();
       return json(geaendert.filter(Boolean));
@@ -240,5 +286,19 @@ server.on('upgrade', (req, sock) => {
 setInterval(() => {
   aendern('sensor.stromzaehler_leistung', { state: String(Math.round(500 + Math.random() * 400)) });
   aendern('sensor.pc_leistung', { state: (120 + Math.random() * 60).toFixed(1) });
+  // Ben ist unterwegs nach Hause
+  const b = z['person.ben'];
+  if (b) {
+    const lat = b.attributes.latitude + (HEIM[0] - b.attributes.latitude) * 0.08, lon = b.attributes.longitude + (HEIM[1] - b.attributes.longitude) * 0.08;
+    const da = Math.hypot(lat - HEIM[0], (lon - HEIM[1]) * 0.6) < 0.0012;
+    aendern('person.ben', da ? { state: 'home', attributes: { latitude: HEIM[0] - 0.0002, longitude: HEIM[1] + 0.0002 } } : { attributes: { latitude: lat, longitude: lon } });
+    if (da) z['person.ben'] = { ...z['person.ben'] }; // bleibt dann zu Hause
+  }
+  // Thermostate nähern sich dem Ziel
+  for (const id of Object.keys(z).filter((x) => x.startsWith('climate.'))) {
+    const a = z[id].attributes; if (z[id].state === 'off') continue;
+    const ist = Math.round((a.current_temperature + (a.temperature > a.current_temperature ? 0.1 : -0.05)) * 10) / 10;
+    aendern(id, { attributes: { current_temperature: ist, hvac_action: ist < a.temperature - 0.2 ? 'heating' : 'idle' } });
+  }
 }, 3000);
 server.listen(PORT, '127.0.0.1', () => log('läuft auf ' + PORT));

@@ -1,5 +1,6 @@
 /*
- * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Energie.
+ * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Heizung · Energie · Personen,
+ * rechts das Menü (Instanz wechseln, neu laden, Home Assistant öffnen, Einstellungen).
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
@@ -9,10 +10,15 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PC3
 import org.kde.plasma.extras as PlasmaExtras
 
+import "logik.js" as Logik
+
 PlasmaExtras.Representation {
     id: voll
 
     required property var ha    // HaVerbindung
+    property var steuerung: null    // PlasmoidItem: Instanzen, Extra heizen
+    property bool zeigeHeizung: true
+    property bool zeigePersonen: true
     property bool zeigeGruppen: true
     property bool zeigeRaeume: true
     property string hauptzaehler: ""
@@ -22,15 +28,18 @@ PlasmaExtras.Representation {
 
     signal einrichten()
 
-    Layout.minimumWidth: Kirigami.Units.gridUnit * 18
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 26
-    Layout.minimumHeight: Kirigami.Units.gridUnit * 16
-    Layout.preferredHeight: Kirigami.Units.gridUnit * 28
+    Layout.minimumWidth: Kirigami.Units.gridUnit * 20
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 30
+    Layout.minimumHeight: Kirigami.Units.gridUnit * 18
+    Layout.preferredHeight: Kirigami.Units.gridUnit * 32
+
+    readonly property var instanzen: steuerung ? steuerung.instanzen : []
+    readonly property string instanzName: steuerung && steuerung.aktiv ? (steuerung.aktiv.name || "") : ""
 
     collapseMarginsHint: true
 
     header: PlasmaExtras.PlasmoidHeading {
-        visible: voll.ha.eingerichtet && voll.ha.verbunden
+        visible: voll.ha.eingerichtet && (voll.ha.verbunden || voll.instanzen.length > 1)
         contentItem: RowLayout {
             spacing: Kirigami.Units.smallSpacing
             PC3.TabBar {
@@ -40,35 +49,68 @@ PlasmaExtras.Representation {
                 position: PC3.TabBar.Header
                 Reiter { text: i18n("Lampen"); symbol: "lampe"; zahl: voll.ha.lichterAn }
                 Reiter { text: i18n("Steckdosen"); symbol: "steckdose"; zahl: voll.ha.schalterAn; visible: voll.ha.schalter.length > 0 }
+                Reiter { text: i18n("Heizung"); symbol: "heizung"; visible: voll.zeigeHeizung && voll.ha.heizungen.length > 0
+                         zahl: voll.ha.heizungen.filter(r => Logik.raumKlima(r, voll.ha.zustaende).heizt).length }
                 Reiter { text: i18n("Energie"); symbol: "energie"; visible: voll.ha.leistung.length > 0 || voll.ha.energie.length > 0 || voll.ha.hauptWatt !== null }
+                Reiter { text: i18n("Personen"); symbol: "person"; visible: voll.zeigePersonen && voll.ha.personen.length > 0
+                         zahl: voll.ha.personen.filter(p => p.zustand === "home").length }
             }
-            // Werkzeugknöpfe wie bei den Plasma-eigenen Widgets
+            // Ein Menü wie bei den Plasma-eigenen Widgets: Instanz wechseln, neu laden, …
             PC3.ToolButton {
-                icon.name: "view-refresh"
+                id: menueKnopf
+                objectName: "menueKnopf"
+                icon.name: "overflow-menu"
                 display: PC3.AbstractButton.IconOnly
-                text: i18n("Neu laden")
+                text: i18n("Mehr")
+                down: menue.opened
                 PC3.ToolTip.text: text
-                PC3.ToolTip.visible: hovered
+                PC3.ToolTip.visible: hovered && !menue.opened
                 PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
-                onClicked: { voll.ha.bereicheLaden(); voll.ha.erneutVersuchen(); }
+                onClicked: menue.opened ? menue.close() : menue.popup(menueKnopf, 0, menueKnopf.height)
             }
-            PC3.ToolButton {
-                icon.name: "internet-web-browser-symbolic"
-                display: PC3.AbstractButton.IconOnly
-                text: i18n("Home Assistant öffnen")
-                PC3.ToolTip.text: text
-                PC3.ToolTip.visible: hovered
-                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
-                onClicked: Qt.openUrlExternally(voll.ha.basis)
-            }
-            PC3.ToolButton {
-                icon.name: "configure"
-                display: PC3.AbstractButton.IconOnly
-                text: i18n("Einrichten …")
-                PC3.ToolTip.text: text
-                PC3.ToolTip.visible: hovered
-                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
-                onClicked: voll.einrichten()
+            PC3.Menu {
+                id: menue
+                objectName: "menue"
+                PC3.Menu {
+                    id: instanzMenue
+                    title: i18n("Instanz wechseln")
+                    enabled: voll.instanzen.length > 1
+                    Instantiator {
+                        model: voll.instanzen
+                        delegate: PC3.MenuItem {
+                            required property var modelData
+                            text: modelData.name + (modelData.favorit ? " ★" : "")
+                            checkable: true
+                            checked: voll.steuerung && voll.steuerung.aktiveInstanzId === modelData.id
+                            onTriggered: voll.steuerung.wechseln(modelData.id)
+                        }
+                        onObjectAdded: (index, objekt) => instanzMenue.insertItem(index, objekt)
+                        onObjectRemoved: (index, objekt) => instanzMenue.removeItem(objekt)
+                    }
+                }
+                PC3.MenuSeparator {}
+                PC3.MenuItem {
+                    text: i18n("Neu laden")
+                    icon.name: "view-refresh"
+                    onTriggered: { voll.ha.bereicheLaden(); voll.ha.erneutVersuchen(); }
+                }
+                PC3.MenuItem {
+                    text: i18n("Home Assistant öffnen")
+                    icon.name: "internet-web-browser-symbolic"
+                    onTriggered: Qt.openUrlExternally(voll.ha.basis)
+                }
+                PC3.MenuItem {
+                    text: i18n("Alle Lampen aus")
+                    icon.name: "system-shutdown"
+                    enabled: voll.ha.lichterAn > 0
+                    onTriggered: voll.ha.alleLichterAus()
+                }
+                PC3.MenuSeparator {}
+                PC3.MenuItem {
+                    text: i18n("Einrichten …")
+                    icon.name: "configure"
+                    onTriggered: voll.einrichten()
+                }
             }
         }
     }
@@ -88,8 +130,9 @@ PlasmaExtras.Representation {
             }
             PC3.Label {
                 Layout.fillWidth: true
-                text: voll.ha.live ? i18n("Live verbunden mit %1", voll.ha.basis.replace(/^https?:\/\//, ""))
-                                   : i18n("Verbunden mit %1 · Stand %2", voll.ha.basis.replace(/^https?:\/\//, ""), Qt.formatTime(voll.ha.stand, "hh:mm"))
+                readonly property string ziel: voll.instanzen.length > 1 && voll.instanzName ? voll.instanzName : voll.ha.basis.replace(/^https?:\/\//, "")
+                text: voll.ha.live ? i18n("Live verbunden mit %1", ziel)
+                                   : i18n("Verbunden mit %1 · Stand %2", ziel, Qt.formatTime(voll.ha.stand, "hh:mm"))
                 font: Kirigami.Theme.smallFont
                 color: Kirigami.Theme.disabledTextColor
                 elide: Text.ElideMiddle
@@ -158,12 +201,19 @@ PlasmaExtras.Representation {
             SteckdosenSeite {
                 ha: voll.ha
             }
+            HeizungSeite {
+                ha: voll.ha
+                steuerung: voll.steuerung
+            }
             EnergieSeite {
                 ha: voll.ha
                 hauptzaehler: voll.hauptzaehler
                 verbrauchAnzeige: voll.verbrauchAnzeige
                 eigeneZaehler: voll.eigeneZaehler
-                aktiv: voll.offen && reiter.currentIndex === 2
+                aktiv: voll.offen && reiter.currentIndex === 3
+            }
+            PersonenSeite {
+                ha: voll.ha
             }
         }
     }

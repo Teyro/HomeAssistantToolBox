@@ -95,7 +95,17 @@ public struct RegisterEintrag: Equatable, Sendable {
 
 /// Ergebnis des Bereiche-Templates: Räume, Leistungssensoren je Schalter, Gerät je Schalter.
 public struct Bereiche: Equatable, Sendable {
-    public struct Bereich: Equatable, Sendable { public let id: String; public let name: String; public let entitaeten: [String] }
+    public struct Bereich: Equatable, Sendable {
+        public let id: String
+        public let name: String
+        public let entitaeten: [String]
+        /// Temperatur- und Feuchtesensoren im Raum
+        public var temperatur: [String] = []
+        public var feuchte: [String] = []
+        public init(id: String, name: String, entitaeten: [String], temperatur: [String] = [], feuchte: [String] = []) {
+            self.id = id; self.name = name; self.entitaeten = entitaeten; self.temperatur = temperatur; self.feuchte = feuchte
+        }
+    }
     public struct Geraet: Equatable, Sendable { public let schalter: String; public let geraet: String; public let name: String }
     public var bereiche: [Bereich] = []
     public var leistung: [(String, String)] = []
@@ -106,7 +116,8 @@ public struct Bereiche: Equatable, Sendable {
     public init(json: JSON?) {
         guard let json else { return }
         bereiche = (json["bereiche"]?.liste ?? []).map {
-            Bereich(id: $0["id"]?.text ?? "", name: $0["name"]?.text ?? "", entitaeten: ($0["e"]?.liste ?? []).compactMap { $0.text })
+            Bereich(id: $0["id"]?.text ?? "", name: $0["name"]?.text ?? "", entitaeten: ($0["e"]?.liste ?? []).compactMap { $0.text },
+                    temperatur: ($0["t"]?.liste ?? []).compactMap { $0.text }, feuchte: ($0["h"]?.liste ?? []).compactMap { $0.text })
         }
         leistung = (json["leistung"]?.liste ?? []).compactMap {
             guard let a = $0[0]?.text, let b = $0[1]?.text else { return nil }

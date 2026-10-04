@@ -32,5 +32,15 @@
     <entry name="zaehlerStrom" type="String"><default></default></entry>
     <entry name="zaehlerWasser" type="String"><default></default></entry>
     <entry name="zaehlerGas" type="String"><default></default></entry>
+    <!-- Mehrere Home-Assistant-Instanzen (JSON: id, name, adresse, token, favorit, hauptzaehler, zaehler…) -->
+    <entry name="instanzen" type="String"><default></default></entry>
+    <!-- Laufendes "Extra heizen" (JSON) -->
+    <entry name="boosts" type="String"><default></default></entry>
+    <entry name="zeigeHeizung" type="Bool"><default>true</default></entry>
+    <entry name="zeigePersonen" type="Bool"><default>true</default></entry>
+    <!-- Auf dem Schreibtisch: komplett | uebersicht | lampe | steckdose | raum | heizung | energie | personen | entitaet -->
+    <entry name="darstellung" type="String"><default>uebersicht</default></entry>
+    <entry name="kachelEntitaet" type="String"><default></default></entry>
+    <entry name="kachelInstanz" type="String"><default></default></entry>
   </group>
 </kcfg>

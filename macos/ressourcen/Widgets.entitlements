@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Widgets müssen in der Sandbox laufen -->
+	<key>com.apple.security.app-sandbox</key><true/>
+	<!-- Nur lesen: die Datei, die HA Leiste für die Widgets schreibt -->
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+	<array>
+		<string>/Library/Application Support/HA Leiste/</string>
+	</array>
+</dict>
+</plist>

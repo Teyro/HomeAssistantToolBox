@@ -2,7 +2,8 @@ import SwiftUI
 import HALogik
 
 /// Testlauf für die automatischen Bildschirmfotos (GitHub Actions):
-/// `HALeiste --vorschau Dark|Light` mit HA_ADRESSE, HA_TOKEN, HA_HAUPTZAEHLER, HA_BILDER.
+/// `HALeiste --vorschau Dark|Light` mit HA_ADRESSE, HA_TOKEN, HA_HAUPTZAEHLER, HA_BILDER
+/// (optional HA_ADRESSE2/HA_TOKEN2 für eine zweite Instanz).
 @MainActor
 enum Vorschau {
     static var fenster: [NSWindow] = []
@@ -15,10 +16,9 @@ enum Vorschau {
         try? FileManager.default.createDirectory(atPath: ordner, withIntermediateDirectories: true)
 
         // Hintergrund wie ein Schreibtisch, damit das Glas etwas zum Durchscheinen hat
-        let panel = PanelAnsicht(ha: kern.ha, einstellungen: kern.einstellungen, zustand: kern.panel) {}
-            .background(Hintergrund())
-        let f = fensterMit(panel, titel: "HA Leiste", groesse: NSSize(width: 420, height: 640))
-        f.setFrameOrigin(NSPoint(x: 60, y: 120))
+        let panel = PanelAnsicht(kern: kern) {}.background(Hintergrund())
+        let f = fensterMit(panel, titel: "HA Leiste", groesse: NSSize(width: 470, height: 700))
+        f.setFrameOrigin(NSPoint(x: 60, y: 80))
 
         Task {
             func warte(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
@@ -41,20 +41,49 @@ enum Vorschau {
             if let g = kern.ha.schalterGruppen.first { kern.panel.offen.insert(g.id) }
             await warte(1.5)
             foto("3_steckdosen")
-            kern.panel.einzelneSteckdosenOffen = true
-            await warte(1)
-            foto("4_steckdosen_einzeln")
+            kern.panel.reiter = .heizung
+            kern.panel.offen.insert("h:raum:wohnzimmer")
+            await warte(1.5)
+            kern.boostStarten(["climate.bad"], grad: 24, minuten: 60)
+            await warte(1.5)
+            print("heizungen:", kern.ha.heizungen.map(\.name), "boosts:", kern.einstellungen.boosts.count)
+            foto("4_heizung")
             kern.panel.reiter = .energie
             await warte(4)
             print("verbrauch heute:", kern.ha.verbrauchHeute.map { "\($0.key.rawValue)=\($0.value.heute)" }, "verlauf:", kern.ha.verlauf.count)
             foto("5_energie")
+            kern.panel.reiter = .personen
+            await warte(5)
+            print("personen:", kern.ha.personen.map { "\($0.name)=\($0.zustand)" })
+            foto("6_personen")
 
-            let e = fensterMit(EinstellungenAnsicht(ha: kern.ha, einstellungen: kern.einstellungen), titel: "HA Leiste – Einstellungen",
-                               groesse: NSSize(width: 520, height: 900))
-            e.setFrameOrigin(NSPoint(x: 520, y: 60))
+            // Widgets wie auf dem Schreibtisch (gleiche Ansichten wie in der Widget-Erweiterung)
+            kern.widgetsAktualisieren(sofort: true)
+            await warte(1)
+            let daten = Schnappschuss.lesen() ?? Schnappschuss()
+            print("schnappschuss:", daten.lampen.count, "lampen,", daten.heizungen.count, "heizungen,", daten.werte.count, "werte")
+            let w = fensterMit(WidgetVorschau(daten: daten).background(Hintergrund()), titel: "Widgets", groesse: NSSize(width: 800, height: 840))
+            w.setFrameOrigin(NSPoint(x: 560, y: 40))
+            await warte(2)
+            speichern(w, "\(ordner)/\(modus)_8_widgets.png")
+            w.orderOut(nil)
+
+            let e = fensterMit(EinstellungenAnsicht(kern: kern), titel: "HA Leiste – Einstellungen", groesse: NSSize(width: 560, height: 900))
+            e.setFrameOrigin(NSPoint(x: 560, y: 40))
             await warte(1.5)
-            speichern(e, "\(ordner)/\(modus)_6_einstellungen.png")
-            await warte(0.5)
+            speichern(e, "\(ordner)/\(modus)_9_einstellungen.png")
+            e.orderOut(nil)
+
+            // Zweite Instanz
+            if kern.einstellungen.instanzen.count > 1 {
+                kern.panel.reiter = .lampen
+                kern.wechseln("i2")
+                await warte(5)
+                print("nach Wechsel:", kern.ha.basis, "lichter:", kern.ha.lichter.count, "name:", kern.aktiv?.anzeigename ?? "")
+                foto("7_zweite_instanz")
+                kern.wechseln("i1")
+                await warte(1)
+            }
             NSApp.terminate(nil)
         }
     }
@@ -87,6 +116,46 @@ enum Vorschau {
         v.cacheDisplay(in: v.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: pfad))
         print("Bild (Ansicht)", pfad)
+    }
+}
+
+/// Alle Widgets in ihren echten Größen (klein 170×170, mittel 364×170, groß 364×382)
+private struct WidgetVorschau: View {
+    let daten: Schnappschuss
+
+    var body: some View {
+        let raum = daten.raeume.first { $0.id == "raum:wohnzimmer" } ?? daten.raeume.first
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 16) {
+                    kachel(170, 170) { LampeKachel(lampe: daten.lampen.first { $0.id == "light.wz_stehlampe" } ?? daten.lampen.first) }
+                    kachel(170, 170) { SteckdoseKachel(dose: daten.steckdosen.first { $0.id == "switch.pc" } ?? daten.steckdosen.first) }
+                    kachel(170, 170) { HeizungKachel(heizung: daten.heizungen.first { $0.id == "raum:wohnzimmer" } ?? daten.heizungen.first) }
+                    kachel(170, 170) { WertKachel(wert: daten.werte.first { $0.id == "sensor.temperatur" } ?? daten.werte.first) }
+                }
+                HStack(alignment: .top, spacing: 16) {
+                    kachel(364, 170) { UebersichtKachel(daten: daten) }
+                    kachel(364, 170) { EnergieKachel(daten: daten) }
+                }
+                HStack(alignment: .top, spacing: 16) {
+                    kachel(364, 170) { RaumKachel(daten: daten, raum: raum) }
+                    kachel(364, 170) { PersonenKachel(daten: daten) }
+                }
+                HStack(alignment: .top, spacing: 16) {
+                    kachel(364, 382) { EnergieKachel(daten: daten, groesse: .gross) }
+                    kachel(364, 382) { RaumKachel(daten: daten, raum: raum, groesse: .gross) }
+                }
+            }
+            .padding(20)
+        }
+    }
+
+    private func kachel<V: View>(_ b: CGFloat, _ h: CGFloat, @ViewBuilder inhalt: () -> V) -> some View {
+        inhalt()
+            .padding(14)
+            .frame(width: b, height: h, alignment: .topLeading)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 3)
     }
 }
 

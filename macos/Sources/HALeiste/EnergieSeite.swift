@@ -7,6 +7,12 @@ import HALogik
 struct EnergieSeite: View {
     let ha: HaVerbindung
     let einstellungen: Einstellungen
+    var instanz: Instanz?
+
+    private var hauptzaehler: String { instanz?.hauptzaehler ?? "" }
+    private var eigeneZaehler: [VerbrauchsArt: String] {
+        [.strom: instanz?.zaehlerStrom ?? "", .wasser: instanz?.zaehlerWasser ?? "", .gas: instanz?.zaehlerGas ?? ""]
+    }
 
     private var aktuell: Double { ha.hauptWatt ?? ha.summeWatt }
     private var verbraucher: [Messung] { Array(ha.leistung.filter { $0.watt > 0 }.prefix(10)) }
@@ -15,7 +21,7 @@ struct EnergieSeite: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 jetzt
-                if !einstellungen.hauptzaehler.isEmpty {
+                if !hauptzaehler.isEmpty {
                     VerlaufDiagramm(punkte: ha.verlauf, aktuell: ha.hauptWatt)
                         .frame(height: 130)
                         .karte()
@@ -51,7 +57,7 @@ struct EnergieSeite: View {
             .padding(.bottom, 12)
         }
         // Verlauf und Tageswerte beim Öffnen und dann alle 5 Minuten
-        .task(id: einstellungen.hauptzaehler) {
+        .task(id: hauptzaehler) {
             while !Task.isCancelled {
                 await ha.verlaufLaden()
                 try? await Task.sleep(for: .seconds(300))
@@ -60,7 +66,7 @@ struct EnergieSeite: View {
         .task(id: verbrauchSchluessel) {
             while !Task.isCancelled {
                 if !einstellungen.verbrauchGewuenscht.isEmpty {
-                    await ha.verbrauchHeuteLaden(eigene: einstellungen.eigeneZaehler, gewuenscht: einstellungen.verbrauchGewuenscht)
+                    await ha.verbrauchHeuteLaden(eigene: eigeneZaehler, gewuenscht: einstellungen.verbrauchGewuenscht)
                 }
                 try? await Task.sleep(for: .seconds(300))
             }
@@ -70,7 +76,7 @@ struct EnergieSeite: View {
     /// Ändert sich bei anderen Einstellungen oder wenn die Live-Verbindung steht → neu laden
     private var verbrauchSchluessel: String {
         let arten = einstellungen.verbrauchGewuenscht.map(\.rawValue).sorted().joined(separator: ",")
-        return [arten, einstellungen.zaehlerStrom, einstellungen.zaehlerWasser, einstellungen.zaehlerGas, ha.live ? "live" : ""].joined(separator: "|")
+        return [arten, eigeneZaehler[.strom] ?? "", eigeneZaehler[.wasser] ?? "", eigeneZaehler[.gas] ?? "", ha.live ? "live" : ""].joined(separator: "|")
     }
 
     // MARK: Jetzt

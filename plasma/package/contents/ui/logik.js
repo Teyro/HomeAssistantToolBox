@@ -5,7 +5,9 @@
 var BEREICHE_TEMPLATE =
     "{%- set ns = namespace(a=[], p=[], g=[]) -%}" +
     "{%- for ar in areas() -%}" +
-    "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch)\\\\.') | list}] -%}" +
+    "{%- set se = area_entities(ar) | select('match', 'sensor\\\\.') | list -%}" +
+    "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate)\\\\.') | list," +
+    " 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list}] -%}" +
     "{%- endfor -%}" +
     "{%- for s in states.switch -%}" +
     "{%- set d = device_id(s.entity_id) -%}" +
@@ -350,11 +352,11 @@ function wattVon(e) {
 /** Ist diese Entität für das Widget überhaupt interessant? (alles andere wird ignoriert) */
 function relevant(id, e, hauptzaehler) {
     var d = domain(id);
-    if (d === "light" || d === "switch" || d === "group") return true;
+    if (d === "light" || d === "switch" || d === "group" || d === "climate" || d === "person" || d === "zone") return true;
     if (d !== "sensor") return false;
     if (id === hauptzaehler) return true;
     var k = e && e.attributes ? e.attributes.device_class : null;
-    return k === "power" || k === "energy" || k === "water" || k === "gas";
+    return k === "power" || k === "energy" || k === "water" || k === "gas" || k === "temperature" || k === "humidity";
 }
 
 /** Kennzahlen aus dem Verlauf: Energie (Fläche unter der Kurve), Spitze, Durchschnitt. */
@@ -429,4 +431,213 @@ function formatMenge(wert, einheit, art) {
     // Gas
     if (e === "kWh" || e === "Wh" || e === "MWh") return formatKwh(e === "Wh" ? wert / 1000 : e === "MWh" ? wert * 1000 : wert);
     return wert.toFixed(wert >= 10 ? 1 : 2).replace(".", ",") + " " + (e || "m³");
+}
+
+
+// ------------------------------------------------------------------ Heizung
+
+/** Räume mit Thermostat oder Temperatursensor; Thermostate ohne Raum als eigene Einträge. */
+function heizungen(zustaende, bereiche, versteckt) {
+    versteckt = versteckt || [];
+    var liste = [], vergeben = {};
+    var sichtbar = function (id) { return zustaende[id] && !ausgeblendet(id, versteckt); };
+    ((bereiche && bereiche.bereiche) || []).forEach(function (b) {
+        var klima = (b.e || []).filter(function (id) { return domain(id) === "climate" && sichtbar(id); });
+        var temp = (b.t || []).filter(sichtbar);
+        var feuchte = (b.h || []).filter(sichtbar);
+        if (!klima.length && !temp.length) return;
+        klima.forEach(function (id) { vergeben[id] = true; });
+        liste.push({ id: "raum:" + b.id, name: b.name || b.id, klima: klima, temperatur: temp[0] || "", feuchte: feuchte[0] || "" });
+    });
+    Object.keys(zustaende).forEach(function (id) {
+        if (domain(id) !== "climate" || vergeben[id] || !sichtbar(id)) return;
+        liste.push({ id: id, name: name(zustaende[id]).replace(/^(heizung|thermostat|heizkörper)\s+/i, ""), klima: [id], temperatur: "", feuchte: "" });
+    });
+    liste.sort(vergleicheName);
+    return liste;
+}
+
+function zahl(x) { var n = parseFloat(x); return isNaN(n) ? null : n; }
+
+/** Zustand eines Thermostats (climate.*) */
+function klimaStatus(e) {
+    if (!e) return null;
+    var a = e.attributes || {};
+    var modi = a.hvac_modes || [];
+    return {
+        modus: e.state,                                   // off / heat / auto / cool …
+        aktion: a.hvac_action || (e.state === "off" ? "off" : ""),
+        heizt: a.hvac_action === "heating" || a.hvac_action === "preheating",
+        ist: zahl(a.current_temperature),
+        ziel: zahl(a.temperature),
+        min: zahl(a.min_temp) !== null ? zahl(a.min_temp) : 7,
+        max: zahl(a.max_temp) !== null ? zahl(a.max_temp) : 30,
+        schritt: zahl(a.target_temp_step) || 0.5,
+        modi: modi,
+        presets: (a.preset_modes || []).filter(function (p) { return p && p !== "none"; }),
+        preset: a.preset_mode && a.preset_mode !== "none" ? a.preset_mode : "",
+        verfuegbar: istVerfuegbar(e)
+    };
+}
+
+/** Zusammenfassung eines Raums: Ist-Temperatur (Raumsensor vor Thermostat), Ziel, heizt? */
+function raumKlima(raum, zustaende) {
+    var thermostat = raum.klima.length ? klimaStatus(zustaende[raum.klima[0]]) : null;
+    var sensor = raum.temperatur ? zahl(zustaende[raum.temperatur] && zustaende[raum.temperatur].state) : null;
+    var feuchte = raum.feuchte ? zahl(zustaende[raum.feuchte] && zustaende[raum.feuchte].state) : null;
+    var heizt = raum.klima.some(function (id) { var k = klimaStatus(zustaende[id]); return k && k.heizt; });
+    return {
+        ist: sensor !== null ? sensor : (thermostat ? thermostat.ist : null),
+        ziel: thermostat && thermostat.modus !== "off" ? thermostat.ziel : null,
+        feuchte: feuchte,
+        heizt: heizt,
+        aus: !!thermostat && raum.klima.every(function (id) { return zustaende[id] && zustaende[id].state === "off"; }),
+        thermostat: thermostat
+    };
+}
+
+function formatTemp(t, stellen) {
+    if (t === null || t === undefined || isNaN(t)) return "–";
+    return t.toFixed(stellen === undefined ? 1 : stellen).replace(".", ",") + " °C";
+}
+
+/** Name eines Heizmodus bzw. Presets auf Deutsch */
+function modusName(m) {
+    return ({ off: "Aus", heat: "Heizen", auto: "Automatik", heat_cool: "Heizen/Kühlen", cool: "Kühlen", dry: "Entfeuchten", fan_only: "Lüfter",
+              eco: "Eco", comfort: "Komfort", boost: "Boost", away: "Abwesend", home: "Zuhause", sleep: "Schlafen", activity: "Aktiv" })[m] || m;
+}
+
+/** Temperatur auf den Schritt des Thermostats runden und begrenzen */
+function rundeZiel(t, k) {
+    var s = (k && k.schritt) || 0.5;
+    var r = Math.round(t / s) * s;
+    return Math.max(k ? k.min : 5, Math.min(k ? k.max : 30, Math.round(r * 10) / 10));
+}
+
+/** Extra heizen: laufende Einträge { id, bis, vorher, modus } (bis = ms) */
+function boostRest(b, jetzt) { return b ? Math.max(0, b.bis - jetzt) : 0; }
+function formatDauer(ms) {
+    var min = Math.ceil(ms / 60000);
+    if (min < 60) return min + " min";
+    var h = Math.floor(min / 60), m = min % 60;
+    return m ? h + " h " + m + " min" : h + " h";
+}
+
+// ------------------------------------------------------------------ Personen
+
+function personen(zustaende, versteckt) {
+    var liste = [];
+    Object.keys(zustaende).forEach(function (id) {
+        if (domain(id) !== "person" || ausgeblendet(id, versteckt || [])) return;
+        var e = zustaende[id], a = e.attributes || {};
+        liste.push({ id: id, name: name(e), zustand: e.state, lat: zahl(a.latitude), lon: zahl(a.longitude),
+                     bild: a.entity_picture || "", seit: Date.parse(e.last_changed || "") || 0 });
+    });
+    liste.sort(vergleicheName);
+    // feste, unterschiedliche Farben in alphabetischer Reihenfolge
+    liste.forEach(function (p, i) { p.farbe = PERSONEN_FARBEN[i % PERSONEN_FARBEN.length]; });
+    return liste;
+}
+var PERSONEN_FARBEN = ["#3daee9", "#f67400", "#9b59b6", "#1cdc9a", "#da4453", "#fdbc4b", "#2980b9", "#27ae60"];
+
+function zonen(zustaende) {
+    return Object.keys(zustaende).filter(function (id) { return domain(id) === "zone"; }).map(function (id) {
+        var e = zustaende[id], a = e.attributes || {};
+        return { id: id, name: name(e), lat: zahl(a.latitude), lon: zahl(a.longitude), radius: zahl(a.radius) || 100, heim: id === "zone.home" };
+    }).filter(function (z) { return z.lat !== null && z.lon !== null; });
+}
+
+function ortText(zustand) {
+    if (zustand === "home") return "Zuhause";
+    if (zustand === "not_home") return "Unterwegs";
+    if (zustand === "unknown" || zustand === "unavailable") return "Unbekannt";
+    return zustand;
+}
+
+/** Entfernung in km (Haversine) */
+function entfernung(lat1, lon1, lat2, lon2) {
+    if ([lat1, lon1, lat2, lon2].some(function (x) { return x === null || x === undefined; })) return null;
+    var r = 6371, g = Math.PI / 180;
+    var dLat = (lat2 - lat1) * g, dLon = (lon2 - lon1) * g;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * g) * Math.cos(lat2 * g) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * r * Math.asin(Math.sqrt(a));
+}
+
+function formatEntfernung(km) {
+    if (km === null || km === undefined) return "";
+    if (km < 1) return Math.round(km * 1000 / 10) * 10 + " m";
+    return (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km)) + " km";
+}
+
+/** "seit 2 h", "seit 15 min" */
+function formatSeit(ms, jetzt) {
+    if (!ms) return "";
+    var min = Math.max(0, Math.round((jetzt - ms) / 60000));
+    if (min < 1) return "gerade eben";
+    if (min < 60) return "seit " + min + " min";
+    var h = Math.floor(min / 60);
+    if (h < 24) return "seit " + h + " h";
+    return "seit " + Math.floor(h / 24) + " d";
+}
+
+/** Kartenkacheln (Web-Mercator): Längen-/Breitengrad → Kachelkoordinaten (Bruchteil) */
+function kachelX(lon, zoom) { return (lon + 180) / 360 * Math.pow(2, zoom); }
+function kachelY(lat, zoom) {
+    var r = lat * Math.PI / 180;
+    return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, zoom);
+}
+
+/** Zoomstufe, bei der alle Punkte in breite×hoehe Pixel (256er-Kacheln) passen */
+function passenderZoom(punkte, breite, hoehe) {
+    if (!punkte.length) return 13;
+    for (var z = 17; z >= 2; z--) {
+        var xs = punkte.map(function (p) { return kachelX(p.lon, z) * 256; });
+        var ys = punkte.map(function (p) { return kachelY(p.lat, z) * 256; });
+        if (Math.max.apply(null, xs) - Math.min.apply(null, xs) < breite * 0.75 && Math.max.apply(null, ys) - Math.min.apply(null, ys) < hoehe * 0.7) return Math.min(z, 16);
+    }
+    return 2;
+}
+
+// ------------------------------------------------------------------ Instanzen
+
+/** Liste der Home-Assistant-Instanzen aus den Einstellungen (JSON); alte Einzel-Einstellung wird übernommen */
+function instanzenLesen(json, alteAdresse, alterToken) {
+    var liste = [];
+    try { liste = JSON.parse(json || "[]") || []; } catch (e) { liste = []; }
+    liste = liste.filter(function (i) { return i && i.adresse; });
+    if (!liste.length && alteAdresse && alterToken)
+        liste = [{ id: "i1", name: "Zuhause", adresse: alteAdresse, token: alterToken, favorit: true }];
+    if (liste.length && !liste.some(function (i) { return i.favorit; })) liste[0].favorit = true;
+    return liste;
+}
+
+function favorit(liste) {
+    for (var i = 0; i < liste.length; i++) if (liste[i].favorit) return liste[i];
+    return liste[0] || null;
+}
+
+function neueInstanzId(liste) {
+    var n = 1;
+    while (liste.some(function (i) { return i.id === "i" + n; })) n++;
+    return "i" + n;
+}
+
+/** Umkehrung: Kachelkoordinaten → Längen-/Breitengrad */
+function lonAusX(x, zoom) { return x / Math.pow(2, zoom) * 360 - 180; }
+function latAusY(y, zoom) {
+    var n = Math.PI * (1 - 2 * y / Math.pow(2, zoom));
+    return Math.atan((Math.exp(n) - Math.exp(-n)) / 2) * 180 / Math.PI;
+}
+
+/** Gleichbleibende Farbe je Person (aus dem Namen) */
+function personFarbe(name) {
+    var farben = ["#3daee9", "#f67400", "#1cdc9a", "#da4453", "#9b59b6", "#fdbc4b", "#2980b9", "#27ae60"];
+    var h = 0;
+    for (var i = 0; i < (name || "").length; i++) h = (h * 31 + name.charCodeAt(i)) % 997;
+    return farben[h % farben.length];
+}
+
+function initialen(name) {
+    var teile = (name || "?").trim().split(/\s+/);
+    return ((teile[0] || "?")[0] + (teile.length > 1 ? teile[teile.length - 1][0] : "")).toUpperCase();
 }
