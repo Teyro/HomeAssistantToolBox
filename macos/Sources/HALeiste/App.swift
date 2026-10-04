@@ -21,6 +21,12 @@ struct HALeisteApp: App {
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
+
+        Window("HA Leiste – Was ist neu?", id: "neuigkeiten") {
+            NeuigkeitenAnsicht(akt: kern.aktualisierer)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
 }
 
@@ -34,6 +40,7 @@ final class Kern {
     let einstellungen: Einstellungen
     let ha = HaVerbindung()
     let panel = PanelZustand()
+    let aktualisierer = Aktualisierer()
     /// Gewählte Instanz (bis zum Neustart; danach wieder der Favorit)
     var gewaehlteId = "" { didSet { if gewaehlteId != oldValue { uebernehmen(sofort: true) } } }
     @ObservationIgnored private var verzoegert: Task<Void, Never>?
@@ -67,6 +74,13 @@ final class Kern {
         uebernehmen(sofort: true)
         befehleEmpfangen()
         Task { await self.dauerlauf() }
+        if let u = ProcessInfo.processInfo.environment["HA_UPDATE_URL"], let url = URL(string: u) { aktualisierer.quelle = url }
+        if einstellungen.updatesSuchen && !vorschau {
+            Task {
+                try? await Task.sleep(for: .seconds(20))
+                await self.aktualisierer.automatischPruefen()
+            }
+        }
     }
 
     func wechseln(_ id: String) { gewaehlteId = id }
@@ -194,10 +208,13 @@ struct PanelMitFenster: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        PanelAnsicht(kern: kern) {
+        PanelAnsicht(kern: kern, einrichten: {
             openWindow(id: "einstellungen")
             NSApp.activate(ignoringOtherApps: true)
-        }
+        }, neuigkeiten: {
+            openWindow(id: "neuigkeiten")
+            NSApp.activate(ignoringOtherApps: true)
+        })
     }
 }
 

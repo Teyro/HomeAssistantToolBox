@@ -42,10 +42,10 @@ enum Vorschau {
             await warte(1.5)
             foto("3_steckdosen")
             kern.panel.reiter = .heizung
-            kern.panel.offen.insert("h:raum:wohnzimmer")
+            kern.panel.offen.insert("h:raum:bad")
             await warte(1.5)
             kern.boostStarten(["climate.bad"], grad: 24, minuten: 60)
-            await warte(1.5)
+            await warte(3)
             print("heizungen:", kern.ha.heizungen.map(\.name), "boosts:", kern.einstellungen.boosts.count)
             foto("4_heizung")
             kern.panel.reiter = .energie
@@ -73,6 +73,18 @@ enum Vorschau {
             await warte(1.5)
             speichern(e, "\(ordner)/\(modus)_9_einstellungen.png")
             e.orderOut(nil)
+
+            // Update-Hinweis und "Was ist neu?"
+            await kern.aktualisierer.pruefen()
+            print("update:", kern.aktualisierer.neueVersion ?? "-", kern.aktualisierer.downloadURL?.absoluteString ?? "-")
+            kern.panel.reiter = .lampen
+            await warte(1.5)
+            foto("10_update_hinweis")
+            let n = fensterMit(NeuigkeitenAnsicht(akt: kern.aktualisierer), titel: "HA Leiste – Was ist neu?", groesse: NSSize(width: 520, height: 520))
+            n.setFrameOrigin(NSPoint(x: 560, y: 120))
+            await warte(1.5)
+            speichern(n, "\(ordner)/\(modus)_11_neuigkeiten.png")
+            n.orderOut(nil)
 
             // Zweite Instanz
             if kern.einstellungen.instanzen.count > 1 {

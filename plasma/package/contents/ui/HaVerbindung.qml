@@ -65,6 +65,7 @@ Item {
     readonly property string basis: adresse.trim().replace(/\/+$/, "")
 
     signal verlaufGeladen(string entityId, var punkte)
+    signal klimaVerlaufGeladen(string raumId, var daten)
 
     // "Verbrauch heute": { strom|wasser|gas: { heute, gestern, einheit, zaehler } }
     property var verbrauchHeute: ({})
@@ -327,6 +328,22 @@ Item {
     function setzePreset(entityId, preset) {
         vorabKlima(entityId, { preset_mode: preset });
         dienst("climate", "set_preset_mode", { entity_id: entityId, preset_mode: preset });
+    }
+
+    /**
+     * 24-Stunden-Verlauf eines Raums: Thermostat (mit Attributen: Ist, Ziel, heizt?) und
+     * Raumsensor. Ohne minimal_response, weil die Temperaturen in den Attributen stehen.
+     */
+    function klimaVerlaufLaden(raum) {
+        const klimaId = raum.klima[0] || "";
+        const ids = [klimaId, raum.temperatur].filter(x => x);
+        if (!ids.length) return;
+        const start = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+        anfrage("GET", "/api/history/period/" + encodeURIComponent(start) + "?filter_entity_id=" + encodeURIComponent(ids.join(","))
+                + "&significant_changes_only=0", null, function (antwort, meldung) {
+            if (meldung) return;
+            klimaVerlaufGeladen(raum.id, Logik.klimaVerlauf(antwort, klimaId, raum.temperatur, Date.now()));
+        });
     }
 
     /** Name der Installation holen (für die Instanzliste) */

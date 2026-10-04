@@ -83,6 +83,11 @@ thermostat('climate.schlafzimmer', 'Heizung Schlafzimmer', 18.2, 18, 'auto');
 thermostat('climate.bad', 'Heizung Bad', 21.9, 23, 'heat');
 thermostat('climate.kinderzimmer', 'Heizung Kinderzimmer', 20.1, 20, 'heat', { preset_mode: 'comfort' });
 thermostat('climate.buero', 'Heizung Büro', 17.4, 19, 'off');
+// Fensterkontakte
+function fenster(id, name, offen) { z[id] = { entity_id: id, state: offen ? 'on' : 'off', last_changed: jetzt(), attributes: { friendly_name: name, device_class: 'window' } }; }
+fenster('binary_sensor.wz_fenster', 'Fenster Wohnzimmer', false);
+fenster('binary_sensor.bad_fenster', 'Fenster Bad', true);
+fenster('binary_sensor.schlafzimmer_fenster', 'Fenster Schlafzimmer', false);
 // Personen und Zonen (Hamburg)
 const HEIM = [53.5656, 10.1172];
 z['zone.home'] = { entity_id: 'zone.home', state: '2', last_changed: jetzt(), attributes: { friendly_name: 'Zuhause', latitude: HEIM[0], longitude: HEIM[1], radius: 120, icon: 'mdi:home' } };
@@ -98,10 +103,10 @@ if (NAME !== 'Zuhause') {
   z['light.kueche_decke'].attributes.friendly_name = 'Ferienhaus Küche';
 }
 const BEREICHE = [
-  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte']],
+  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte'], ['binary_sensor.wz_fenster']],
   ['kueche', 'Küche', ['light.kueche_decke', 'light.kueche_spots', 'switch.kaffeemaschine'], ['sensor.kueche_temperatur']],
-  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch', 'climate.schlafzimmer']],
-  ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter', 'climate.bad'], [], ['sensor.bad_feuchte']],
+  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch', 'climate.schlafzimmer'], [], [], ['binary_sensor.schlafzimmer_fenster']],
+  ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter', 'climate.bad'], [], ['sensor.bad_feuchte'], ['binary_sensor.bad_fenster']],
   ['kinderzimmer', 'Kinderzimmer', ['light.kinderzimmer', 'climate.kinderzimmer']],
   ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc', 'switch.leiste_dose_1', 'switch.leiste_dose_2', 'switch.leiste_dose_3', 'climate.buero']],
   ['flur', 'Flur', ['light.flur']],
@@ -125,8 +130,29 @@ function zaehlerVerlauf(id) {
   }
   return punkte;
 }
+// 24 h Heizungsverlauf: Ziel tagsüber 21,5 °C, nachts 18 °C, Ist-Temperatur läuft hinterher
+function klimaVerlauf(id) {
+  const liste = [];
+  const ende = Date.now();
+  let ist = 19;
+  const basisZiel = (z[id] && z[id].attributes.temperature) || 21;
+  for (let t = ende - 24 * 3600e3, i = 0; t < ende; t += 15 * 60e3, i++) {
+    const h = new Date(t).getHours();
+    const ziel = h >= 22 || h < 6 ? 18 : basisZiel;
+    const heizt = ist < ziel - 0.2;
+    ist = Math.round((ist + (heizt ? 0.25 : -0.12) + (Math.random() - 0.5) * 0.05) * 10) / 10;
+    liste.push({ entity_id: id, state: 'heat', last_changed: new Date(t).toISOString(),
+                 attributes: { ...(z[id] ? z[id].attributes : {}), current_temperature: ist, temperature: ziel, hvac_action: heizt ? 'heating' : 'idle' } });
+  }
+  return liste;
+}
+function tempVerlauf(id) {
+  return klimaVerlauf('climate.wohnzimmer').map((p, i) => ({ ...(i === 0 ? { entity_id: id } : {}), state: String(Math.round((p.attributes.current_temperature + 0.3) * 10) / 10), last_changed: p.last_changed }));
+}
 function verlauf(id) {
   const ids = (id || '').split(',');
+  if (ids.some((x) => x.startsWith('climate.') || (z[x] && z[x].attributes.device_class === 'temperature')))
+    return ids.map((x) => x.startsWith('climate.') ? klimaVerlauf(x) : tempVerlauf(x));
   if (ids.some((x) => ZUWACHS[x])) return ids.filter((x) => ZUWACHS[x]).map(zaehlerVerlauf);
   const punkte = [];
   const ende = Date.now();
@@ -190,6 +216,17 @@ const server = http.createServer((req, res) => {
   req.on('data', (c) => (body += c));
   req.on('end', () => {
     log(`${req.method} ${req.url} ${body.slice(0, 200)}`);
+    // Nachgebaute GitHub-Releases für den Updater-Test (ohne Anmeldung)
+    if (req.url.startsWith('/github/releases')) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      const basis = 'https://github.com/Teyro/homeassistant-leiste/releases/download/';
+      return res.end(JSON.stringify([
+        { tag_name: 'v2.3.0', name: '2.3.0 – Testversion', draft: false, prerelease: false, html_url: 'https://github.com/Teyro/homeassistant-leiste/releases/tag/v2.3.0',
+          body: '**Neu**\n\n- Testfunktion A für die Heizung\n- Testfunktion B: schönere Karte\n\n**Behoben**\n\n- Ein Fehler beim Wechseln der Instanz',
+          assets: [{ name: 'home-assistant.plasmoid', browser_download_url: basis + 'v2.3.0/home-assistant.plasmoid' }, { name: 'HA-Leiste-2.3.0.zip', browser_download_url: basis + 'v2.3.0/HA-Leiste-2.3.0.zip' }] },
+        { tag_name: 'v2.2.0', name: '2.2.0', draft: false, prerelease: false, body: 'Updater, Fenster offen, Verlauf der Heizung', assets: [] },
+        { tag_name: 'v2.1.0', name: '2.1.0', draft: false, prerelease: false, body: 'Instanzen, Heizung, Personen, Widgets', assets: [] }]));
+    }
     if (req.headers.authorization !== 'Bearer ' + TOKEN) { res.writeHead(401); res.end('401: Unauthorized'); return; }
     const url = new URL(req.url, 'http://x');
     const json = (o) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -199,7 +236,7 @@ const server = http.createServer((req, res) => {
       const t = JSON.parse(body).template;
       if (!t.includes('areas()')) { res.writeHead(400); res.end('?'); return; }
       res.writeHead(200, { 'Content-Type': 'text/plain' });
-      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e, t = [], h = []]) => ({ id, name, e, t, h })), leistung: LEISTUNG, geraete: GERAETE }));
+      return res.end(JSON.stringify({ bereiche: BEREICHE.map(([id, name, e, t = [], h = [], f = []]) => ({ id, name, e, t, h, f })), leistung: LEISTUNG, geraete: GERAETE }));
     }
     if (url.pathname.startsWith('/api/history/period/')) return json(verlauf(url.searchParams.get('filter_entity_id')));
     const m = url.pathname.match(/^\/api\/services\/(\w+)\/(\w+)$/);

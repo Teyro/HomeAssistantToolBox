@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property string cfg_instanzen
     property alias cfg_zeigeHeizung: zeigeHeizung.checked
     property alias cfg_zeigePersonen: zeigePersonen.checked
+    property alias cfg_updatesSuchen: updatesSuchen.checked
     property alias cfg_abfrageSekunden: abfrage.value
     property alias cfg_zeigeGruppen: zeigeGruppen.checked
     property alias cfg_zeigeRaeume: zeigeRaeume.checked
@@ -388,6 +389,11 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Ausblenden:")
             Layout.minimumWidth: Kirigami.Units.gridUnit * 18
             placeholderText: "light.flur_nachtlicht, switch.*_kindersicherung"
+        }
+        QQC2.CheckBox {
+            id: updatesSuchen
+            Kirigami.FormData.label: i18n("Updates:")
+            text: i18n("Automatisch nach neuen Versionen suchen (GitHub)")
         }
         QQC2.SpinBox {
             id: abfrage

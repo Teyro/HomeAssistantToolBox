@@ -6,8 +6,10 @@ var BEREICHE_TEMPLATE =
     "{%- set ns = namespace(a=[], p=[], g=[]) -%}" +
     "{%- for ar in areas() -%}" +
     "{%- set se = area_entities(ar) | select('match', 'sensor\\\\.') | list -%}" +
+    "{%- set be = area_entities(ar) | select('match', 'binary_sensor\\\\.') | list -%}" +
     "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate)\\\\.') | list," +
-    " 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list}] -%}" +
+    " 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list," +
+    " 'f': (be | select('is_state_attr', 'device_class', 'window') | list) + (be | select('is_state_attr', 'device_class', 'opening') | list)}] -%}" +
     "{%- endfor -%}" +
     "{%- for s in states.switch -%}" +
     "{%- set d = device_id(s.entity_id) -%}" +
@@ -353,9 +355,10 @@ function wattVon(e) {
 function relevant(id, e, hauptzaehler) {
     var d = domain(id);
     if (d === "light" || d === "switch" || d === "group" || d === "climate" || d === "person" || d === "zone") return true;
+    var k = e && e.attributes ? e.attributes.device_class : null;
+    if (d === "binary_sensor") return k === "window" || k === "opening";
     if (d !== "sensor") return false;
     if (id === hauptzaehler) return true;
-    var k = e && e.attributes ? e.attributes.device_class : null;
     return k === "power" || k === "energy" || k === "water" || k === "gas" || k === "temperature" || k === "humidity";
 }
 
@@ -445,13 +448,14 @@ function heizungen(zustaende, bereiche, versteckt) {
         var klima = (b.e || []).filter(function (id) { return domain(id) === "climate" && sichtbar(id); });
         var temp = (b.t || []).filter(sichtbar);
         var feuchte = (b.h || []).filter(sichtbar);
+        var fenster = (b.f || []).filter(sichtbar);
         if (!klima.length && !temp.length) return;
         klima.forEach(function (id) { vergeben[id] = true; });
-        liste.push({ id: "raum:" + b.id, name: b.name || b.id, klima: klima, temperatur: temp[0] || "", feuchte: feuchte[0] || "" });
+        liste.push({ id: "raum:" + b.id, name: b.name || b.id, klima: klima, temperatur: temp[0] || "", feuchte: feuchte[0] || "", fenster: fenster });
     });
     Object.keys(zustaende).forEach(function (id) {
         if (domain(id) !== "climate" || vergeben[id] || !sichtbar(id)) return;
-        liste.push({ id: id, name: name(zustaende[id]).replace(/^(heizung|thermostat|heizkörper)\s+/i, ""), klima: [id], temperatur: "", feuchte: "" });
+        liste.push({ id: id, name: name(zustaende[id]).replace(/^(heizung|thermostat|heizkörper)\s+/i, ""), klima: [id], temperatur: "", feuchte: "", fenster: [] });
     });
     liste.sort(vergleicheName);
     return liste;
@@ -486,12 +490,20 @@ function raumKlima(raum, zustaende) {
     var sensor = raum.temperatur ? zahl(zustaende[raum.temperatur] && zustaende[raum.temperatur].state) : null;
     var feuchte = raum.feuchte ? zahl(zustaende[raum.feuchte] && zustaende[raum.feuchte].state) : null;
     var heizt = raum.klima.some(function (id) { var k = klimaStatus(zustaende[id]); return k && k.heizt; });
+    // Fenster: Fensterkontakte im Raum oder das Thermostat selbst (Attribut window_open bzw. window_state)
+    var fensterIds = (raum.fenster || []).filter(function (id) { return zustaende[id]; });
+    var thermostatFenster = raum.klima.map(function (id) { var a = (zustaende[id] && zustaende[id].attributes) || {}; return a.window_open !== undefined ? !!a.window_open : (a.window_state !== undefined ? a.window_state === "open" : null); })
+        .filter(function (x) { return x !== null; });
+    var fensterBekannt = fensterIds.length > 0 || thermostatFenster.length > 0;
+    var fensterOffen = fensterIds.some(function (id) { return zustaende[id].state === "on"; }) || thermostatFenster.some(function (x) { return x; });
     return {
         ist: sensor !== null ? sensor : (thermostat ? thermostat.ist : null),
         ziel: thermostat && thermostat.modus !== "off" ? thermostat.ziel : null,
         feuchte: feuchte,
         heizt: heizt,
         aus: !!thermostat && raum.klima.every(function (id) { return zustaende[id] && zustaende[id].state === "off"; }),
+        fensterBekannt: fensterBekannt,
+        fensterOffen: fensterOffen,
         thermostat: thermostat
     };
 }
@@ -640,4 +652,63 @@ function personFarbe(name) {
 function initialen(name) {
     var teile = (name || "?").trim().split(/\s+/);
     return ((teile[0] || "?")[0] + (teile.length > 1 ? teile[teile.length - 1][0] : "")).toUpperCase();
+}
+
+
+/**
+ * Heizungsverlauf aus der History-API: Ist-Temperatur (Raumsensor, sonst Thermostat),
+ * Zieltemperatur und Zeiten, in denen geheizt wurde.
+ * antwort: Liste von Listen (je Entität), ende: jetzt (ms)
+ */
+function klimaVerlauf(antwort, klimaId, sensorId, ende) {
+    var jeEntitaet = {};
+    (antwort || []).forEach(function (l) { if (l && l.length && l[0].entity_id) jeEntitaet[l[0].entity_id] = l; });
+    var klima = jeEntitaet[klimaId] || [], sensor = sensorId ? (jeEntitaet[sensorId] || []) : [];
+    var ist = [], ziel = [], heizen = [], von = null;
+    klima.forEach(function (p) {
+        var t = Date.parse(p.last_changed || p.last_updated || "");
+        if (isNaN(t)) return;
+        var a = p.attributes || {};
+        var zt = p.state === "off" ? null : zahl(a.temperature);
+        if (zt !== null) ziel.push({ t: t, w: zt });
+        if (!sensor.length && zahl(a.current_temperature) !== null) ist.push({ t: t, w: zahl(a.current_temperature) });
+        var h = a.hvac_action === "heating" || a.hvac_action === "preheating";
+        if (h && von === null) von = t;
+        if (!h && von !== null) { heizen.push({ von: von, bis: t }); von = null; }
+    });
+    if (von !== null) heizen.push({ von: von, bis: ende });
+    sensor.forEach(function (p) {
+        var t = Date.parse(p.last_changed || ""), w = zahl(p.state);
+        if (!isNaN(t) && w !== null) ist.push({ t: t, w: w });
+    });
+    return { ist: ist, ziel: ziel, heizen: heizen };
+}
+
+// ------------------------------------------------------------------ Updates
+
+/** Versionen vergleichen ("2.10.1" > "2.9") */
+function versionNeuer(a, b) {
+    var x = String(a).replace(/^v/, "").split(/[.-]/).map(function (n) { return parseInt(n, 10) || 0; });
+    var y = String(b).replace(/^v/, "").split(/[.-]/).map(function (n) { return parseInt(n, 10) || 0; });
+    for (var i = 0; i < Math.max(x.length, y.length); i++) {
+        if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+    }
+    return false;
+}
+
+/** Aus der Release-Liste von GitHub: alle neueren Versionen mit Änderungen und die Download-Adresse */
+function updateAusReleases(releases, aktuell, dateiname) {
+    var neuer = (releases || []).filter(function (r) { return r && !r.draft && !r.prerelease && versionNeuer(r.tag_name, aktuell); });
+    neuer.sort(function (a, b) { return versionNeuer(a.tag_name, b.tag_name) ? -1 : 1; });
+    if (!neuer.length) return null;
+    var asset = (neuer[0].assets || []).filter(function (a) { return a.name === dateiname || (dateiname.indexOf("*") >= 0 && new RegExp("^" + dateiname.replace(/[.]/g, "\\.").replace("*", ".*") + "$").test(a.name)); })[0];
+    var url = asset ? asset.browser_download_url : "";
+    // nur Downloads aus diesem Projekt auf GitHub
+    if (url && url.indexOf("https://github.com/Teyro/homeassistant-leiste/releases/download/") !== 0) url = "";
+    return {
+        version: neuer[0].tag_name.replace(/^v/, ""),
+        url: url,
+        seite: neuer[0].html_url || "https://github.com/Teyro/homeassistant-leiste/releases",
+        notizen: neuer.map(function (r) { return { version: r.tag_name.replace(/^v/, ""), titel: r.name || r.tag_name, text: r.body || "" }; })
+    };
 }

@@ -29,6 +29,7 @@ final class Einstellungen {
     var zeigeGasHeute: Bool { didSet { d.set(zeigeGasHeute, forKey: "zeigeGasHeute") } }
     var zeigeHeizung: Bool { didSet { d.set(zeigeHeizung, forKey: "zeigeHeizung") } }
     var zeigePersonen: Bool { didSet { d.set(zeigePersonen, forKey: "zeigePersonen") } }
+    var updatesSuchen: Bool { didSet { d.set(updatesSuchen, forKey: "updatesSuchen") } }
     /// Laufendes "Extra heizen"
     var boosts: [Boost] { didSet { if let j = try? JSONEncoder().encode(boosts) { d.set(j, forKey: "boosts") } } }
 
@@ -37,7 +38,7 @@ final class Einstellungen {
         d.register(defaults: [
             "abfrageSekunden": 10, "zeigeGruppen": true, "zeigeRaeume": true, "alteGruppen": true, "nurSteckdosen": false,
             "zeigeAnzahl": true, "zeigeStromHeute": true, "zeigeWasserHeute": true, "zeigeGasHeute": true,
-            "zeigeHeizung": true, "zeigePersonen": true,
+            "zeigeHeizung": true, "zeigePersonen": true, "updatesSuchen": true,
         ])
         abfrageSekunden = d.integer(forKey: "abfrageSekunden")
         zeigeGruppen = d.bool(forKey: "zeigeGruppen")
@@ -51,6 +52,7 @@ final class Einstellungen {
         zeigeGasHeute = d.bool(forKey: "zeigeGasHeute")
         zeigeHeizung = d.bool(forKey: "zeigeHeizung")
         zeigePersonen = d.bool(forKey: "zeigePersonen")
+        updatesSuchen = d.bool(forKey: "updatesSuchen")
         boosts = (d.data(forKey: "boosts")).flatMap { try? JSONDecoder().decode([Boost].self, from: $0) } ?? []
         if vorschau {
             instanzen = []

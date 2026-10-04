@@ -42,6 +42,7 @@ final class PanelZustand {
 struct PanelAnsicht: View {
     let kern: Kern
     var einrichten: () -> Void
+    var neuigkeiten: () -> Void = {}
     private var ha: HaVerbindung { kern.ha }
     private var einstellungen: Einstellungen { kern.einstellungen }
     private var zustand: PanelZustand { kern.panel }
@@ -62,6 +63,23 @@ struct PanelAnsicht: View {
     var body: some View {
         VStack(spacing: 0) {
             kopf
+            // Update verfügbar
+            if let v = kern.aktualisierer.neueVersion {
+                Button(action: neuigkeiten) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.down.circle.fill").foregroundStyle(Color.accentColor)
+                        Text("Version \(v) ist verfügbar").font(.callout.weight(.medium))
+                        Spacer()
+                        Text("Was ist neu?").font(.callout).foregroundStyle(Color.accentColor)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .karte(farbe: Color.accentColor.opacity(0.18), eckradius: 12)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
             if !ha.meldung.isEmpty {
                 Label(ha.meldung, systemImage: "exclamationmark.triangle.fill")
                     .font(.callout)
@@ -142,6 +160,15 @@ struct PanelAnsicht: View {
                             .disabled(!ha.eingerichtet)
                         Button("Alle Lampen aus") { ha.alleLichterAus() }
                             .disabled(ha.lichterAn == 0)
+                        Divider()
+                        Button(kern.aktualisierer.neueVersion.map { "Update auf \($0) …" } ?? "Was ist neu?") {
+                            if kern.aktualisierer.notizen.isEmpty { Task { await kern.aktualisierer.pruefen() } }
+                            neuigkeiten()
+                        }
+                        Button("Nach Updates suchen") {
+                            Task { await kern.aktualisierer.pruefen() }
+                            neuigkeiten()
+                        }
                         Divider()
                         Button("Einstellungen …", action: einrichten)
                             .keyboardShortcut(",")

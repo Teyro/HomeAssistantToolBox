@@ -12,6 +12,7 @@ public struct Schnappschuss: Codable, Equatable, Sendable {
     public struct Heizung: Codable, Equatable, Sendable, Identifiable {
         public let id: String, name: String, klima: [String], ist: Double?, ziel: Double?, feuchte: Double?
         public let heizt: Bool, aus: Bool, min: Double, max: Double, schritt: Double
+        public var fensterOffen: Bool = false
     }
     public struct Raum: Codable, Equatable, Sendable, Identifiable {
         public let id: String, name: String, lampen: [String], steckdosen: [String], heizung: String?
@@ -115,7 +116,8 @@ public extension Logik {
         s.heizungen = heizungen.map { h in
             let k = raumKlima(h, z)
             return .init(id: h.id, name: h.name, klima: h.klima, ist: k.ist, ziel: k.ziel, feuchte: k.feuchte, heizt: k.heizt, aus: k.aus,
-                         min: k.thermostat?.min ?? 5, max: k.thermostat?.max ?? 30, schritt: k.thermostat?.schritt ?? 0.5)
+                         min: k.thermostat?.min ?? 5, max: k.thermostat?.max ?? 30, schritt: k.thermostat?.schritt ?? 0.5,
+                         fensterOffen: k.fensterOffen)
         }
         var raumIds = Set<String>()
         s.raeume = anzeige.raeume.map { r in

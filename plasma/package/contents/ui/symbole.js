@@ -18,7 +18,9 @@ var PFADE = {
     "thermometer": "<path d=\"M9 4.6a2 2 0 0 1 4 0v8.1a4 4 0 1 1-4 0z\"/><path d=\"M11 9.2v6\"/><circle cx=\"11\" cy=\"16\" r=\"1.5\" fill=\"currentColor\"/><path d=\"M15.5 6h2M15.5 9h2\"/>",
     "heizung": "<rect x=\"3\" y=\"6\" width=\"16\" height=\"11\" rx=\"2\"/><path d=\"M7 6v11M11 6v11M15 6v11\"/><path d=\"M5 19.5h1.5M15.5 19.5H17\"/>",
     "person": "<circle cx=\"11\" cy=\"7.5\" r=\"3.5\"/><path d=\"M4.5 19c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5\"/>",
-    "karte": "<path d=\"M3 6.5 8 4.5l6 2 5-2v11l-5 2-6-2-5 2z\"/><path d=\"M8 4.5v11M14 6.5v11\"/>"
+    "karte": "<path d=\"M3 6.5 8 4.5l6 2 5-2v11l-5 2-6-2-5 2z\"/><path d=\"M8 4.5v11M14 6.5v11\"/>",
+    "fenster": "<rect x=\"5\" y=\"3\" width=\"12\" height=\"16\" rx=\"1.5\"/><path d=\"M11 3v16M5 11h12\"/>",
+    "fenster-offen": "<rect x=\"5\" y=\"3\" width=\"12\" height=\"16\" rx=\"1.5\"/><path d=\"M5 3 12 5.5v15L5 19z\" fill=\"currentColor\" fill-opacity=\".25\"/><path d=\"M9.6 12.6h.8\"/>"
 };
 
 function farbeText(c) {

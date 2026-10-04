@@ -9,8 +9,9 @@ public struct HeizRaum: Equatable, Identifiable, Sendable, Codable {
     public let klima: [String]
     public let temperatur: String
     public let feuchte: String
-    public init(id: String, name: String, klima: [String], temperatur: String = "", feuchte: String = "") {
-        self.id = id; self.name = name; self.klima = klima; self.temperatur = temperatur; self.feuchte = feuchte
+    public let fenster: [String]
+    public init(id: String, name: String, klima: [String], temperatur: String = "", feuchte: String = "", fenster: [String] = []) {
+        self.id = id; self.name = name; self.klima = klima; self.temperatur = temperatur; self.feuchte = feuchte; self.fenster = fenster
     }
 }
 
@@ -37,7 +38,23 @@ public struct RaumKlima: Equatable, Sendable {
     public let feuchte: Double?
     public let heizt: Bool
     public let aus: Bool
+    /// Gibt es Fensterkontakte (oder meldet das Thermostat das Fenster)?
+    public let fensterBekannt: Bool
+    public let fensterOffen: Bool
     public let thermostat: KlimaStatus?
+}
+
+/// 24-Stunden-Verlauf eines Raums
+public struct KlimaVerlauf: Equatable, Sendable {
+    public struct Phase: Equatable, Sendable, Identifiable {
+        public let von: Date
+        public let bis: Date
+        public var id: Date { von }
+    }
+    public var ist: [Punkt] = []
+    public var ziel: [Punkt] = []
+    public var heizen: [Phase] = []
+    public init() {}
 }
 
 public struct Person: Equatable, Identifiable, Sendable, Codable {
@@ -104,10 +121,11 @@ public extension Logik {
             let klima = b.entitaeten.filter { domain($0) == "climate" && sichtbar($0) }
             let temp = b.temperatur.filter(sichtbar)
             let feuchte = b.feuchte.filter(sichtbar)
+            let fenster = b.fenster.filter(sichtbar)
             if klima.isEmpty && temp.isEmpty { continue }
             klima.forEach { vergeben.insert($0) }
             liste.append(HeizRaum(id: "raum:" + b.id, name: b.name.isEmpty ? b.id : b.name, klima: klima,
-                                  temperatur: temp.first ?? "", feuchte: feuchte.first ?? ""))
+                                  temperatur: temp.first ?? "", feuchte: feuchte.first ?? "", fenster: fenster))
         }
         for id in z.keys.sorted() where domain(id) == "climate" && !vergeben.contains(id) && sichtbar(id) {
             let n = z[id]!.name.replacingOccurrences(of: #"^(heizung|thermostat|heizkörper)\s+"#, with: "", options: [.regularExpression, .caseInsensitive])
@@ -136,8 +154,18 @@ public extension Logik {
         let feuchte = r.feuchte.isEmpty ? nil : z[r.feuchte]?.wert
         let heizt = r.klima.contains { klimaStatus(z[$0])?.heizt == true }
         let aus = t != nil && r.klima.allSatisfy { z[$0]?.state == "off" }
+        // Fenster: Kontakte im Raum oder das Thermostat selbst (window_open bzw. window_state)
+        let kontakte = r.fenster.filter { z[$0] != nil }
+        let vomThermostat: [Bool] = r.klima.compactMap { id in
+            guard let a = z[id]?.attribute else { return nil }
+            if let o = a["window_open"]?.bool { return o }
+            if let s = a["window_state"]?.text { return s == "open" }
+            return nil
+        }
+        let offen = kontakte.contains { z[$0]?.state == "on" } || vomThermostat.contains(true)
         return RaumKlima(ist: sensor ?? t?.ist, ziel: (t != nil && t!.modus != "off") ? t!.ziel : nil,
-                         feuchte: feuchte, heizt: heizt, aus: aus, thermostat: t)
+                         feuchte: feuchte, heizt: heizt, aus: aus, fensterBekannt: !kontakte.isEmpty || !vomThermostat.isEmpty,
+                         fensterOffen: offen, thermostat: t)
     }
 
     static func formatTemp(_ t: Double?, stellen: Int = 1) -> String {
@@ -163,6 +191,46 @@ public extension Logik {
         if min < 60 { return "\(min) min" }
         let h = min / 60, m = min % 60
         return m > 0 ? "\(h) h \(m) min" : "\(h) h"
+    }
+
+    /// Heizungsverlauf aus der History-API (je Entität eine Liste, Thermostat mit Attributen)
+    static func klimaVerlauf(_ antwort: JSON?, klimaId: String, sensorId: String, ende: Date = Date()) -> KlimaVerlauf {
+        var jeEntitaet: [String: [JSON]] = [:]
+        for l in antwort?.liste ?? [] {
+            if let l = l.liste, let id = l.first?["entity_id"]?.text { jeEntitaet[id] = l }
+        }
+        var v = KlimaVerlauf()
+        let sensor = sensorId.isEmpty ? [] : (jeEntitaet[sensorId] ?? [])
+        var von: Date?
+        for p in jeEntitaet[klimaId] ?? [] {
+            guard let t = zeitVon(p) else { continue }
+            let a = p["attributes"]
+            if p["state"]?.text != "off", let z = a?["temperature"]?.zahl { v.ziel.append(Punkt(t: t, w: z)) }
+            if sensor.isEmpty, let i = a?["current_temperature"]?.zahl { v.ist.append(Punkt(t: t, w: i)) }
+            let h = ["heating", "preheating"].contains(a?["hvac_action"]?.text ?? "")
+            if h && von == nil { von = t }
+            if !h, let s = von { v.heizen.append(.init(von: s, bis: t)); von = nil }
+        }
+        if let s = von { v.heizen.append(.init(von: s, bis: ende)) }
+        for p in sensor {
+            if let t = zeitVon(p), let s = p["state"]?.text, let w = Double(s) { v.ist.append(Punkt(t: t, w: w)) }
+        }
+        return v
+    }
+
+    // MARK: Updates
+
+    /// Versionen vergleichen ("2.10.1" > "2.9")
+    static func versionNeuer(_ a: String, _ b: String) -> Bool {
+        func teile(_ s: String) -> [Int] {
+            s.trimmingCharacters(in: CharacterSet(charactersIn: "v")).split(whereSeparator: { $0 == "." || $0 == "-" }).map { Int($0) ?? 0 }
+        }
+        let x = teile(a), y = teile(b)
+        for i in 0..<Swift.max(x.count, y.count) {
+            let p = i < x.count ? x[i] : 0, q = i < y.count ? y[i] : 0
+            if p != q { return p > q }
+        }
+        return false
     }
 
     // MARK: Personen

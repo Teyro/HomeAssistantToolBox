@@ -29,7 +29,7 @@ Item {
     Layout.minimumWidth: Kirigami.Units.gridUnit * (klein ? 9 : 14)
     Layout.minimumHeight: Kirigami.Units.gridUnit * (klein ? 4 : 8)
     Layout.preferredWidth: Kirigami.Units.gridUnit * (klein ? 13 : gross ? 22 : art === "heizung" ? 21 : 17)
-    Layout.preferredHeight: Kirigami.Units.gridUnit * (klein ? 6 : gross ? 24 : art === "uebersicht" ? 10 : 13)
+    Layout.preferredHeight: Kirigami.Units.gridUnit * (klein ? 6 : gross ? 24 : art === "uebersicht" ? 10 : art === "heizung" ? 21 : 13)
 
     readonly property bool bereit: ha.eingerichtet && ha.verbunden
     // für die Restzeit beim Extra heizen

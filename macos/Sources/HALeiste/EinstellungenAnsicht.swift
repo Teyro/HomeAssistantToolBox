@@ -140,6 +140,7 @@ struct EinstellungenAnsicht: View {
 
             Section("Sonstiges") {
                 Toggle("Zahl der eingeschalteten Lampen in der Menüleiste", isOn: $einstellungen.zeigeAnzahl)
+                Toggle("Automatisch nach Updates suchen (GitHub)", isOn: $einstellungen.updatesSuchen)
                 Toggle("Beim Anmelden starten", isOn: $anmeldeStart)
                     .onChange(of: anmeldeStart) { _, neu in
                         if neu != einstellungen.anmeldeStart { einstellungen.anmeldeStart = neu }

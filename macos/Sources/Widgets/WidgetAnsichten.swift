@@ -131,7 +131,7 @@ struct HeizungKachel: View {
         if let h = heizung {
             VStack(alignment: .leading, spacing: 4) {
                 WidgetKopf(symbol: h.heizt ? "flame.fill" : "heater.vertical", titel: h.name,
-                           rechts: h.feuchte.map { "\(Int($0.rounded())) %" } ?? "")
+                           rechts: h.fensterOffen ? "Fenster offen" : (h.feuchte.map { "\(Int($0.rounded())) %" } ?? ""))
                 Spacer(minLength: 0)
                 Text(Logik.formatTemp(h.ist))
                     .font(.system(size: groesse == .klein ? 30 : 36, weight: .semibold, design: .rounded))

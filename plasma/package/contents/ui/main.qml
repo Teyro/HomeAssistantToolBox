@@ -113,6 +113,14 @@ PlasmoidItem {
         }
     }
 
+    // ---- Updates (nur im Panel-Widget, nicht in jeder Kachel) ----
+    Aktualisierer {
+        id: updater
+        aktuelleVersion: Plasmoid.metaData.version
+        automatisch: Plasmoid.configuration.updatesSuchen && !root.aufDemSchreibtisch
+    }
+    readonly property alias aktualisierer: updater
+
     readonly property int lichterAn: verbindung.lichterAn
     readonly property real watt: verbindung.hauptWatt !== null ? verbindung.hauptWatt : verbindung.summeWatt
 

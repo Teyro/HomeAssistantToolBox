@@ -42,5 +42,6 @@
     <entry name="darstellung" type="String"><default>uebersicht</default></entry>
     <entry name="kachelEntitaet" type="String"><default></default></entry>
     <entry name="kachelInstanz" type="String"><default></default></entry>
+    <entry name="updatesSuchen" type="Bool"><default>true</default></entry>
   </group>
 </kcfg>

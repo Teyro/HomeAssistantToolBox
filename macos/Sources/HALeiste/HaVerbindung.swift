@@ -489,6 +489,18 @@ final class HaVerbindung {
         verlauf = Logik.verlaufPunkte(antwort, kw: zustaende[id]?.einheit == "kW")
     }
 
+    /// 24-Stunden-Verlauf eines Raums: Thermostat (mit Attributen) und Raumsensor
+    func klimaVerlauf(_ raum: HeizRaum) async -> KlimaVerlauf? {
+        let klimaId = raum.klima.first ?? ""
+        let ids = [klimaId, raum.temperatur].filter { !$0.isEmpty }
+        guard !ids.isEmpty else { return nil }
+        let start = Logik.isoText(Date().addingTimeInterval(-24 * 3600))
+        let pfad = "/api/history/period/" + kodiert(start) + "?filter_entity_id=" + kodiert(ids.joined(separator: ","))
+            + "&significant_changes_only=0"
+        guard case .ok(let antwort) = await anfrage("GET", pfad) else { return nil }
+        return Logik.klimaVerlauf(antwort, klimaId: klimaId, sensorId: raum.temperatur)
+    }
+
     private func kodiert(_ s: String) -> String {
         var erlaubt = CharacterSet.urlQueryAllowed
         erlaubt.remove(charactersIn: "+&=:,/")

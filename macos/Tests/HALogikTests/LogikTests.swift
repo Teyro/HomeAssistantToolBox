@@ -175,3 +175,32 @@ final class HeizungPersonenTests: XCTestCase {
         XCTAssertEqual(s.werte.first?.text, "an")
     }
 }
+
+final class UpdateVerlaufTests: XCTestCase {
+    func testVersion() {
+        XCTAssertTrue(Logik.versionNeuer("v2.10.0", "2.9.1"))
+        XCTAssertFalse(Logik.versionNeuer("v2.2.0", "2.2.0"))
+        XCTAssertFalse(Logik.versionNeuer("2.1", "2.1.1"))
+    }
+
+    func testKlimaVerlaufUndFenster() {
+        let jetzt = Date()
+        func p(_ min: Double, _ ist: Double, _ ziel: Double, _ aktion: String) -> JSON {
+            ["entity_id": "climate.x", "state": "heat", "last_changed": .text(Logik.isoText(jetzt.addingTimeInterval(-min * 60))),
+             "attributes": ["current_temperature": .zahl(ist), "temperature": .zahl(ziel), "hvac_action": .text(aktion)]]
+        }
+        let antwort: JSON = [[p(120, 19, 21, "heating"), p(60, 20.5, 21, "heating"), p(30, 21, 21, "idle")]]
+        let v = Logik.klimaVerlauf(antwort, klimaId: "climate.x", sensorId: "")
+        XCTAssertEqual(v.ist.map(\.w), [19, 20.5, 21])
+        XCTAssertEqual(v.heizen.count, 1)
+
+        let z: [String: Entitaet] = [
+            "climate.x": Entitaet(id: "climate.x", state: "heat", attribute: ["current_temperature": 20]),
+            "binary_sensor.f": Entitaet(id: "binary_sensor.f", state: "on", attribute: ["device_class": "window"]),
+        ]
+        let k = Logik.raumKlima(HeizRaum(id: "raum:x", name: "X", klima: ["climate.x"], fenster: ["binary_sensor.f"]), z)
+        XCTAssertTrue(k.fensterBekannt)
+        XCTAssertTrue(k.fensterOffen)
+        XCTAssertTrue(Logik.relevant("binary_sensor.f", z["binary_sensor.f"], ""))
+    }
+}

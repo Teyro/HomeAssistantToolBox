@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 import HALogik
 
 /// Reiter "Heizung": alle Räume mit Ist-Temperatur (live), Luftfeuchte und Thermostat.
@@ -43,21 +44,33 @@ struct HeizRaumKarte: View {
 
     @State private var boostGrad: Double = 22
     @State private var boostMinuten = 60
+    @State private var verlauf: KlimaVerlauf?
     private var ha: HaVerbindung { kern.ha }
 
     var body: some View {
         let k = Logik.raumKlima(raum, ha.zustaende)
         let t = k.thermostat
         let boost = kern.boost(fuer: raum.klima)
+        let aufklappbar = t != nil || !raum.temperatur.isEmpty
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 SymbolKreis(symbol: t == nil ? "thermometer.medium" : "heater.vertical.fill", farbe: k.heizt ? .orange : nil,
                             verfuegbar: t?.verfuegbar ?? true)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(raum.name).font(.body.weight(.semibold)).lineLimit(1)
+                    HStack(spacing: 5) {
+                        Text(raum.name).font(.body.weight(.semibold)).lineLimit(1)
+                        // Fenster offen/zu
+                        if k.fensterBekannt {
+                            Image(systemName: k.fensterOffen ? "window.vertical.open" : "window.vertical.closed")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(k.fensterOffen ? AnyShapeStyle(Color.cyan) : AnyShapeStyle(.tertiary))
+                                .symbolEffect(.bounce, value: k.fensterOffen)
+                                .help(k.fensterOffen ? "Fenster offen" : "Fenster zu")
+                        }
+                    }
                     Text(untertitel(k))
                         .font(.caption)
-                        .foregroundStyle(k.heizt ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+                        .foregroundStyle(k.fensterOffen ? AnyShapeStyle(Color.cyan) : k.heizt ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
@@ -66,7 +79,7 @@ struct HeizRaumKarte: View {
                     .monospacedDigit()
                     .contentTransition(.numericText(value: k.ist ?? 0))
                     .animation(.snappy, value: k.ist)
-                if t != nil {
+                if aufklappbar {
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.secondary)
@@ -74,7 +87,7 @@ struct HeizRaumKarte: View {
                 }
             }
             .contentShape(Rectangle())
-            .onTapGesture { if t != nil { klick() } }
+            .onTapGesture { if aufklappbar { klick() } }
 
             if let t, t.verfuegbar, let ziel = t.ziel, t.modus != "off" {
                 HStack(spacing: 8) {
@@ -99,6 +112,19 @@ struct HeizRaumKarte: View {
                 }
                 .padding(8)
                 .background(Color.orange.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+
+            if aufgeklappt {
+                KlimaDiagramm(verlauf: verlauf)
+                    .frame(height: 175)
+                    .transition(.opacity)
+                    .task(id: aufgeklappt) {
+                        // beim Aufklappen laden, dann alle 5 Minuten
+                        while !Task.isCancelled {
+                            if let v = await ha.klimaVerlauf(raum) { verlauf = v }
+                            try? await Task.sleep(for: .seconds(300))
+                        }
+                    }
             }
 
             if aufgeklappt, let t {
@@ -148,6 +174,7 @@ struct HeizRaumKarte: View {
 
     private func untertitel(_ k: RaumKlima) -> String {
         var teile: [String] = []
+        if k.fensterOffen { teile.append("Fenster offen") }
         if let t = k.thermostat {
             if !t.verfuegbar { teile.append("nicht erreichbar") }
             else if k.aus { teile.append("Heizung aus") }
@@ -246,5 +273,123 @@ struct TemperaturRegler: View {
             }
             setzen(lokal)
         }
+    }
+}
+
+/// Verlauf der letzten 24 Stunden: Ist-Temperatur, Zieltemperatur (gestrichelt) und die
+/// Zeiten, in denen geheizt wurde (orange hinterlegt). Beim Überfahren Uhrzeit und Werte.
+struct KlimaDiagramm: View {
+    let verlauf: KlimaVerlauf?
+    @State private var auswahl: Date?
+
+    var body: some View {
+        if let v = verlauf, !(v.ist.isEmpty && v.ziel.isEmpty) {
+            let werte = (v.ist + v.ziel).map(\.w)
+            let lo = Swift.floor((werte.min() ?? 18) - 0.5), hi = Swift.ceil((werte.max() ?? 22) + 0.5)
+            let jetzt = Date()
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 10) {
+                    legende(.accentColor, "Ist")
+                    legende(.orange, "Ziel", gestrichelt: true)
+                    HStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 2).fill(.orange.opacity(0.25)).frame(width: 12, height: 8)
+                        Text("heizt")
+                    }
+                    Spacer()
+                    Text("24 Stunden").foregroundStyle(.tertiary)
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                Chart {
+                    ForEach(v.heizen) { p in
+                        RectangleMark(xStart: .value("Von", Swift.max(p.von, jetzt.addingTimeInterval(-86400))), xEnd: .value("Bis", p.bis))
+                            .foregroundStyle(.orange.opacity(0.16))
+                    }
+                    ForEach(v.ziel) { p in
+                        LineMark(x: .value("Zeit", p.t), y: .value("Grad", p.w), series: .value("Art", "Ziel"))
+                            .interpolationMethod(.stepEnd)
+                            .foregroundStyle(.orange)
+                            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    }
+                    ForEach(v.ist) { p in
+                        LineMark(x: .value("Zeit", p.t), y: .value("Grad", p.w), series: .value("Art", "Ist"))
+                            .interpolationMethod(.monotone)
+                            .foregroundStyle(Color.accentColor)
+                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                    }
+                    if let auswahl {
+                        RuleMark(x: .value("Zeit", auswahl))
+                            .foregroundStyle(.secondary.opacity(0.6))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .annotation(position: .top, spacing: 2, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                                hinweis(v, auswahl)
+                            }
+                    }
+                }
+                .chartYScale(domain: lo...hi)
+                .chartXScale(domain: jetzt.addingTimeInterval(-86400)...jetzt)
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .hour, count: 6)) { wert in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
+                        AxisValueLabel {
+                            if let d = wert.as(Date.self) {
+                                Text(String(format: "%02d:00", Calendar.current.component(.hour, from: d))).fixedSize()
+                            }
+                        }
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { wert in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
+                        AxisValueLabel { if let w = wert.as(Double.self) { Text("\(Int(w))°") } }
+                    }
+                }
+                .chartOverlay { proxy in
+                    GeometryReader { geo in
+                        Rectangle().fill(.clear).contentShape(Rectangle())
+                            .onContinuousHover { phase in
+                                switch phase {
+                                case .active(let ort):
+                                    guard let rahmen = proxy.plotFrame else { return }
+                                    auswahl = proxy.value(atX: ort.x - geo[rahmen].origin.x)
+                                case .ended:
+                                    auswahl = nil
+                                }
+                            }
+                    }
+                }
+            }
+            .padding(10)
+            .background(.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else {
+            HStack {
+                Spacer()
+                if verlauf == nil { ProgressView().controlSize(.small) } else { Text("Kein Verlauf vorhanden").font(.caption).foregroundStyle(.secondary) }
+                Spacer()
+            }
+            .frame(maxHeight: .infinity)
+        }
+    }
+
+    private func legende(_ farbe: Color, _ text: String, gestrichelt: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            Capsule().fill(farbe).frame(width: 12, height: 3).opacity(gestrichelt ? 0.8 : 1)
+            Text(text)
+        }
+    }
+
+    private func hinweis(_ v: KlimaVerlauf, _ t: Date) -> some View {
+        let ist = v.ist.last { $0.t <= t }?.w
+        let ziel = v.ziel.last { $0.t <= t }?.w
+        let heizt = v.heizen.contains { $0.von <= t && $0.bis >= t }
+        return VStack(spacing: 0) {
+            Text(t.formatted(date: .omitted, time: .shortened)).font(.caption2).foregroundStyle(.secondary)
+            Text([Logik.formatTemp(ist), ziel.map { "Ziel " + Logik.formatTemp($0) }, heizt ? "heizt" : nil].compactMap { $0 }.joined(separator: " · "))
+                .font(.caption.weight(.semibold))
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .glas(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

@@ -1,6 +1,7 @@
 /*
  * Ein Raum im Reiter "Heizung": Ist-Temperatur groß, Zustand, Zieltemperatur-Regler.
- * Aufgeklappt: Modus, Profil und "Extra heizen" (Temperatur für 30 min … 4 h, danach zurück).
+ * Fenster offen/zu als Symbol. Aufgeklappt: Verlauf der letzten 24 Stunden, Modus, Profil und
+ * "Extra heizen" (Temperatur für 30 min … 4 h, danach zurück).
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import QtQuick
@@ -31,6 +32,19 @@ ColumnLayout {
         return null;
     }
     readonly property color heizFarbe: "#f67400"
+    readonly property color fensterFarbe: "#3daee9"
+    readonly property bool aufklappbar: hatThermostat || raum.temperatur !== ""
+
+    // Verlauf der letzten 24 Stunden – beim Aufklappen laden, dann alle 5 Minuten
+    property var verlauf: null
+    function verlaufHolen() { if (aufgeklappt) ha.klimaVerlaufLaden(raum); }
+    onAufgeklapptChanged: verlaufHolen()
+    Component.onCompleted: verlaufHolen()
+    Connections {
+        target: raumEintrag.ha
+        function onKlimaVerlaufGeladen(raumId, daten) { if (raumId === raumEintrag.raum.id) raumEintrag.verlauf = daten; }
+    }
+    Timer { interval: 300000; running: raumEintrag.aufgeklappt; repeat: true; onTriggered: raumEintrag.verlaufHolen() }
 
     function zielSetzen(t) {
         const ziel = Logik.rundeZiel(t, k);
@@ -46,7 +60,7 @@ ColumnLayout {
         HoverHandler { id: zeiger }
         MouseArea {
             anchors.fill: parent
-            enabled: raumEintrag.hatThermostat
+            enabled: raumEintrag.aufklappbar
             cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
             onClicked: raumEintrag.klick()
         }
@@ -55,7 +69,7 @@ ColumnLayout {
             anchors.leftMargin: Kirigami.Units.smallSpacing
             anchors.rightMargin: Kirigami.Units.smallSpacing
             hovered: !raumEintrag.aufgeklappt
-            visible: raumEintrag.aufgeklappt || (zeiger.hovered && raumEintrag.hatThermostat)
+            visible: raumEintrag.aufgeklappt || (zeiger.hovered && raumEintrag.aufklappbar)
         }
 
         ColumnLayout {
@@ -79,17 +93,35 @@ ColumnLayout {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
-                    PC3.Label {
+                    RowLayout {
                         Layout.fillWidth: true
-                        text: raumEintrag.raum.name
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
-                        textFormat: Text.PlainText
+                        spacing: Kirigami.Units.smallSpacing
+                        PC3.Label {
+                            Layout.fillWidth: !fensterSymbol.visible
+                            text: raumEintrag.raum.name
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                        }
+                        // Fenster offen/zu
+                        Glyphe {
+                            id: fensterSymbol
+                            visible: raumEintrag.klima.fensterBekannt
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            name: raumEintrag.klima.fensterOffen ? "fenster-offen" : "fenster"
+                            farbe: raumEintrag.klima.fensterOffen ? raumEintrag.fensterFarbe : Kirigami.Theme.disabledTextColor
+                            HoverHandler { id: fensterZeiger }
+                            PC3.ToolTip.text: raumEintrag.klima.fensterOffen ? i18n("Fenster offen") : i18n("Fenster zu")
+                            PC3.ToolTip.visible: fensterZeiger.hovered
+                        }
+                        Item { Layout.fillWidth: fensterSymbol.visible }
                     }
                     PC3.Label {
                         Layout.fillWidth: true
                         text: {
                             const k = raumEintrag.klima, teile = [];
+                            if (k.fensterOffen) teile.push(i18n("Fenster offen"));
                             if (!raumEintrag.hatThermostat) teile.push(i18n("Temperatur"));
                             else if (!raumEintrag.k.verfuegbar) teile.push(i18n("nicht erreichbar"));
                             else if (k.aus) teile.push(i18n("Heizung aus"));
@@ -100,7 +132,7 @@ ColumnLayout {
                             return teile.join(" · ");
                         }
                         font: Kirigami.Theme.smallFont
-                        color: raumEintrag.klima.heizt ? raumEintrag.heizFarbe : Kirigami.Theme.disabledTextColor
+                        color: raumEintrag.klima.fensterOffen ? raumEintrag.fensterFarbe : raumEintrag.klima.heizt ? raumEintrag.heizFarbe : Kirigami.Theme.disabledTextColor
                         elide: Text.ElideRight
                     }
                 }
@@ -111,10 +143,10 @@ ColumnLayout {
                     font.features: { "tnum": 1 }
                 }
                 PC3.ToolButton {
-                    visible: raumEintrag.hatThermostat
+                    visible: raumEintrag.aufklappbar
                     icon.name: raumEintrag.aufgeklappt ? "collapse" : "expand"
                     display: PC3.AbstractButton.IconOnly
-                    text: raumEintrag.aufgeklappt ? i18n("Weniger") : i18n("Modus, Profil, Extra heizen")
+                    text: raumEintrag.aufgeklappt ? i18n("Weniger") : (raumEintrag.hatThermostat ? i18n("Verlauf, Modus, Profil, Extra heizen") : i18n("Verlauf"))
                     onClicked: raumEintrag.klick()
                     PC3.ToolTip.text: text
                     PC3.ToolTip.visible: hovered
@@ -192,6 +224,18 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    // ---- Aufgeklappt: Verlauf der letzten 24 Stunden ----
+    TemperaturDiagramm {
+        Layout.fillWidth: true
+        Layout.leftMargin: Kirigami.Units.largeSpacing * 2 + Kirigami.Units.iconSizes.medium
+        Layout.rightMargin: Kirigami.Units.largeSpacing
+        Layout.topMargin: Kirigami.Units.smallSpacing
+        Layout.bottomMargin: Kirigami.Units.smallSpacing
+        Layout.preferredHeight: Kirigami.Units.gridUnit * 7
+        visible: raumEintrag.aufgeklappt
+        daten: raumEintrag.verlauf
     }
 
     // ---- Aufgeklappt: Modus, Profil, Extra heizen ----

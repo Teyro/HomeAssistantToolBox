@@ -66,7 +66,7 @@ jobs:
           sleep 2
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
-            HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token \
+            HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token HA_UPDATE_URL=http://127.0.0.1:8123/github/releases \
             HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
           done
           # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)

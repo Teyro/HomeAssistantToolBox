@@ -102,8 +102,10 @@ public struct Bereiche: Equatable, Sendable {
         /// Temperatur- und Feuchtesensoren im Raum
         public var temperatur: [String] = []
         public var feuchte: [String] = []
-        public init(id: String, name: String, entitaeten: [String], temperatur: [String] = [], feuchte: [String] = []) {
-            self.id = id; self.name = name; self.entitaeten = entitaeten; self.temperatur = temperatur; self.feuchte = feuchte
+        /// Fensterkontakte im Raum
+        public var fenster: [String] = []
+        public init(id: String, name: String, entitaeten: [String], temperatur: [String] = [], feuchte: [String] = [], fenster: [String] = []) {
+            self.id = id; self.name = name; self.entitaeten = entitaeten; self.temperatur = temperatur; self.feuchte = feuchte; self.fenster = fenster
         }
     }
     public struct Geraet: Equatable, Sendable { public let schalter: String; public let geraet: String; public let name: String }
@@ -117,7 +119,8 @@ public struct Bereiche: Equatable, Sendable {
         guard let json else { return }
         bereiche = (json["bereiche"]?.liste ?? []).map {
             Bereich(id: $0["id"]?.text ?? "", name: $0["name"]?.text ?? "", entitaeten: ($0["e"]?.liste ?? []).compactMap { $0.text },
-                    temperatur: ($0["t"]?.liste ?? []).compactMap { $0.text }, feuchte: ($0["h"]?.liste ?? []).compactMap { $0.text })
+                    temperatur: ($0["t"]?.liste ?? []).compactMap { $0.text }, feuchte: ($0["h"]?.liste ?? []).compactMap { $0.text },
+                    fenster: ($0["f"]?.liste ?? []).compactMap { $0.text })
         }
         leistung = (json["leistung"]?.liste ?? []).compactMap {
             guard let a = $0[0]?.text, let b = $0[1]?.text else { return nil }

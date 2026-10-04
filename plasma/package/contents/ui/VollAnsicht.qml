@@ -34,6 +34,8 @@ PlasmaExtras.Representation {
     Layout.preferredHeight: Kirigami.Units.gridUnit * 32
 
     readonly property var instanzen: steuerung ? steuerung.instanzen : []
+    readonly property var aktualisierer: steuerung ? steuerung.aktualisierer : null
+    property bool zeigeNeuigkeiten: false
     readonly property string instanzName: steuerung && steuerung.aktiv ? (steuerung.aktiv.name || "") : ""
 
     collapseMarginsHint: true
@@ -107,6 +109,18 @@ PlasmaExtras.Representation {
                 }
                 PC3.MenuSeparator {}
                 PC3.MenuItem {
+                    text: voll.aktualisierer && voll.aktualisierer.update ? i18n("Update auf %1 …", voll.aktualisierer.update.version) : i18n("Was ist neu?")
+                    icon.name: voll.aktualisierer && voll.aktualisierer.update ? "update-none" : "documentinfo"
+                    enabled: voll.aktualisierer !== null
+                    onTriggered: { if (voll.aktualisierer.alleNotizen.length === 0) voll.aktualisierer.pruefen(); voll.zeigeNeuigkeiten = true; }
+                }
+                PC3.MenuItem {
+                    text: i18n("Nach Updates suchen")
+                    icon.name: "system-software-update"
+                    enabled: voll.aktualisierer !== null && voll.aktualisierer.status !== "suche"
+                    onTriggered: { voll.aktualisierer.pruefen(); voll.zeigeNeuigkeiten = true; }
+                }
+                PC3.MenuItem {
                     text: i18n("Einrichten …")
                     icon.name: "configure"
                     onTriggered: voll.einrichten()
@@ -145,7 +159,7 @@ PlasmaExtras.Representation {
         PlasmaExtras.PlaceholderMessage {
             anchors.centerIn: parent
             width: parent.width - Kirigami.Units.gridUnit * 4
-            visible: !voll.ha.eingerichtet
+            visible: !voll.ha.eingerichtet && !voll.zeigeNeuigkeiten
             iconName: "network-connect"
             text: i18n("Mit Home Assistant verbinden")
             explanation: i18n("Adresse deiner Home-Assistant-Installation und einen langlebigen Zugriffstoken eintragen.")
@@ -158,7 +172,7 @@ PlasmaExtras.Representation {
         PlasmaExtras.PlaceholderMessage {
             anchors.centerIn: parent
             width: parent.width - Kirigami.Units.gridUnit * 4
-            visible: voll.ha.eingerichtet && !voll.ha.verbunden
+            visible: voll.ha.eingerichtet && !voll.ha.verbunden && !voll.zeigeNeuigkeiten
             iconName: voll.ha.laedt ? "view-refresh" : "network-disconnect"
             text: voll.ha.laedt ? i18n("Verbinde …") : i18n("Keine Verbindung")
             explanation: voll.ha.laedt ? "" : voll.ha.fehler
@@ -188,9 +202,37 @@ PlasmaExtras.Representation {
             visible: voll.ha.meldung !== "" && voll.ha.verbunden
         }
 
+        // Update verfügbar
+        Kirigami.InlineMessage {
+            id: updateHinweis
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: Kirigami.Units.smallSpacing
+            z: 1
+            type: Kirigami.MessageType.Information
+            showCloseButton: true
+            visible: !!voll.aktualisierer && !!voll.aktualisierer.update && !voll.zeigeNeuigkeiten
+            text: visible ? i18n("Version %1 ist verfügbar.", voll.aktualisierer.update.version) : ""
+            actions: [
+                Kirigami.Action {
+                    text: i18n("Was ist neu?")
+                    icon.name: "documentinfo"
+                    onTriggered: voll.zeigeNeuigkeiten = true
+                }
+            ]
+        }
+
+        Neuigkeiten {
+            anchors.fill: parent
+            visible: voll.zeigeNeuigkeiten && voll.aktualisierer !== null
+            aktualisierer: voll.aktualisierer
+            onSchliessen: voll.zeigeNeuigkeiten = false
+        }
+
         StackLayout {
             anchors.fill: parent
-            visible: voll.ha.eingerichtet && voll.ha.verbunden
+            visible: voll.ha.eingerichtet && voll.ha.verbunden && !voll.zeigeNeuigkeiten
             currentIndex: reiter.currentIndex
 
             LampenSeite {
