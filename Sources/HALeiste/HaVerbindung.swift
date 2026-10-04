@@ -137,6 +137,7 @@ final class HaVerbindung {
         verlauf = []
         fehler = ""
         verbunden = false
+        laedt = false
         neuBerechnen()
         liveVerbindung.stop()
         live = false
@@ -153,7 +154,7 @@ final class HaVerbindung {
 
     // MARK: HTTP
 
-    enum Antwort { case ok(JSON?), fehler(String) }
+    enum Antwort { case ok(JSON?), fehler(String), abgebrochen }
 
     func anfrage(_ methode: String, _ pfad: String, _ daten: JSON? = nil) async -> Antwort {
         guard eingerichtet, let url = URL(string: basis + pfad) else { return .fehler("Nicht eingerichtet") }
@@ -175,6 +176,8 @@ final class HaVerbindung {
             }
             return .fehler("Fehler \(status) von Home Assistant.")
         } catch {
+            // Abgebrochen (neue Einstellungen, Neustart der Abfrage) ist kein Verbindungsfehler
+            if Task.isCancelled || (error as? URLError)?.code == .cancelled { return .abgebrochen }
             return .fehler("Home Assistant ist nicht erreichbar (\(basis)).")
         }
     }
@@ -186,12 +189,16 @@ final class HaVerbindung {
             verbunden = false
             return
         }
+        // Läuft schon eine Abfrage, nicht noch eine hinterherschicken
+        guard !laedt else { return }
         let gen = generation
         laedt = true
         let antwort = await anfrage("GET", "/api/states")
         guard gen == generation else { return }
         laedt = false
         switch antwort {
+        case .abgebrochen:
+            return
         case .fehler(let text):
             fehler = text
             verbunden = false
@@ -219,6 +226,8 @@ final class HaVerbindung {
         let antwort = await anfrage("POST", "/api/template", ["template": .text(Logik.bereicheTemplate)])
         guard gen == generation else { return }
         switch antwort {
+        case .abgebrochen:
+            bereicheStand = .distantPast
         case .fehler:
             bereiche = Bereiche() // ältere Versionen ohne Bereiche-Funktionen
         case .ok(let j):
@@ -297,7 +306,10 @@ final class HaVerbindung {
         abfrageTask = Task {
             var erstes = sofort
             while !Task.isCancelled {
-                if erstes || !self.verbunden || self.zustaende.isEmpty { await self.aktualisieren() }
+                if erstes || !self.verbunden || self.zustaende.isEmpty {
+                    // eigene Aufgabe: ein Neustart der Schleife bricht die laufende Abfrage nicht ab
+                    await Task { await self.aktualisieren() }.value
+                }
                 erstes = true
                 if self.abgelehnt { return }
                 // Mit Live-Verbindung nur selten zur Sicherheit, sonst regelmäßig
@@ -321,6 +333,8 @@ final class HaVerbindung {
     private func dienst(_ domain: String, _ name: String, _ daten: JSON) {
         Task {
             switch await anfrage("POST", "/api/services/\(domain)/\(name)", daten) {
+            case .abgebrochen:
+                break
             case .fehler(let text):
                 zeigeMeldung("Schalten fehlgeschlagen: " + text)
                 // Vorab angezeigten Zustand wieder richtigstellen
