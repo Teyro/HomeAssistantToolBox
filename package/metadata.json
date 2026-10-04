@@ -14,7 +14,7 @@
         "Id": "de.teyro.homeassistant",
         "License": "GPL-3.0-or-later",
         "Name": "Home Assistant",
-        "Version": "1.2.0",
+        "Version": "1.2.1",
         "Website": "https://github.com/Teyro/plasma-homeassistant"
     },
     "X-Plasma-API-Minimum-Version": "6.0",

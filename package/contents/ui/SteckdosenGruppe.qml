@@ -25,6 +25,15 @@ ColumnLayout {
 
     spacing: 0
 
+    // Teilen sich mehrere Dosen einen Messsensor (typisch bei Leisten), gehört der Wert zur
+    // ganzen Leiste – dann nicht bei jeder einzelnen Dose anzeigen.
+    function mitglied(id) {
+        const s = ha.schalter.find(x => x.id === id);
+        if (!s) return { id: id, name: id, raum: "", leistung: "" };
+        const geteilt = s.leistung && daten.mitglieder.filter(m => (ha.schalter.find(x => x.id === m) || {}).leistung === s.leistung).length > 1;
+        return geteilt ? Object.assign({}, s, { leistung: "" }) : s;
+    }
+
     function schalten(ein) {
         if (daten.steuerId) ha.schalte(daten.steuerId, ein);
         else ha.schalteSchalter(daten.mitglieder, ein);
@@ -128,7 +137,7 @@ ColumnLayout {
                     required property var modelData
                     Layout.fillWidth: true
                     ha: gruppe.ha
-                    eintrag: gruppe.ha.schalter.find(s => s.id === modelData) || { id: modelData, name: modelData, raum: "", leistung: "" }
+                    eintrag: gruppe.mitglied(modelData)
                     einzug: Kirigami.Units.gridUnit * 1.5
                 }
             }

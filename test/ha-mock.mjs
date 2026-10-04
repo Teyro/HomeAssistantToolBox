@@ -1,4 +1,4 @@
-// Nachgebautes Home Assistant (REST + WebSocket) mit einer Beispielwohnung – zum Testen des Plasmoids.
+// Nachgebautes Home Assistant (REST + WebSocket) mit einer Beispielwohnung – zum Testen (Plasma-Widget und macOS-App).
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -206,6 +206,7 @@ server.on('upgrade', (req, sock) => {
     puffer = rest;
     for (const n of nachrichten) {
       if (n.op === 8) { sock.end(); return; }
+      if (n.op === 9) { const d = Buffer.from(n.text); sock.write(Buffer.concat([Buffer.from([0x8a, d.length]), d])); log('WS ping'); continue; }
       if (n.op !== 1) continue;
       const m = JSON.parse(n.text);
       log('WS ' + n.text.slice(0, 120));
