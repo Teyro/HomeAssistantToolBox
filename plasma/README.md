@@ -33,6 +33,11 @@ und alles ist da.
 - **Heizung**: alle Räume mit Temperatur (live) und Luftfeuchte. Zieltemperatur mit Regler
   und −/+, Modus (Aus/Heizen/Automatik), Profil (Eco, Komfort …) und **Extra heizen**: eine
   Temperatur für 30 Minuten bis 4 Stunden, danach automatisch zurück – auch nach einem Neustart.
+- **Fenster und Verlauf**: bei jeder Heizung ein Symbol für Fenster offen/zu (Fensterkontakte im
+  Raum oder das Thermostat selbst); ein Klick auf die Heizung zeigt den Verlauf der letzten
+  24 Stunden – Ist- und Zieltemperatur und wann geheizt wurde.
+- **Updates**: das Widget meldet neue Versionen (GitHub). Menü ⋮ → „Was ist neu?“ zeigt die
+  Änderungen, „Installieren“ spielt das Update mit `kpackagetool6` ein, danach „Plasma neu starten“.
 - **Personen**: Karte wie bei „Wo ist?“ mit Zonen (Zuhause, Arbeit …), darunter wer wo ist, seit
   wann und wie weit von zu Hause – dazu, ob gerade geheizt wird.
 - **Mehrere Instanzen**: beliebig viele Home-Assistant-Installationen, eine als Favorit (wird

@@ -27,6 +27,10 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
 - **Heizung**: alle Räume mit Temperatur (live) und Luftfeuchte, Zieltemperatur mit Regler
   (blau → orange) und −/+, Modus, Profil und **Extra heizen** für 30 Minuten bis 4 Stunden –
   danach geht die Temperatur von selbst zurück.
+- **Fenster und Verlauf**: bei jeder Heizung ein Symbol für Fenster offen/zu; ein Klick auf die
+  Heizung zeigt den Verlauf der letzten 24 Stunden (Ist, Ziel, Heizphasen).
+- **Updates**: neue Versionen werden im Panel gemeldet. „Was ist neu?“ zeigt die Änderungen,
+  „Installieren und neu starten“ lädt das Update von GitHub, prüft es und tauscht die App aus.
 - **Personen**: Apple-Karte mit Zonen (Zuhause, Arbeit …) und allen Personen, darunter wer wo
   ist, seit wann und wie weit weg – und ob gerade geheizt wird.
 - **Mehrere Instanzen**: beliebig viele Home-Assistant-Installationen, eine als Favorit (★, wird

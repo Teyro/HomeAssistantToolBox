@@ -21,6 +21,8 @@ Dazu gibt es auf beiden Systemen **Widgets für den Schreibtisch**.
 - **Heizung**: alle Räume mit Temperatur und Luftfeuchte, Zieltemperatur per Regler, Modus, Profil,
   **Extra heizen** für 30 Minuten bis 4 Stunden
 - **Personen**: Karte wie bei „Wo ist?“, wer ist wo und wie weit weg, heizt es gerade?
+- **Fenster offen/zu** bei jeder Heizung und **24-Stunden-Verlauf** (Ist, Ziel, Heizphasen) zum Aufklappen
+- **Updates mit einem Klick**: neue Version wird gemeldet, „Was ist neu?“ zeigt die Änderungen
 - **Mehrere Home-Assistant-Instanzen** mit Favorit, Wechsel über das Menü
 - **Widgets/Kacheln** für den Schreibtisch: Übersicht, Lampe, Steckdose, Raum, Heizung, Energie, Personen, Entität
 - **Live** über die WebSocket-Schnittstelle von Home Assistant, Schutz vor IP-Sperre bei falschem Token
