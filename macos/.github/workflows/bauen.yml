@@ -1,0 +1,66 @@
+name: Bauen und testen
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bauen:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Swift-Version
+        run: swift --version
+
+      - name: Logik testen
+        run: swift test
+
+      - name: App bauen
+        run: |
+          VERSION=$(cat VERSION)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF#refs/tags/v}"; fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          ./scripts/baue-app.sh "$VERSION"
+
+      - name: Bildschirmfotos gegen nachgebautes Home Assistant
+        timeout-minutes: 6
+        run: |
+          HA_MOCK_LOG="$PWD/mock.log" node test/ha-mock.mjs 8123 > /dev/null 2>&1 &
+          sleep 2
+          for m in Dark Light; do
+            HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
+            HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
+          done
+          # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)
+          : > mock.log.vorher; cp mock.log mock.log.vorher
+          HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=falsch HA_NUR_ERSTES=7_falscher_token HA_BILDER="$PWD/bilder-ci" \
+            "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark || true
+          N=$(( $(wc -l < mock.log) - $(wc -l < mock.log.vorher) ))
+          echo "Anfragen mit falschem Token: $N"
+          tail -n $N mock.log | cut -c1-120
+          test "$N" -le 4
+          ls -la bilder-ci || true
+          tail -20 mock.log
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: bilder
+          path: bilder-ci
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: app
+          path: build/HA-Leiste-*.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" build/HA-Leiste-$VERSION.zip --clobber
