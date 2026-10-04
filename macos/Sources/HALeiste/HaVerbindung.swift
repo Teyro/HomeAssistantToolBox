@@ -46,7 +46,8 @@ final class HaVerbindung {
     private(set) var personen: [Person] = []
     private(set) var zonen: [Zone] = []
     /// Name der Installation aus Home Assistant (Einstellungen → Allgemein)
-    private(set) var standortName = ""
+    private(set) var standortName = "" { didSet { if !standortName.isEmpty { standortGeladen(standortName) } } }
+    @ObservationIgnored var standortGeladen: (String) -> Void = { _ in }
 
     private(set) var verbunden = false
     private(set) var laedt = false

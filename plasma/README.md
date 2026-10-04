@@ -8,6 +8,14 @@ und alles ist da.
 |---|---|---|
 | ![Lampen](bilder/lampen-dunkel.png) | ![Steckdosen](bilder/steckdosen-hell.png) | ![Energie](bilder/energie-dunkel.png) |
 
+| Heizung | Personen |
+|---|---|
+| ![Heizung](bilder/heizung-dunkel.png) | ![Personen](bilder/personen-hell.png) |
+
+**Kacheln auf dem Schreibtisch:**
+
+![Kacheln](bilder/kacheln-dunkel.png)
+
 ## Was es kann
 
 - **Lampen**: oben deine Lampengruppen, darunter die Räume (Bereiche aus Home Assistant),
@@ -21,7 +29,18 @@ und alles ist da.
 - **Energie**: aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden (Energie, Durchschnitt,
   Spitze), Verlauf mit Werten beim Überfahren mit der Maus, **Verbrauch heute** an Strom,
   Wasser und Gas (mit dem Wert von gestern), die größten Verbraucher mit Anteil und alle
-  Zählerstände als Kacheln.
+  Zählerstände.
+- **Heizung**: alle Räume mit Temperatur (live) und Luftfeuchte. Zieltemperatur mit Regler
+  und −/+, Modus (Aus/Heizen/Automatik), Profil (Eco, Komfort …) und **Extra heizen**: eine
+  Temperatur für 30 Minuten bis 4 Stunden, danach automatisch zurück – auch nach einem Neustart.
+- **Personen**: Karte wie bei „Wo ist?“ mit Zonen (Zuhause, Arbeit …), darunter wer wo ist, seit
+  wann und wie weit von zu Hause – dazu, ob gerade geheizt wird.
+- **Mehrere Instanzen**: beliebig viele Home-Assistant-Installationen, eine als Favorit (wird
+  beim Start gezeigt). Wechseln über das Menü ⋮ → „Instanz wechseln“.
+- **Kacheln für den Schreibtisch**: das Widget einfach auf den Schreibtisch ziehen – je Kachel
+  wählbar: Übersicht, eine Lampe, eine Steckdose, ein Raum, eine Heizung, Energie, Personen,
+  eine beliebige Entität oder alles. Mehrere Kacheln = Widget mehrmals hinziehen; schon
+  eingerichtete Instanzen werden übernommen.
 - **Live**: Änderungen (Schalter an der Wand, Automationen, App) erscheinen sofort über die
   WebSocket-Schnittstelle von Home Assistant.
 - **Panel-Symbol** im Breeze-Stil (Haus mit Glühbirne), so groß wie die Symbole im
@@ -55,6 +74,10 @@ und alles ist da.
 
 ## Einstellungen
 
+- **Instanzen**: hinzufügen, entfernen, Stern = Favorit. Ohne Namen wird der Name der
+  Installation aus Home Assistant übernommen. Hauptzähler und Zähler je Instanz.
+- Reiter Heizung und Personen ein- und ausblenden
+- **Schreibtisch**: was die Kachel zeigt (eigene Einstellungsseite)
 - Gruppen und/oder Räume anzeigen, klassische `group.*`-Gruppen einbeziehen
 - Nur Schalter vom Typ „Steckdose“ zeigen
 - Entitäten ausblenden, auch mit `*`: `light.flur_nachtlicht, switch.*_kindersicherung`
@@ -64,6 +87,13 @@ und alles ist da.
   lassen sich von Hand wählen.
 
 ## Gut zu wissen
+
+- **Karte**: Kartenkacheln von [OpenStreetMap Deutschland](https://www.openstreetmap.de/)
+  (© OpenStreetMap-Mitwirkende). Es werden nur die gerade sichtbaren Kacheln geladen.
+- **Extra heizen** setzt die Temperatur zurück, solange das Widget läuft (Plasma ist an). War
+  der Rechner aus, passiert das beim nächsten Start.
+- Die Instanzen (mit Token) werden zum Übernehmen in weitere Widgets unter
+  `~/.config/homeassistant-leiste/instanzen.json` abgelegt (nur für dich lesbar).
 
 - **Lampengruppen** sind Lichtgruppen aus Home Assistant (*Einstellungen → Geräte & Dienste →
   Helfer → Gruppe → Licht-Gruppe*) und klassische Gruppen, die nur Lampen enthalten.

@@ -32,6 +32,9 @@ Item {
     Layout.preferredHeight: Kirigami.Units.gridUnit * (klein ? 6 : gross ? 24 : art === "uebersicht" ? 10 : 13)
 
     readonly property bool bereit: ha.eingerichtet && ha.verbunden
+    // für die Restzeit beim Extra heizen
+    property double jetzt: Date.now()
+    Timer { interval: 30000; running: kachel.art === "heizung" || kachel.art === "raum"; repeat: true; onTriggered: kachel.jetzt = Date.now() }
     readonly property bool zielFehlt: ["lampe", "steckdose", "raum", "heizung", "entitaet"].indexOf(art) >= 0 && ziel === ""
 
     // ---- Nicht eingerichtet / keine Verbindung / nichts gewählt ----
@@ -165,6 +168,7 @@ Item {
                 ha: kachel.ha
                 raum: parent.raumDaten || { id: "", name: "", klima: [], temperatur: "", feuchte: "" }
                 steuerung: kachel.steuerung
+                jetzt: kachel.jetzt
                 aufgeklappt: true
             }
             Item { Layout.fillHeight: true }
@@ -208,6 +212,7 @@ Item {
                         ha: kachel.ha
                         raum: raumKachel.klimaRaum || { id: "", name: "", klima: [], temperatur: "", feuchte: "" }
                         steuerung: kachel.steuerung
+                        jetzt: kachel.jetzt
                     }
                     Repeater {
                         model: raumKachel.lampenRaum ? raumKachel.lampenRaum.lichter : []

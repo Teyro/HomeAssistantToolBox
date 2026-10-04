@@ -47,6 +47,11 @@ final class Kern {
     private init() {
         einstellungen = Einstellungen(vorschau: vorschau)
         einstellungen.geaendert = { [weak self] in self?.uebernehmen() }
+        // Ohne eigenen Namen gleich den Namen der Installation aus Home Assistant übernehmen
+        ha.standortGeladen = { [weak self] name in
+            guard let self, let i = self.aktiv, i.name.isEmpty else { return }
+            self.einstellungen.aendern(i.id) { $0.name = name }
+        }
         if vorschau {
             // Testlauf: Instanzen aus Umgebungsvariablen (HA_ADRESSE/HA_TOKEN, optional HA_ADRESSE2/HA_TOKEN2)
             let env = ProcessInfo.processInfo.environment
@@ -163,10 +168,14 @@ final class Kern {
     func ausfuehren(_ befehl: String) {
         let teile = befehl.split(separator: "|").map(String.init)
         switch teile.first {
+        // Nur bekannte Lampen/Steckdosen/Thermostate und gültige Temperaturen annehmen –
+        // die Mitteilungen kann jedes Programm auf dem Mac schicken.
         case "schalte" where teile.count >= 3:
+            guard ["light", "switch", "group"].contains(Logik.domain(teile[1])), ha.zustaende[teile[1]] != nil else { return }
             ha.schalte(teile[1], teile[2] == "1")
         case "temp" where teile.count >= 3:
-            if let t = Double(teile[2]) { ha.setzeTemperatur(teile[1], t) }
+            guard Logik.domain(teile[1]) == "climate", let k = Logik.klimaStatus(ha.zustaende[teile[1]]), let t = Double(teile[2]) else { return }
+            ha.setzeTemperatur(teile[1], Logik.rundeZiel(t, k))
         case "alleaus":
             ha.alleLichterAus()
         default:

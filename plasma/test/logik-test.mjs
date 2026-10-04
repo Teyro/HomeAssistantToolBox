@@ -21,3 +21,10 @@ console.log('Dashboard', JSON.stringify(ctx.zaehlerAusEnergieDashboard(prefs)));
 const mn = new Date(2026, 9, 3).getTime(), iso = (h) => new Date(mn + h * 3600e3).toISOString();
 console.log('Tag', JSON.stringify(ctx.tagesVerbrauch([{ state: '100', last_changed: iso(-24) }, { state: '103', last_changed: iso(-2) }, { state: '104', last_changed: iso(3) }, { state: '1', last_changed: iso(5) }, { state: '2.5', last_changed: iso(8) }], mn)));
 console.log('Menge', ctx.formatMenge(6.17, 'kWh', 'strom'), '|', ctx.formatMenge(0.1057, 'm³', 'wasser'), '|', ctx.formatMenge(1.41, 'm³', 'gas'), '|', ctx.formatMenge(12.3, 'kWh', 'gas'), '|', ctx.formatMenge(NaN, '', 'gas'));
+
+// 2.1: Heizung und Personen
+const hz = ctx.heizungen(z, JSON.parse(t), []);
+console.log('Heizung:', hz.map(h => { const k = ctx.raumKlima(h, z); return h.name + ' ' + ctx.formatTemp(k.ist) + (k.heizt ? ' heizt' : ''); }).join(', '));
+console.log('Personen:', ctx.personen(z).map(p => p.name + '=' + ctx.ortText(p.zustand) + ' ' + p.farbe).join(', '));
+console.log('Instanzen:', JSON.stringify(ctx.instanzenLesen('', 'http://x', 'tok')), ctx.neueInstanzId([{ id: 'i1' }]));
+console.log('Zoom', ctx.passenderZoom([{ lat: 53.5656, lon: 10.1172 }, { lat: 53.5503, lon: 9.9925 }], 500, 300));

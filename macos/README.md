@@ -8,6 +8,10 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
 |---|---|---|
 | ![Lampen](bilder/lampen-dunkel.png) | ![Steckdosen](bilder/steckdosen-hell.png) | ![Energie](bilder/energie-dunkel.png) |
 
+| Heizung | Personen |
+|---|---|
+| ![Heizung](bilder/heizung-dunkel.png) | ![Personen](bilder/personen-hell.png) |
+
 ## Was es kann
 
 - **Lampen**: Lampengruppen und Räume aus Home Assistant zum Aufklappen, Lampen ohne Raum.
@@ -20,6 +24,16 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
 - **Energie**: aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden (Energie, Durchschnitt,
   Spitze), Verlauf mit Werten beim Überfahren mit der Maus, **Verbrauch heute** an Strom, Wasser
   und Gas (mit dem Wert von gestern), die größten Verbraucher mit Anteil und alle Zählerstände.
+- **Heizung**: alle Räume mit Temperatur (live) und Luftfeuchte, Zieltemperatur mit Regler
+  (blau → orange) und −/+, Modus, Profil und **Extra heizen** für 30 Minuten bis 4 Stunden –
+  danach geht die Temperatur von selbst zurück.
+- **Personen**: Apple-Karte mit Zonen (Zuhause, Arbeit …) und allen Personen, darunter wer wo
+  ist, seit wann und wie weit weg – und ob gerade geheizt wird.
+- **Mehrere Instanzen**: beliebig viele Home-Assistant-Installationen, eine als Favorit (★, wird
+  beim Start gezeigt). Wechseln im Panel über ⋯ → „Instanz wechseln“.
+- **Widgets für den Schreibtisch**: Übersicht, Lampe, Steckdose, Heizung, Raum, Energie,
+  Personen und eine beliebige Entität – Lampen und Steckdosen lassen sich direkt im Widget
+  schalten, die Heizung mit −/+ verstellen.
 - **Live**: Änderungen (Schalter an der Wand, Automationen, App) erscheinen sofort über die
   WebSocket-Schnittstelle von Home Assistant. Nach dem Ruhezustand verbindet sich die App neu.
 - **Menüleiste**: Glühbirne mit der Zahl der eingeschalteten Lampen.
@@ -42,6 +56,15 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
    Auf **Verbinden** klicken. macOS fragt evtl., ob die App auf Geräte im lokalen Netzwerk zugreifen darf → **Erlauben**.
 
 Nach einem Update fragt macOS evtl. einmal, ob HA Leiste den Token im Schlüsselbund lesen darf → **Immer erlauben**.
+
+### Widgets auf den Schreibtisch legen
+
+Rechtsklick auf den Schreibtisch → **Widgets bearbeiten …** → links **HA Leiste** suchen → Widget
+auf den Schreibtisch ziehen. Bei Lampe, Steckdose, Heizung, Raum und Entität: Rechtsklick auf das
+Widget → **Widget bearbeiten** → auswählen, was es zeigen soll. Die Widgets bekommen ihre Daten
+von der laufenden App (HA Leiste muss also laufen – am besten „Beim Anmelden starten“ einschalten).
+
+![Widgets](bilder/widgets-hell.png)
 
 ## Einstellungen
 
@@ -67,7 +90,7 @@ Nach einem Update fragt macOS evtl. einmal, ob HA Leiste den Token im Schlüssel
 ```bash
 cd macos
 swift test                 # Logik prüfen
-./scripts/baue-app.sh      # build/HA Leiste.app und ZIP (Apple Silicon + Intel)
+./scripts/baue-app.sh      # build/HA Leiste.app mit Widgets und ZIP (Xcode + XcodeGen nötig)
 node ../test/ha-mock.mjs & # nachgebautes Home Assistant auf Port 8123 (Token: test-token)
 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
   "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark   # Bildschirmfotos
