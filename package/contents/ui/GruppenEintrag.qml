@@ -95,7 +95,7 @@ ColumnLayout {
                             if (s.verfuegbar === 0) return i18n("nicht erreichbar");
                             if (s.an === 0) return s.gesamt === 1 ? i18n("1 Lampe · aus") : i18n("%1 Lampen · alle aus", s.gesamt);
                             const teil = s.an === s.gesamt ? i18n("alle %1 an", s.gesamt) : i18n("%1 von %2 an", s.an, s.gesamt);
-                            return s.dimmbar ? teil + " · " + (regler.pressed ? Math.round(regler.value) : s.helligkeit) + " %" : teil;
+                            return teil;
                         }
                         font: Kirigami.Theme.smallFont
                         color: Kirigami.Theme.disabledTextColor
@@ -103,11 +103,14 @@ ColumnLayout {
                     }
                 }
 
-                Kirigami.Icon {
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    source: eintrag.aufgeklappt ? "arrow-up" : "arrow-down"
-                    color: Kirigami.Theme.disabledTextColor
+                PC3.ToolButton {
+                    icon.name: eintrag.aufgeklappt ? "collapse" : "expand"
+                    onClicked: eintrag.klick()
+                    display: PC3.AbstractButton.IconOnly
+                    text: eintrag.aufgeklappt ? i18n("Lampen ausblenden") : i18n("Lampen zeigen")
+                    PC3.ToolTip.text: text
+                    PC3.ToolTip.visible: hovered
+                    PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
                 }
 
                 PC3.Switch {
@@ -118,11 +121,14 @@ ColumnLayout {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.iconSizes.medium + Kirigami.Units.largeSpacing
+                visible: eintrag.status.dimmbar && eintrag.status.verfuegbar > 0
+                spacing: Kirigami.Units.smallSpacing
             PC3.Slider {
                 id: regler
                 Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2 + Kirigami.Units.largeSpacing
-                visible: eintrag.status.dimmbar
                 enabled: eintrag.status.verfuegbar > 0
                 from: 0
                 to: 100
@@ -142,22 +148,22 @@ ColumnLayout {
                     onTriggered: eintrag.dimmen(regler.value)
                 }
             }
+            PC3.Label {
+                Layout.minimumWidth: gruppenProzentMass.width
+                horizontalAlignment: Text.AlignRight
+                text: i18n("%1 %", Math.round(regler.value))
+                opacity: regler.opacity
+                TextMetrics { id: gruppenProzentMass; text: i18n("%1 %", 100) }
+            }
+            }
         }
     }
 
-    // Die einzelnen Lampen, eingerückt und mit Linie links
+    // Die einzelnen Lampen, eingerückt
     Item {
         Layout.fillWidth: true
         visible: eintrag.aufgeklappt
         implicitHeight: liste.implicitHeight
-        Rectangle {
-            x: Kirigami.Units.largeSpacing + Kirigami.Units.iconSizes.medium / 2 + Kirigami.Units.smallSpacing
-            width: 2
-            radius: 1
-            y: Kirigami.Units.smallSpacing
-            height: parent.height - Kirigami.Units.smallSpacing * 2
-            color: eintrag.farbe !== "" ? Qt.alpha(eintrag.farbe, 0.6) : Qt.alpha(Kirigami.Theme.textColor, 0.15)
-        }
         ColumnLayout {
             id: liste
             width: parent.width

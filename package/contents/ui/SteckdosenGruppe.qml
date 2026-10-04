@@ -99,11 +99,14 @@ ColumnLayout {
                     elide: Text.ElideRight
                 }
             }
-            Kirigami.Icon {
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                source: gruppe.aufgeklappt ? "arrow-up" : "arrow-down"
-                color: Kirigami.Theme.disabledTextColor
+            PC3.ToolButton {
+                icon.name: gruppe.aufgeklappt ? "collapse" : "expand"
+                onClicked: gruppe.klick()
+                display: PC3.AbstractButton.IconOnly
+                text: gruppe.aufgeklappt ? i18n("Dosen ausblenden") : i18n("Dosen zeigen")
+                PC3.ToolTip.text: text
+                PC3.ToolTip.visible: hovered
+                PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
             PC3.Switch {
                 checked: gruppe.an
@@ -114,19 +117,11 @@ ColumnLayout {
         }
     }
 
-    // Die einzelnen Dosen, eingerückt mit Linie links
+    // Die einzelnen Dosen, eingerückt
     Item {
         Layout.fillWidth: true
         visible: gruppe.aufgeklappt
         implicitHeight: liste.implicitHeight
-        Rectangle {
-            x: Kirigami.Units.largeSpacing + Kirigami.Units.iconSizes.medium / 2 + Kirigami.Units.smallSpacing
-            width: 2
-            radius: 1
-            y: Kirigami.Units.smallSpacing
-            height: parent.height - Kirigami.Units.smallSpacing * 2
-            color: gruppe.an ? Qt.alpha(Kirigami.Theme.highlightColor, 0.6) : Qt.alpha(Kirigami.Theme.textColor, 0.15)
-        }
         ColumnLayout {
             id: liste
             width: parent.width

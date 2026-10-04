@@ -67,7 +67,6 @@ Item {
                     Layout.fillWidth: true
                     text: !zeile.verfuegbar ? i18n("nicht erreichbar")
                         : !zeile.an ? i18n("aus")
-                        : zeile.dimmbar ? i18n("%1 %", regler.pressed ? Math.round(regler.value) : zeile.prozent)
                         : i18n("an")
                     font: Kirigami.Theme.smallFont
                     color: Kirigami.Theme.disabledTextColor
@@ -83,11 +82,15 @@ Item {
             }
         }
 
+        // Regler mit Prozentangabe daneben – wie im Lautstärke-Applet
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.iconSizes.medium + Kirigami.Units.largeSpacing
+            visible: zeile.dimmbar && zeile.verfuegbar
+            spacing: Kirigami.Units.smallSpacing
         PC3.Slider {
             id: regler
             Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2 + Kirigami.Units.largeSpacing
-            visible: zeile.dimmbar
             enabled: zeile.verfuegbar
             from: 0
             to: 100
@@ -109,6 +112,14 @@ Item {
                 interval: 250
                 onTriggered: zeile.ha.dimme(zeile.entityId, regler.value)
             }
+        }
+        PC3.Label {
+            Layout.minimumWidth: prozentMass.width
+            horizontalAlignment: Text.AlignRight
+            text: i18n("%1 %", Math.round(regler.value))
+            opacity: regler.opacity
+            TextMetrics { id: prozentMass; text: i18n("%1 %", 100) }
+        }
         }
     }
 }
