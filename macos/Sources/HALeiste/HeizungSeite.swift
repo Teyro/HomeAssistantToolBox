@@ -285,7 +285,7 @@ struct KlimaDiagramm: View {
     var body: some View {
         if let v = verlauf, !(v.ist.isEmpty && v.ziel.isEmpty) {
             let werte = (v.ist + v.ziel).map(\.w)
-            let lo = Swift.floor((werte.min() ?? 18) - 0.5), hi = Swift.ceil((werte.max() ?? 22) + 0.5)
+            let lo = ((werte.min() ?? 18) - 0.5).rounded(.down), hi = ((werte.max() ?? 22) + 0.5).rounded(.up)
             let jetzt = Date()
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 10) {
