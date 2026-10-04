@@ -95,7 +95,7 @@ extension VerbrauchsArt {
     }
 }
 
-/// Symbol im Kreis (wie im Kontrollzentrum): an = gefüllt in der Lampenfarbe
+/// Symbol im Kreis (wie im Kontrollzentrum): an = gefüllt in der Lampenfarbe, mit Schein
 struct SymbolKreis: View {
     let symbol: String
     var farbe: Color?
@@ -104,86 +104,256 @@ struct SymbolKreis: View {
 
     var body: some View {
         ZStack {
+            if let farbe {
+                // weicher Lichtschein hinter dem Kreis
+                Circle()
+                    .fill(RadialGradient(colors: [farbe.opacity(0.55), .clear], center: .center, startRadius: 0, endRadius: groesse * 0.95))
+                    .frame(width: groesse * 1.9, height: groesse * 1.9)
+                    .allowsHitTesting(false)
+            }
             Circle()
-                .fill(farbe.map { AnyShapeStyle($0.gradient) } ?? AnyShapeStyle(Color.primary.opacity(0.1)))
+                .fill(farbe.map { AnyShapeStyle($0) } ?? AnyShapeStyle(Color.primary.opacity(0.09)))
+                .overlay(Circle().fill(LinearGradient(colors: [.white.opacity(farbe != nil ? 0.35 : 0), .clear], startPoint: .top, endPoint: .center)))
+                .overlay(Circle().strokeBorder(.white.opacity(farbe != nil ? 0.35 : 0.06), lineWidth: 0.5))
+                .frame(width: groesse, height: groesse)
             Image(systemName: symbol)
-                .font(.system(size: groesse * 0.45, weight: .semibold))
-                .foregroundStyle(farbe != nil ? AnyShapeStyle(Color.black.opacity(0.65)) : AnyShapeStyle(.secondary))
+                .font(.system(size: groesse * 0.44, weight: .semibold))
+                .foregroundStyle(farbe != nil ? AnyShapeStyle(Color.black.opacity(0.62)) : AnyShapeStyle(.secondary))
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, value: farbe != nil)
         }
         .frame(width: groesse, height: groesse)
         .opacity(verfuegbar ? 1 : 0.4)
-        .shadow(color: (farbe ?? .clear).opacity(0.5), radius: farbe != nil ? 6 : 0)
+        .animation(.smooth(duration: 0.35), value: farbe)
     }
 }
 
 /// Abschnittsüberschrift, optional zum Auf- und Zuklappen und mit Anzahl
 struct Abschnitt: View {
     let titel: String
+    var symbol: String?
     var anzahl: Int?
     var offen: Binding<Bool>?
 
     var body: some View {
-        Button {
-            withAnimation(.snappy) { offen?.wrappedValue.toggle() }
-        } label: {
-            HStack(spacing: 6) {
-                if let offen {
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .rotationEffect(.degrees(offen.wrappedValue ? 90 : 0))
-                }
-                Text(titel).font(.subheadline.weight(.semibold))
-                if let anzahl {
-                    Text("\(anzahl)")
-                        .font(.caption.weight(.semibold))
-                        .monospacedDigit()
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 1)
-                        .background(.primary.opacity(0.08), in: Capsule())
-                }
-                Spacer()
+        if let offen {
+            Button {
+                withAnimation(.snappy) { offen.wrappedValue.toggle() }
+            } label: {
+                zeile(offen: offen.wrappedValue)
             }
-            .foregroundStyle(.secondary)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+        } else {
+            zeile(offen: nil)
         }
-        .buttonStyle(.plain)
-        .disabled(offen == nil)
-        .padding(.horizontal, 4)
-        .padding(.top, 8)
+    }
+
+    private func zeile(offen: Bool?) -> some View {
+        HStack(spacing: 6) {
+            if let offen {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .heavy))
+                    .rotationEffect(.degrees(offen ? 90 : 0))
+            }
+            if let symbol { Image(systemName: symbol).font(.system(size: 10, weight: .semibold)) }
+            Text(titel.uppercased())
+                .font(.system(size: 10.5, weight: .semibold))
+                .tracking(0.6)
+            if let anzahl {
+                Text("\(anzahl)")
+                    .font(.system(size: 10, weight: .bold))
+                    .monospacedDigit()
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(.primary.opacity(0.08), in: Capsule())
+            }
+            Spacer()
+        }
+        .foregroundStyle(.secondary)
+        .contentShape(Rectangle())
+        .padding(.horizontal, 6)
+        .padding(.top, 10)
+        .padding(.bottom, 1)
     }
 }
 
-/// Helligkeitsregler: schickt beim Ziehen höchstens alle 0,3 s und am Ende den Wert
+/// Helligkeitsregler wie im Kontrollzentrum: breite Kapsel, gefüllt in der Lampenfarbe.
+/// Schickt beim Ziehen höchstens alle 0,3 s und am Ende den Wert.
 struct HelligkeitsRegler: View {
     let wert: Int
     let farbe: Color
     let setzen: (Double) -> Void
 
-    @State private var lokal: Double = 0
+    @State private var lokal: Double = 50
     @State private var zieht = false
     @State private var zuletzt = Date.distantPast
+    @State private var losgelassen = Date.distantPast
+    @State private var ueber = false
+    private let hoehe: CGFloat = 24
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "sun.min").font(.caption).foregroundStyle(.secondary)
-            Slider(value: $lokal, in: 1...100, onEditingChanged: { aktiv in
-                zieht = aktiv
-                if !aktiv { setzen(lokal) }
-            })
-            .tint(farbe)
-            .controlSize(.small)
-            .onChange(of: lokal) { _, neu in
-                guard zieht, Date().timeIntervalSince(zuletzt) > 0.3 else { return }
-                zuletzt = Date()
-                setzen(neu)
+        GeometryReader { geo in
+            let breite = geo.size.width
+            let anteil = CGFloat((lokal - 1) / 99)
+            let fuellung = max(hoehe, hoehe + (breite - hoehe) * anteil)
+            ZStack(alignment: .leading) {
+                Capsule().fill(.primary.opacity(0.08))
+                Capsule()
+                    .fill(LinearGradient(colors: [farbe.opacity(0.6), farbe], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: fuellung)
+                    .shadow(color: farbe.opacity(zieht ? 0.6 : 0.35), radius: zieht ? 8 : 4)
+                // Griff am Ende der Füllung
+                Capsule()
+                    .fill(.white.opacity(0.85))
+                    .frame(width: 3, height: hoehe * 0.5)
+                    .offset(x: fuellung - 8)
+                    .shadow(color: .black.opacity(0.2), radius: 1)
+                HStack {
+                    Image(systemName: lokal < 40 ? "sun.min.fill" : "sun.max.fill")
+                        .foregroundStyle(Color.black.opacity(0.6))
+                        .contentTransition(.symbolEffect(.replace))
+                    Spacer()
+                    Text("\(Int(lokal.rounded())) %")
+                        .monospacedDigit()
+                        .foregroundStyle(anteil > 0.82 ? AnyShapeStyle(Color.black.opacity(0.6)) : AnyShapeStyle(.secondary))
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .padding(.horizontal, 8)
             }
-            Text("\(Int(lokal.rounded())) %")
-                .font(.caption)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(width: 38, alignment: .trailing)
+            .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(ueber || zieht ? 0.3 : 0.12), lineWidth: 0.5))
+            .contentShape(Capsule())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { g in
+                        zieht = true
+                        lokal = min(100, max(1, 1 + Double((g.location.x - hoehe / 2) / max(1, breite - hoehe)) * 99))
+                        if Date().timeIntervalSince(zuletzt) > 0.3 {
+                            zuletzt = Date()
+                            setzen(lokal)
+                        }
+                    }
+                    .onEnded { _ in
+                        zieht = false
+                        losgelassen = Date()
+                        setzen(lokal)
+                    }
+            )
         }
+        .frame(height: hoehe)
+        .scaleEffect(zieht ? 1.02 : 1)
+        .animation(.snappy(duration: 0.18), value: zieht)
+        .onHover { ueber = $0 }
         .onAppear { lokal = Double(max(1, wert)) }
-        .onChange(of: wert) { _, neu in if !zieht { lokal = Double(max(1, neu)) } }
+        .onChange(of: wert) { _, neu in
+            // Kurz nach dem Loslassen kommen noch Rückmeldungen zu älteren Zwischenwerten –
+            // die würden den Regler zurückspringen lassen.
+            if !zieht && Date().timeIntervalSince(losgelassen) > 1.5 {
+                withAnimation(.smooth) { lokal = Double(max(1, neu)) }
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Helligkeit")
+        .accessibilityValue("\(Int(lokal.rounded())) Prozent")
+        .accessibilityAdjustableAction { richtung in
+            switch richtung {
+            case .increment: lokal = min(100, lokal + 10)
+            case .decrement: lokal = max(1, lokal - 10)
+            @unknown default: break
+            }
+            setzen(lokal)
+        }
     }
+}
+
+/// Übersicht oben im Reiter: Ring mit Anteil, Titel, Untertitel und ein Knopf
+struct UebersichtKarte<Knopf: View>: View {
+    let symbol: String
+    let titel: String
+    let untertitel: String
+    let anteil: Double
+    let farbe: Color
+    @ViewBuilder var knopf: Knopf
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle().stroke(.primary.opacity(0.1), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: max(0.001, min(1, anteil)))
+                    .stroke(AngularGradient(colors: [farbe.opacity(0.6), farbe], center: .center), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .shadow(color: farbe.opacity(0.5), radius: 3)
+                Image(systemName: symbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(anteil > 0 ? AnyShapeStyle(farbe) : AnyShapeStyle(.secondary))
+                    .symbolEffect(.bounce, value: anteil > 0)
+            }
+            .frame(width: 40, height: 40)
+            .animation(.smooth(duration: 0.5), value: anteil)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(titel).font(.system(size: 15, weight: .semibold)).contentTransition(.numericText())
+                Text(untertitel).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            knopf
+        }
+        .karte(farbe: anteil > 0 ? farbe.opacity(0.14) : nil, eckradius: 20)
+    }
+}
+
+/// Leistung als kleine Plakette (z. B. "62 W" neben einer Steckdose)
+struct WattPlakette: View {
+    let watt: Double
+    var body: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "bolt.fill").font(.system(size: 8, weight: .bold))
+            Text(Logik.formatWatt(watt)).font(.system(size: 10.5, weight: .semibold)).monospacedDigit()
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .foregroundStyle(watt > 0 ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+        .background((watt > 0 ? Color.orange : Color.primary).opacity(0.13), in: Capsule())
+        .contentTransition(.numericText(value: watt))
+        .animation(.snappy, value: watt)
+    }
+}
+
+/// Pulsierender Punkt für "live verbunden"
+struct LivePunkt: View {
+    let farbe: Color
+    let pulsiert: Bool
+    @State private var an = false
+
+    var body: some View {
+        ZStack {
+            if pulsiert {
+                Circle()
+                    .fill(farbe.opacity(0.5))
+                    .frame(width: 7, height: 7)
+                    .scaleEffect(an ? 2.4 : 1)
+                    .opacity(an ? 0 : 0.8)
+                    .animation(.easeOut(duration: 1.6).repeatForever(autoreverses: false), value: an)
+            }
+            Circle().fill(farbe).frame(width: 7, height: 7)
+        }
+        .frame(width: 14, height: 14)
+        .onAppear { an = true }
+    }
+}
+
+/// Leichtes Anheben beim Überfahren mit der Maus
+struct Anheben: ViewModifier {
+    @State private var ueber = false
+    func body(content: Content) -> some View {
+        content
+            .brightness(ueber ? 0.025 : 0)
+            .scaleEffect(ueber ? 1.006 : 1)
+            .animation(.smooth(duration: 0.2), value: ueber)
+            .onHover { ueber = $0 }
+    }
+}
+
+extension View {
+    func anheben() -> some View { modifier(Anheben()) }
 }

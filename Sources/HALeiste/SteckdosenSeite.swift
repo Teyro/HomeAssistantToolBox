@@ -32,24 +32,25 @@ struct SteckdosenSeite: View {
         let mitRaeumen = liste.contains { !$0.raum.isEmpty }
         // Ohne Gruppen gibt es nichts zum Einklappen – dann gleich alles zeigen
         let einzelneSichtbar = zustand.einzelneSteckdosenOffen || ha.schalterGruppen.isEmpty
+        let mitMessung = ha.schalter.contains { !$0.leistung.isEmpty }
         VStack(spacing: 0) {
-            HStack {
-                Text(ha.schalter.isEmpty ? "Keine Steckdosen gefunden" : "\(ha.schalterAn) von \(ha.schalter.count) an")
-                Spacer()
-                if ha.schalter.contains(where: { !$0.leistung.isEmpty }) {
-                    Label("zusammen \(Logik.formatWatt(summe))", systemImage: "bolt.fill")
-                        .monospacedDigit()
-                }
-            }
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 6)
-
             ScrollView {
                 LazyVStack(spacing: 8) {
+                    UebersichtKarte(symbol: "poweroutlet.type.f.fill",
+                                    titel: ha.schalter.isEmpty ? "Keine Steckdosen" : ha.schalterAn == 0 ? "Alle aus" : "\(ha.schalterAn) von \(ha.schalter.count) an",
+                                    untertitel: mitMessung ? "Verbrauch zusammen" : "\(ha.schalter.count) Steckdosen",
+                                    anteil: ha.schalter.isEmpty ? 0 : Double(ha.schalterAn) / Double(ha.schalter.count),
+                                    farbe: .accentColor) {
+                        if mitMessung {
+                            Text(Logik.formatWatt(summe))
+                                .font(.system(.title3, design: .rounded).weight(.semibold))
+                                .monospacedDigit()
+                                .contentTransition(.numericText(value: summe))
+                                .animation(.snappy, value: summe)
+                        }
+                    }
                     if !ha.schalterGruppen.isEmpty {
-                        Abschnitt(titel: "Gruppen & Steckdosenleisten")
+                        Abschnitt(titel: "Gruppen & Steckdosenleisten", symbol: "poweroutlet.strip.fill")
                         ForEach(ha.schalterGruppen) { g in
                             SteckdosenGruppe(ha: ha, gruppe: g, aufgeklappt: zustand.offen.contains(g.id)) { zustand.umschalten(g.id) }
                         }
@@ -69,11 +70,13 @@ struct SteckdosenSeite: View {
                             }
                             SteckdosenZeile(ha: ha, eintrag: s)
                                 .karte(farbe: Logik.istAn(ha.zustaende[s.id]) ? Color.accentColor.opacity(0.18) : nil)
+                                .anheben()
                         }
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
+                .padding(.top, 2)
             }
         }
     }
@@ -93,6 +96,7 @@ struct SteckdosenGruppe: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 SymbolKreis(symbol: "poweroutlet.strip.fill", farbe: an ? .accentColor : nil, verfuegbar: s.verfuegbar > 0)
+                    .onTapGesture { if s.verfuegbar > 0 { schalten(!an) } }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(gruppe.name).font(.body.weight(.semibold)).lineLimit(1)
                     Text(untertitel(s)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -127,6 +131,8 @@ struct SteckdosenGruppe: View {
             }
         }
         .karte(farbe: an ? Color.accentColor.opacity(0.22) : nil)
+        .anheben()
+        .animation(.snappy, value: aufgeklappt)
     }
 
     private func untertitel(_ s: SchalterGruppenStatus) -> String {
@@ -158,15 +164,15 @@ struct SteckdosenZeile: View {
         let watt = eintrag.leistung.isEmpty ? nil : Logik.wattVon(ha.zustaende[eintrag.leistung])
         HStack(spacing: 10) {
             SymbolKreis(symbol: "poweroutlet.type.f.fill", farbe: an ? .accentColor : nil, verfuegbar: verfuegbar, groesse: klein ? 26 : 32)
+                .onTapGesture { if verfuegbar { ha.schalte(eintrag.id, !an) } }
             VStack(alignment: .leading, spacing: 1) {
                 Text(eintrag.name).font(klein ? .callout : .body.weight(.medium)).lineLimit(1)
-                Text([!verfuegbar ? "nicht erreichbar" : an ? "an" : "aus", watt.map { Logik.formatWatt($0) }]
-                        .compactMap { $0 }.joined(separator: " · "))
+                Text(!verfuegbar ? "nicht erreichbar" : an ? "an" : "aus")
                     .font(.caption)
-                    .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
+            if let watt { WattPlakette(watt: watt) }
             Toggle("", isOn: Binding(get: { an }, set: { ha.schalte(eintrag.id, $0) }))
                 .toggleStyle(.switch)
                 .labelsHidden()

@@ -58,6 +58,23 @@ final class LiveVerbindung {
         let gen = generation
         t.resume()
         Task { await empfangen(t, gen) }
+        Task { await anklopfen(t, gen) }
+    }
+
+    /// Alle 30 s ein Ping: hält die Verbindung offen und merkt tote Verbindungen
+    /// (WLAN weg, Ruhezustand), die sonst stumm hängen bleiben.
+    private func anklopfen(_ t: URLSessionWebSocketTask, _ gen: Int) async {
+        while gen == generation {
+            try? await Task.sleep(for: .seconds(30))
+            guard gen == generation, verbunden else { continue }
+            let ok = await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
+                t.sendPing { fehler in c.resume(returning: fehler == nil) }
+            }
+            if !ok && gen == generation {
+                t.cancel(with: .goingAway, reason: nil)
+                return
+            }
+        }
     }
 
     private func empfangen(_ t: URLSessionWebSocketTask, _ gen: Int) async {

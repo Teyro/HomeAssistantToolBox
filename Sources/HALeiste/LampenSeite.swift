@@ -13,34 +13,29 @@ struct LampenSeite: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text(zusammenfassung)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button {
-                    ha.alleLichterAus()
-                } label: {
-                    Label("Alle aus", systemImage: "power")
-                }
-                .glasKnopf()
-                .controlSize(.small)
-                .disabled(ha.lichterAn == 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 6)
-
             ScrollView {
                 LazyVStack(spacing: 8) {
+                    UebersichtKarte(symbol: ha.lichterAn > 0 ? "lightbulb.fill" : "lightbulb",
+                                    titel: zusammenfassung, untertitel: untertitel,
+                                    anteil: ha.lichter.isEmpty ? 0 : Double(ha.lichterAn) / Double(ha.lichter.count),
+                                    farbe: Logik.gruppenFarbe(ha.lichter, ha.zustaende)?.farbe ?? Color(red: 1, green: 0.78, blue: 0.36)) {
+                        Button {
+                            ha.alleLichterAus()
+                        } label: {
+                            Label("Alle aus", systemImage: "power")
+                        }
+                        .glasKnopf()
+                        .disabled(ha.lichterAn == 0)
+                    }
                     if einstellungen.zeigeGruppen && !ha.gruppen.isEmpty {
-                        Abschnitt(titel: "Gruppen")
+                        Abschnitt(titel: "Gruppen", symbol: "square.stack.3d.up.fill")
                         ForEach(ha.gruppen) { g in
                             GruppenKarte(ha: ha, titel: g.name, symbol: "lightbulb.2.fill", steuerId: g.id, mitglieder: g.mitglieder,
                                          aufgeklappt: zustand.offen.contains("g:" + g.id)) { zustand.umschalten("g:" + g.id) }
                         }
                     }
                     if !raeumeMitLicht.isEmpty {
-                        Abschnitt(titel: "Räume")
+                        Abschnitt(titel: "Räume", symbol: "house.fill")
                         ForEach(raeumeMitLicht) { r in
                             GruppenKarte(ha: ha, titel: r.name, symbol: "house.fill", steuerId: "", mitglieder: r.lichter,
                                          aufgeklappt: zustand.offen.contains("r:" + r.id)) { zustand.umschalten("r:" + r.id) }
@@ -51,22 +46,30 @@ struct LampenSeite: View {
                                   anzahl: einzelne.count, offen: $zustand.einzelneLampenOffen)
                         if zustand.einzelneLampenOffen {
                             ForEach(einzelne, id: \.self) { id in
-                                LampenZeile(ha: ha, entityId: id).karte(farbe: kartenFarbe(id))
+                                LampenZeile(ha: ha, entityId: id).karte(farbe: kartenFarbe(id)).anheben()
                             }
                         }
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
+                .padding(.top, 2)
             }
             .scrollIndicators(.automatic)
         }
     }
 
     private var zusammenfassung: String {
-        if ha.lichter.isEmpty { return "Keine Lampen gefunden" }
-        if ha.lichterAn == 0 { return "Alle \(ha.lichter.count) Lampen sind aus" }
-        return "\(ha.lichterAn) von \(ha.lichter.count) Lampen an"
+        if ha.lichter.isEmpty { return "Keine Lampen" }
+        if ha.lichterAn == 0 { return "Alle Lampen aus" }
+        return "\(ha.lichterAn) von \(ha.lichter.count) an"
+    }
+
+    private var untertitel: String {
+        if ha.lichter.isEmpty { return "In Home Assistant keine Lampen gefunden" }
+        let raeume = Set(ha.raeume.filter { r in r.lichter.contains { Logik.istAn(ha.zustaende[$0]) } }.map(\.id)).count
+        if ha.lichterAn > 0 && raeume > 0 { return raeume == 1 ? "Licht in 1 Raum" : "Licht in \(raeume) Räumen" }
+        return "\(ha.lichter.count) Lampen"
     }
 
     private func kartenFarbe(_ id: String) -> Color? {
@@ -134,6 +137,8 @@ struct GruppenKarte: View {
             }
         }
         .karte(farbe: an ? (farbe ?? .yellow).opacity(0.35) : nil)
+        .anheben()
+        .animation(.snappy, value: aufgeklappt)
     }
 
     private func untertitel(_ s: GruppenStatus) -> String {

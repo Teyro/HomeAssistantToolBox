@@ -25,6 +25,13 @@ enum Vorschau {
             @MainActor func foto(_ name: String) { speichern(f, "\(ordner)/\(modus)_\(name).png") }
             await warte(5)
             print("verbunden:", kern.ha.verbunden, "live:", kern.ha.live, "lichter:", kern.ha.lichter.count, "fehler:", kern.ha.fehler)
+            if let name = ProcessInfo.processInfo.environment["HA_NUR_ERSTES"] {
+                // Fehlerfall: nur ein Bild, dann noch 20 s laufen lassen (darf nicht weiter anfragen)
+                foto(name)
+                await warte(20)
+                NSApp.terminate(nil)
+                return
+            }
             foto("1_lampen")
             if let g = kern.ha.gruppen.first { kern.panel.offen.insert("g:" + g.id) }
             kern.ha.dimme("light.wz_stehlampe", 80)

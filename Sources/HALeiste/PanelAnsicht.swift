@@ -103,6 +103,7 @@ struct PanelAnsicht: View {
                 HStack(spacing: 6) {
                     Menu {
                         Button("Aktualisieren") { ha.erneutVersuchen() }
+                            .keyboardShortcut("r")
                         Divider()
                         Button("Home Assistant öffnen") { if let u = URL(string: ha.basis) { NSWorkspace.shared.open(u) } }
                             .disabled(!ha.eingerichtet)
@@ -110,8 +111,10 @@ struct PanelAnsicht: View {
                             .disabled(ha.lichterAn == 0)
                         Divider()
                         Button("Einstellungen …", action: einrichten)
+                            .keyboardShortcut(",")
                         Divider()
                         Button("HA Leiste beenden") { NSApp.terminate(nil) }
+                            .keyboardShortcut("q")
                     } label: {
                         Image(systemName: "ellipsis")
                     }
@@ -170,16 +173,15 @@ struct PanelAnsicht: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .keyboardShortcut(KeyEquivalent(Character("\(r.rawValue + 1)")), modifiers: .command)
+        .help("\(r.titel) (⌘\(r.rawValue + 1))")
     }
 
     // MARK: Fuß: Verbindungsstatus
 
     private var fuss: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(ha.live ? Color.green : ha.verbunden ? Color.yellow : Color.red)
-                .frame(width: 7, height: 7)
-                .shadow(color: ha.live ? .green.opacity(0.7) : .clear, radius: 3)
+            LivePunkt(farbe: ha.live ? .green : ha.verbunden ? .yellow : .red, pulsiert: ha.live)
             Text(statusText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -187,8 +189,9 @@ struct PanelAnsicht: View {
                 .truncationMode(.middle)
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(alignment: .top) { Divider().opacity(0.5) }
     }
 
     private var statusText: String {

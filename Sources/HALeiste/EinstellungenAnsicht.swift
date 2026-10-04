@@ -16,6 +16,28 @@ struct EinstellungenAnsicht: View {
 
     var body: some View {
         Form {
+            Section {
+                HStack(spacing: 14) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 56, height: 56)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("HA Leiste").font(.title2.weight(.semibold))
+                        Text("Version \(version) · Home Assistant in der Menüleiste")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            LivePunkt(farbe: ha.live ? .green : ha.verbunden ? .yellow : .red, pulsiert: ha.live)
+                            Text(ha.live ? "Live verbunden" : ha.verbunden ? "Verbunden" : ha.eingerichtet ? "Nicht verbunden" : "Nicht eingerichtet")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+            }
+
             Section("Verbindung") {
                 TextField("Adresse", text: $adresse, prompt: Text("http://homeassistant.local:8123"))
                 SecureField("Zugriffstoken", text: $token, prompt: Text("Langlebiger Zugriffstoken"))
@@ -32,6 +54,14 @@ struct EinstellungenAnsicht: View {
                     .disabled(adresse.isEmpty || token.isEmpty || testLaeuft)
                     if testLaeuft { ProgressView().controlSize(.small) }
                     Spacer()
+                    if !einstellungen.token.isEmpty {
+                        Button("Abmelden", role: .destructive) {
+                            einstellungen.token = ""
+                            token = ""
+                            ergebnis = nil
+                        }
+                        .help("Token aus dem Schlüsselbund entfernen")
+                    }
                 }
                 if let ergebnis {
                     Label(ergebnis.text, systemImage: ergebnis.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
@@ -90,6 +120,12 @@ struct EinstellungenAnsicht: View {
                 Stepper("Abfrage alle \(einstellungen.abfrageSekunden) s (ohne Live-Verbindung)",
                         value: $einstellungen.abfrageSekunden, in: 3...600)
             }
+
+            Section {
+                Link(destination: URL(string: "https://github.com/Teyro/macos-homeassistant")!) {
+                    Label("Projektseite und Updates auf GitHub", systemImage: "arrow.up.forward.square")
+                }
+            }
         }
         .formStyle(.grouped)
         .frame(width: 520)
@@ -99,6 +135,10 @@ struct EinstellungenAnsicht: View {
             token = einstellungen.token
             anmeldeStart = einstellungen.anmeldeStart
         }
+    }
+
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
     }
 
     /// Aus der laufenden Verbindung, sonst aus dem Verbindungstest
@@ -137,6 +177,8 @@ struct EinstellungenAnsicht: View {
             ergebnis = (true, "Verbunden: \(probe.lichter.count) Lampen, \(probe.gruppen.count) Gruppen, \(probe.schalter.count) Steckdosen, \(probe.leistung.count) Leistungssensoren.")
             einstellungen.adresse = adresse
             einstellungen.token = token.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Gleiche Werte wie vorher (z. B. Token in Home Assistant wieder freigegeben): neu versuchen
+            if ha.abgelehnt || !ha.verbunden { ha.erneutVersuchen() }
         } else {
             ergebnis = (false, probe.fehler.isEmpty ? "Keine Verbindung." : probe.fehler)
         }

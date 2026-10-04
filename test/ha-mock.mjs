@@ -206,6 +206,7 @@ server.on('upgrade', (req, sock) => {
     puffer = rest;
     for (const n of nachrichten) {
       if (n.op === 8) { sock.end(); return; }
+      if (n.op === 9) { const d = Buffer.from(n.text); sock.write(Buffer.concat([Buffer.from([0x8a, d.length]), d])); log('WS ping'); continue; }
       if (n.op !== 1) continue;
       const m = JSON.parse(n.text);
       log('WS ' + n.text.slice(0, 120));

@@ -17,8 +17,8 @@ final class HaVerbindung {
     var sichtbar = false {
         didSet {
             guard sichtbar != oldValue else { return }
-            if sichtbar && !live { Task { await aktualisieren() } }
-            abfrageStarten()
+            // Beim Öffnen gleich frisch laden – mit Live-Verbindung ist ohnehin alles aktuell
+            abfrageStarten(sofort: sichtbar && !live)
         }
     }
     /// Einstellungen: nur Verbindungstest, keine Live-Verbindung
@@ -87,7 +87,7 @@ final class HaVerbindung {
         liveVerbindung.verbundenGeaendert = { [weak self] an in
             guard let self else { return }
             self.live = an
-            if an { Task { await self.aktualisieren() } }
+            // Nach (Wieder-)Verbindung einmal alles laden, dann seltener bzw. wieder regelmäßig
             self.abfrageStarten()
         }
         liveVerbindung.tokenAbgelehnt = { [weak self] in self?.live = false }
@@ -107,7 +107,9 @@ final class HaVerbindung {
     func verbinde(adresse: String, token neuerToken: String) {
         let b = adresse.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
         let t = neuerToken.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard b != basis || t != token || abgelehnt else { return }
+        // Gleiche Werte: nichts tun – auch nicht nach abgelehntem Token (sonst würde jede
+        // Einstellungsänderung einen neuen Fehlversuch auslösen → ip_ban)
+        guard b != basis || t != token else { return }
         basis = b
         token = t
         neustart()
@@ -288,13 +290,15 @@ final class HaVerbindung {
 
     // MARK: Zeitgeber
 
-    private func abfrageStarten() {
+    private func abfrageStarten(sofort: Bool = true) {
         abfrageTask?.cancel()
         // Der Verbindungstest in den Einstellungen fragt nur einmal ab
         guard eingerichtet, !abgelehnt, liveErlaubt else { return }
         abfrageTask = Task {
+            var erstes = sofort
             while !Task.isCancelled {
-                await self.aktualisieren()
+                if erstes || !self.verbunden || self.zustaende.isEmpty { await self.aktualisieren() }
+                erstes = true
                 if self.abgelehnt { return }
                 // Mit Live-Verbindung nur selten zur Sicherheit, sonst regelmäßig
                 let s = self.live ? 300 : (self.sichtbar ? max(3, self.abfrageSekunden) : max(30, self.abfrageSekunden * 6))

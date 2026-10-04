@@ -27,18 +27,19 @@ struct EnergieSeite: View {
                 }
                 verbrauchHeute
                 if !verbraucher.isEmpty {
-                    Abschnitt(titel: "Größte Verbraucher gerade")
+                    Abschnitt(titel: "Größte Verbraucher gerade", symbol: "chart.bar.fill")
                     VStack(spacing: 10) {
                         ForEach(verbraucher) { v in verbraucherZeile(v) }
                     }
                     .karte()
                 }
                 if !ha.energie.isEmpty {
-                    Abschnitt(titel: "Zählerstände")
+                    Abschnitt(titel: "Zählerstände", symbol: "gauge.with.dots.needle.67percent")
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                         ForEach(ha.energie) { z in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(z.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Label(z.name, systemImage: "gauge.with.dots.needle.33percent")
+                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 Text(Logik.formatKwh(z.kwh)).font(.callout.weight(.semibold)).monospacedDigit().lineLimit(1)
                             }
                             .karte(eckradius: 14)
@@ -76,8 +77,22 @@ struct EnergieSeite: View {
 
     private var jetzt: some View {
         let k = Logik.verlaufKennzahlen(ha.verlauf, ende: Date())
+        // Ring: aktueller Verbrauch im Verhältnis zur Spitze der letzten 24 Stunden
+        let anteil = k.map { $0.spitze.w > 0 ? min(1, aktuell / $0.spitze.w) : 0 } ?? 0
         return HStack(alignment: .center, spacing: 12) {
-            SymbolKreis(symbol: "bolt.fill", farbe: .accentColor, groesse: 46)
+            ZStack {
+                Circle().stroke(.primary.opacity(0.1), lineWidth: 5)
+                Circle()
+                    .trim(from: 0, to: max(0.001, anteil))
+                    .stroke(AngularGradient(colors: [.accentColor.opacity(0.5), .accentColor, .orange], center: .center),
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .shadow(color: .accentColor.opacity(0.5), radius: 4)
+                SymbolKreis(symbol: "bolt.fill", farbe: .accentColor, groesse: 38)
+            }
+            .frame(width: 54, height: 54)
+            .animation(.smooth(duration: 0.6), value: anteil)
+            .help(k != nil ? "Verhältnis zur Spitze der letzten 24 Stunden" : "")
             VStack(alignment: .leading, spacing: 0) {
                 Text(ha.hauptWatt != nil ? "Verbrauch gerade" : "Verbrauch der Messsteckdosen")
                     .font(.caption)
@@ -115,7 +130,7 @@ struct EnergieSeite: View {
         let arten = VerbrauchsArt.allCases.filter { einstellungen.verbrauchGewuenscht.contains($0) }
         let mitWert = arten.filter { ha.verbrauchHeute[$0] != nil }
         if !arten.isEmpty {
-            Abschnitt(titel: "Verbrauch heute")
+            Abschnitt(titel: "Verbrauch heute", symbol: "calendar")
             if mitWert.isEmpty {
                 Text("Keine Zähler gefunden. In Home Assistant das Energie-Dashboard einrichten oder in den Einstellungen Zähler wählen.")
                     .font(.caption)
@@ -140,6 +155,13 @@ struct EnergieSeite: View {
                     .frame(width: 22, height: 22)
                     .background(art.farbe.gradient, in: Circle())
                 Text(art.titel).font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                if w.gueltig, let g = w.gestern, g > 0 {
+                    // Pfeil: heute schon mehr als gestern insgesamt?
+                    Image(systemName: w.heute > g ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(w.heute > g ? .orange : .green)
+                }
             }
             Text(w.gueltig ? Logik.formatMenge(w.heute, w.einheit, art) : "–")
                 .font(.system(.title3, design: .rounded).weight(.semibold))
@@ -148,6 +170,17 @@ struct EnergieSeite: View {
                 .minimumScaleFactor(0.7)
                 .padding(.top, 2)
             if w.gueltig {
+                if let g = w.gestern, g > 0 {
+                    // Balken: wie viel vom gestrigen Tagesverbrauch heute schon erreicht ist
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.primary.opacity(0.1))
+                            Capsule().fill(art.farbe.gradient).frame(width: max(4, geo.size.width * min(1, w.heute / g)))
+                        }
+                    }
+                    .frame(height: 4)
+                    .padding(.top, 2)
+                }
                 Text("gestern " + Logik.formatMenge(w.gestern, w.einheit, art))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -210,7 +243,7 @@ struct VerlaufDiagramm: View {
             ProgressView().controlSize(.small).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Chart {
-                ForEach(daten) { p in
+                ForEach(Array(daten.enumerated()), id: \.offset) { _, p in
                     AreaMark(x: .value("Zeit", p.t), y: .value("Leistung", p.w))
                         .interpolationMethod(.stepEnd)
                         .foregroundStyle(LinearGradient(colors: [.accentColor.opacity(0.45), .accentColor.opacity(0.02)],
@@ -219,6 +252,19 @@ struct VerlaufDiagramm: View {
                         .interpolationMethod(.stepEnd)
                         .foregroundStyle(Color.accentColor)
                         .lineStyle(StrokeStyle(lineWidth: 1.5, lineJoin: .round))
+                }
+                if let spitze = punkte.max(by: { $0.w < $1.w }) {
+                    PointMark(x: .value("Zeit", spitze.t), y: .value("Leistung", spitze.w))
+                        .symbolSize(28)
+                        .foregroundStyle(Color.orange)
+                        .annotation(position: .top, spacing: 2, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                            if auswahl == nil {
+                                Text(Logik.formatWatt(spitze.w))
+                                    .font(.system(size: 9.5, weight: .semibold))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.orange)
+                            }
+                        }
                 }
                 if let letzter = daten.last {
                     PointMark(x: .value("Zeit", letzter.t), y: .value("Leistung", letzter.w))
@@ -241,6 +287,8 @@ struct VerlaufDiagramm: View {
                 }
             }
             .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 18))
+            // oben etwas Luft für die Beschriftung der Spitze
+            .chartYScale(domain: 0...max(1, (daten.map(\.w).max() ?? 1) * 1.2))
             .chartXAxis {
                 AxisMarks(values: .stride(by: .hour, count: 6)) { wert in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))

@@ -32,12 +32,19 @@ jobs:
       - name: Bildschirmfotos gegen nachgebautes Home Assistant
         timeout-minutes: 6
         run: |
-          node test/ha-mock.mjs 8123 > mock.log 2>&1 &
+          HA_MOCK_LOG="$PWD/mock.log" node test/ha-mock.mjs 8123 > /dev/null 2>&1 &
           sleep 2
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
             HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
           done
+          # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)
+          : > mock.log.vorher; cp mock.log mock.log.vorher
+          HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=falsch HA_NUR_ERSTES=7_falscher_token HA_BILDER="$PWD/bilder-ci" \
+            "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark || true
+          N=$(( $(wc -l < mock.log) - $(wc -l < mock.log.vorher) ))
+          echo "Anfragen mit falschem Token: $N"
+          test "$N" -le 4
           ls -la bilder-ci || true
           tail -20 mock.log
 
