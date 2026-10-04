@@ -64,8 +64,10 @@ struct PanelAnsicht: View {
                     if ha.laedt && ha.fehler.isEmpty {
                         ProgressView().controlSize(.large).frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        platzhalter(symbol: "wifi.exclamationmark", titel: "Keine Verbindung",
-                                    text: ha.fehler.isEmpty ? "Home Assistant antwortet nicht." : ha.fehler,
+                        platzhalter(symbol: ha.abgelehnt ? "key.slash" : "wifi.exclamationmark",
+                                    titel: ha.abgelehnt ? "Zugriff verweigert" : "Keine Verbindung",
+                                    text: ha.abgelehnt ? "Home Assistant hat den Token abgelehnt. Bitte in den Einstellungen einen neuen eintragen."
+                                        : ha.fehler.isEmpty ? "Home Assistant antwortet nicht." : ha.fehler,
                                     knopf: ha.abgelehnt ? "Einstellungen …" : "Erneut versuchen",
                                     aktion: ha.abgelehnt ? einrichten : { ha.erneutVersuchen() })
                     }

@@ -155,13 +155,6 @@ struct EnergieSeite: View {
                     .frame(width: 22, height: 22)
                     .background(art.farbe.gradient, in: Circle())
                 Text(art.titel).font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                if w.gueltig, let g = w.gestern, g > 0 {
-                    // Pfeil: heute schon mehr als gestern insgesamt?
-                    Image(systemName: w.heute > g ? "arrow.up.right" : "arrow.down.right")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(w.heute > g ? .orange : .green)
-                }
             }
             Text(w.gueltig ? Logik.formatMenge(w.heute, w.einheit, art) : "–")
                 .font(.system(.title3, design: .rounded).weight(.semibold))
@@ -180,6 +173,7 @@ struct EnergieSeite: View {
                     }
                     .frame(height: 4)
                     .padding(.top, 2)
+                    .help("Heute schon \(Int((w.heute / g * 100).rounded())) % vom gestrigen Tagesverbrauch")
                 }
                 Text("gestern " + Logik.formatMenge(w.gestern, w.einheit, art))
                     .font(.caption2)

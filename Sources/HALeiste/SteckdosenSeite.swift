@@ -119,8 +119,7 @@ struct SteckdosenGruppe: View {
                 VStack(spacing: 0) {
                     ForEach(Array(gruppe.mitglieder.enumerated()), id: \.element) { i, id in
                         if i > 0 { Divider().padding(.leading, 40) }
-                        SteckdosenZeile(ha: ha, eintrag: ha.schalter.first { $0.id == id } ?? Schalter(id: id, name: id, raum: "", leistung: ""),
-                                        klein: true)
+                        SteckdosenZeile(ha: ha, eintrag: mitglied(id), klein: true)
                             .padding(.vertical, 6)
                     }
                 }
@@ -133,6 +132,14 @@ struct SteckdosenGruppe: View {
         .karte(farbe: an ? Color.accentColor.opacity(0.22) : nil)
         .anheben()
         .animation(.snappy, value: aufgeklappt)
+    }
+
+    /// Mitglied der Gruppe. Teilen sich mehrere Dosen einen Messsensor (typisch bei Leisten),
+    /// gehört der Wert zur ganzen Leiste – dann nicht bei jeder einzelnen Dose anzeigen.
+    private func mitglied(_ id: String) -> Schalter {
+        guard let s = ha.schalter.first(where: { $0.id == id }) else { return Schalter(id: id, name: id, raum: "", leistung: "") }
+        let geteilt = !s.leistung.isEmpty && gruppe.mitglieder.filter { m in ha.schalter.first { $0.id == m }?.leistung == s.leistung }.count > 1
+        return geteilt ? Schalter(id: s.id, name: s.name, raum: s.raum, leistung: "") : s
     }
 
     private func untertitel(_ s: SchalterGruppenStatus) -> String {
