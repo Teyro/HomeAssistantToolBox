@@ -19,8 +19,10 @@ jobs:
 
       - name: Logik gegen nachgebautes Home Assistant testen
         run: |
-          HA_MOCK_LOG="$PWD/mock.log" node test/ha-mock.mjs 8123 > /dev/null 2>&1 &
-          sleep 2
+          HA_MOCK_LOG="$PWD/mock.log" node test/ha-mock.mjs 8123 > mock-ausgabe.txt 2>&1 &
+          for i in $(seq 20); do curl -s -o /dev/null http://127.0.0.1:8123/ && break; sleep 0.5; done
+          cat mock-ausgabe.txt
+          node --version
           node plasma/test/logik-test.mjs
 
       - name: Plasmoid packen

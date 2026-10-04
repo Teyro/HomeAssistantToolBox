@@ -69,11 +69,11 @@ struct AlleAusAbsicht: AppIntent {
 
 struct LampenWahl: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Lampe"
-    static var defaultQuery = Abfrage()
+    static var defaultQuery = LampenAbfrage()
     var id: String
     var name: String
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-    struct Abfrage: EntityQuery {
+    struct LampenAbfrage: EntityQuery {
         func entities(for ids: [String]) async throws -> [LampenWahl] { try await suggestedEntities().filter { ids.contains($0.id) } }
         func suggestedEntities() async throws -> [LampenWahl] {
             (Schnappschuss.lesen()?.lampen ?? []).map { LampenWahl(id: $0.id, name: $0.raum.isEmpty ? $0.name : "\($0.name) · \($0.raum)") }
@@ -83,11 +83,11 @@ struct LampenWahl: AppEntity {
 
 struct SteckdosenWahl: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Steckdose"
-    static var defaultQuery = Abfrage()
+    static var defaultQuery = SteckdosenAbfrage()
     var id: String
     var name: String
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-    struct Abfrage: EntityQuery {
+    struct SteckdosenAbfrage: EntityQuery {
         func entities(for ids: [String]) async throws -> [SteckdosenWahl] { try await suggestedEntities().filter { ids.contains($0.id) } }
         func suggestedEntities() async throws -> [SteckdosenWahl] {
             (Schnappschuss.lesen()?.steckdosen ?? []).map { SteckdosenWahl(id: $0.id, name: $0.raum.isEmpty ? $0.name : "\($0.name) · \($0.raum)") }
@@ -97,11 +97,11 @@ struct SteckdosenWahl: AppEntity {
 
 struct HeizungsWahl: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Heizung"
-    static var defaultQuery = Abfrage()
+    static var defaultQuery = HeizungsAbfrage()
     var id: String
     var name: String
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-    struct Abfrage: EntityQuery {
+    struct HeizungsAbfrage: EntityQuery {
         func entities(for ids: [String]) async throws -> [HeizungsWahl] { try await suggestedEntities().filter { ids.contains($0.id) } }
         func suggestedEntities() async throws -> [HeizungsWahl] {
             (Schnappschuss.lesen()?.heizungen ?? []).map { HeizungsWahl(id: $0.id, name: $0.name) }
@@ -111,11 +111,11 @@ struct HeizungsWahl: AppEntity {
 
 struct RaumWahl: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Raum"
-    static var defaultQuery = Abfrage()
+    static var defaultQuery = RaumAbfrage()
     var id: String
     var name: String
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-    struct Abfrage: EntityQuery {
+    struct RaumAbfrage: EntityQuery {
         func entities(for ids: [String]) async throws -> [RaumWahl] { try await suggestedEntities().filter { ids.contains($0.id) } }
         func suggestedEntities() async throws -> [RaumWahl] {
             (Schnappschuss.lesen()?.raeume ?? []).map { RaumWahl(id: $0.id, name: $0.name) }
@@ -125,11 +125,11 @@ struct RaumWahl: AppEntity {
 
 struct WertWahl: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Entität"
-    static var defaultQuery = Abfrage()
+    static var defaultQuery = WertAbfrage()
     var id: String
     var name: String
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)", subtitle: "\(id)") }
-    struct Abfrage: EntityStringQuery {
+    struct WertAbfrage: EntityStringQuery {
         func entities(for ids: [String]) async throws -> [WertWahl] { try await suggestedEntities().filter { ids.contains($0.id) } }
         func suggestedEntities() async throws -> [WertWahl] {
             (Schnappschuss.lesen()?.werte ?? []).map { WertWahl(id: $0.id, name: $0.name) }
