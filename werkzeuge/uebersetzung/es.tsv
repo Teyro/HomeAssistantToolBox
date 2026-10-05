@@ -1,0 +1,402 @@
+0	«%1» no existe en Home Assistant.
+1	«%1» no existe.
+2	«Automático» usa los contadores del panel de energía de Home Assistant y calcula exactamente igual. Tus propios contadores aparecen tras «Probar conexión».
+3	(grupo)
+4	(sin descripción)
+7	%1 %
+8	%1 % de humedad
+9	%1 enchufes · todos apagados
+10	%1 h
+11	%1 h %2 min
+12	%1 calentando
+13	%1 luces
+14	%1 luces · todas apagadas
+15	%1 luces encendidas
+16	%1 informa del error %2.
+17	%1 min
+18	%1 por ciento
+19	%1 habitaciones
+20	%1 habitaciones calentando
+21	Conmutar %1
+22	%1 enchufes
+23	%1 de %2 encendidos
+24	%1 de %2 luces encendidas
+25	%1 de %2 enchufes encendidos
+26	%1 de %2 en casa
+27	%1 en casa
+28	1 enchufe · apagado
+29	1 h
+30	1 luz · apagada
+31	1 luz encendida
+32	1 habitación calentando
+33	2 h
+34	24 h
+35	24 h:
+36	24 horas
+37	3 h
+38	30 min
+39	4 h
+40	Cancelar
+41	Consultar cada (seg.):
+42	Consultar cada %1 s (sin conexión en vivo)
+43	Cerrar sesión
+44	Ausente
+45	Dirección
+46	Introduce la dirección de tu instalación de Home Assistant y un token de acceso de larga duración.
+47	Dirección y token de acceso de larga duración (en Home Assistant: tu nombre → Seguridad → Crear token).
+48	Introduce la dirección y el token de acceso en los ajustes.
+49	Dirección:
+50	Cambiar dirección/token
+51	activa
+52	Actividad
+53	Actualizar
+54	los %1 encendidos
+55	Las %1 luces están apagadas
+56	Apagar todo
+57	Todas las luces
+58	Apagar todas las luces
+59	Mostrar todo
+60	Todos en casa
+61	Como favorita
+62	Marcar como favorita
+63	encendido
+64	Encendido
+65	encendida · %1 %
+66	Mostrar:
+67	También grupos clásicos (group.*) con luces
+68	Ver en GitHub
+69	apagado
+70	Apagado
+71	Ocultar
+72	Ocultar …
+73	Ocultar:
+74	Selección:
+75	Automático
+76	Automático
+77	Automático (panel de energía)
+78	Buscar nuevas versiones automáticamente (GitHub)
+79	Buscar actualizaciones automáticamente (GitHub)
+80	Salir
+81	Iniciar al iniciar sesión
+82	Cualquier entidad (valor grande)
+83	Elige una opción
+84	Boost
+85	Panel
+86	Abrir panel
+87	Duración
+88	La estrella marca la favorita: se muestra al iniciar. Cambia en el panel con ⋯ → Cambiar instancia.
+89	El archivo descargado no es Home Assistant ToolBox.
+90	Los contadores vienen automáticamente del panel de energía de Home Assistant o se eligen arriba por instancia.
+91	Estos ajustes se aplican cuando el widget está en el escritorio. Para varios mosaicos (p. ej. una luz, una calefacción y energía), arrastra el widget varias veces al escritorio y configura cada mosaico por separado.
+92	Ocultar enchufes
+93	Mostrar enchufes
+94	Error en la descarga
+95	Promedio:
+96	Eco
+97	Una habitación (temperatura, luces, enchufes)
+98	Cualquier entidad (sensor, interruptor …) con un valor grande.
+99	Cualquier entidad con un valor grande.
+100	Una calefacción
+101	Una luz o grupo de luces
+102	Una luz o grupo de luces para encender y apagar.
+103	Un enchufe
+104	Un enchufe con consumo para encender y apagar.
+105	Configurar …
+106	Ajustes
+107	Ajustes …
+108	Enchufes individuales
+109	Energía
+110	Energía (historial, consumo de hoy)
+111	Eliminar
+112	Deshumidificar
+113	Entidad
+114	Elige una entidad: clic derecho → «Editar widget»
+115	Entidad:
+116	Entidades que no deben aparecer, separadas por comas, también con *, p. ej. light.pasillo_noche, switch.*_led
+117	Reintentar
+118	Calor extra
+119	Calor extra · faltan %1, después %2
+120	Calor extra:
+121	Favorita
+122	Favorita: se muestra al iniciar
+123	Favorita: se muestra primero al iniciar
+124	Error %1 de Home Assistant.
+125	Ventana abierta
+126	Ventana cerrada
+127	Listo
+128	Gas
+129	Contador de gas
+130	Contador de gas:
+131	cambiado %1
+132	ahora mismo
+133	Ninguna habitación está calentando
+134	ayer
+135	ayer %1
+136	Grados
+137	Mayores consumidores
+138	Mayores consumidores ahora
+139	Grupos
+140	Grupos y regletas
+141	Contador principal
+142	Elegir contador principal
+143	Contador principal:
+144	Calor
+145	Calor/Frío
+146	calentando
+147	calentando a %1
+148	Calefacción
+149	Calefacción (termostatos y temperaturas)
+150	Calefacción encendida (%1 de %2)
+151	Calefacción encendida (%1)
+152	Calefacción encendida en %1 habitaciones
+153	Calefacción apagada
+154	Calefacción en reposo
+155	Elige una calefacción: clic derecho → «Editar widget»
+156	Calefacción:
+157	Brillo %1
+158	Ya el %1 % del consumo de ayer
+159	Home Assistant
+160	Home Assistant · %1
+161	Home Assistant no responde.
+162	Configurar Home Assistant
+163	Home Assistant rechazó el token. Introduce uno nuevo en los ajustes.
+164	Añadir Home Assistant
+165	Home Assistant no está accesible (%1).
+166	Abrir Home Assistant
+167	Home Assistant ToolBox
+168	Home Assistant ToolBox – Ajustes
+169	Home Assistant ToolBox – token de Home Assistant
+170	Home Assistant ToolBox – ¿Qué hay de nuevo?
+171	Salir de Home Assistant ToolBox
+172	Configurar Home Assistant ToolBox
+173	Home Assistant ToolBox está actualizado.
+174	Abrir Home Assistant ToolBox
+175	Elígelo en los ajustes, en «Escritorio».
+176	No hay termostatos en Home Assistant.
+177	No se encontraron luces en Home Assistant
+178	No hay personas en Home Assistant.
+179	En Home Assistant: abajo a la izquierda en tu nombre → Seguridad → «Tokens de acceso de larga duración» → Crear token.
+180	La instalación falló: %1
+181	Instalar
+182	Instalar y reiniciar
+183	Instalado
+184	Instalado: Home Assistant ToolBox se reinicia …
+185	Instalado: la nueva versión estará activa tras reiniciar Plasma.
+186	instalada: %1
+187	Instalada: %1
+188	Instancia
+189	Instancia «%1»
+190	Eliminar instancia
+191	Añadir instancia
+192	Cambiar instancia
+193	Instancia:
+194	Instancias y vista
+195	Instancias:
+196	Actual
+197	ahora
+198	El mosaico muestra:
+199	Más frío
+200	Sin perfil
+201	Sin historial
+202	No hay cambios.
+203	No se encontró calefacción
+204	Sin luces
+205	No se encontraron luces
+206	Sin personas
+207	No hay personas en Home Assistant
+208	Sin enchufes
+209	No se encontraron enchufes
+210	No se encontraron termostatos ni sensores de temperatura
+211	sin conexión
+212	Sin conexión
+213	Sin conexión.
+214	No se encontraron contadores. Configura el panel de energía en Home Assistant o elige contadores en los ajustes.
+215	Ninguno (suma de los enchufes con medición)
+216	Confort
+217	Completo (todas las pestañas)
+218	Frío
+219	Cargando …
+220	Luz
+221	Luz encendida
+222	Elige una luz: clic derecho → «Editar widget»
+223	Luz:
+224	Luces
+225	Luces encendidas
+226	Ocultar luces
+227	Mostrar luces
+228	Luces, enchufes, calefacción, energía y personas de Home Assistant, en el panel y en el escritorio
+229	Luces, enchufes, calefacción, consumo y quién está en casa.
+230	Grupos de luces
+231	Mostrar grupos de luces
+232	Token de acceso de larga duración
+233	vacío = nombre de Home Assistant
+234	Sensor de potencia de tu contador eléctrico
+235	Sensor de potencia del contador eléctrico de esta instancia (p. ej. Shelly 3EM, Tibber Pulse). Tras «Probar conexión» aparecen todos los sensores de potencia.
+236	Luz en %1 habitaciones
+237	Luz en 1 habitación
+238	Conectado en vivo a %1
+239	Ventilador
+240	Humedad
+241	Más
+242	Conectar con Home Assistant
+243	Modo
+244	Modo:
+245	Buscar actualizaciones
+246	Nombre
+247	Nombre (opcional)
+248	Nombre:
+249	Recargar
+250	Nueva instancia
+251	No se puede reiniciar: %1
+252	Sin configurar
+253	no accesible
+254	no encontrado
+255	No encontrado
+256	No conectado
+257	nadie
+258	Nadie en casa
+259	todavía sin dirección
+260	Aún no hay instancias: añade Home Assistant.
+261	Aún sin configurar: clic derecho → Configurar
+262	Normalmente el widget se actualiza al instante mediante la conexión en vivo. El intervalo solo se aplica si no es posible.
+263	Mostrar solo interruptores de tipo «enchufe»
+264	Ø %1
+265	Ø %1 en %2 habitaciones
+266	sin conexión
+267	Sin habitación
+268	colaboradores de OpenStreetMap
+269	Panel:
+270	Personas
+271	Personas con mapa
+272	Reiniciar Plasma
+273	Perfil
+274	Perfil:
+275	Página del proyecto y actualizaciones en GitHub
+276	Habitación
+277	Habitación no encontrada
+278	Elige una habitación: clic derecho → «Editar widget»
+279	Habitación:
+280	Habitaciones
+281	Habitaciones (áreas de Home Assistant)
+282	Mostrar habitaciones (áreas de Home Assistant)
+283	Temperatura ambiente y temperatura objetivo para ajustar.
+284	Pestañas
+285	en reposo
+286	Conmutar
+287	Error al conmutar:
+288	Error al conmutar: %1
+289	Dormir
+290	Cerrar
+291	Escritorio
+292	desde hace %1 d
+293	desde hace %1 h
+294	desde hace %1 min
+295	Ejecuta el script una vez en Scriptable y añade Home Assistant.
+296	Cómo añadir widgets:\n1. Mantén pulsada la pantalla de inicio → «+» → Scriptable → elige el tamaño.\n2. Mantén pulsado el widget → «Editar widget» → Script: «Home Assistant ToolBox».\n3. En «Parameter» escribe lo que debe mostrar:\n\n• (vacío) – resumen\n• lights – luces (tocar para conmutar)\n• heating – todas las habitaciones, heating:Salón – una habitación con historial\n• energy – consumo, historial, electricidad/agua/gas de hoy\n• people – quién está dónde\n• room:Cocina – temperatura, luces y enchufes de una habitación\n• light:light.pasillo o light:Lámpara de pie – una entidad en grande\n• …@Casa de vacaciones – otra instancia distinta de la favorita\n\nEn la pantalla de bloqueo el widget muestra brevemente luces, calefacción y consumo.
+297	Otros
+298	Más tarde
+299	Guardar
+300	Pico:
+301	Estado %1
+302	Iniciar
+303	Enchufe
+304	Elige un enchufe: clic derecho → «Editar widget»
+305	Enchufe:
+306	Enchufes
+307	Enchufes y energía
+308	Enchufes:
+309	Electricidad
+310	Contador eléctrico
+311	Contador eléctrico:
+312	Buscando actualizaciones …
+313	Icono tan grande como el panel (en vez de como la bandeja del sistema)
+314	Temperatura
+315	Temperatura para el calor extra
+316	Ajustar temperatura
+317	Temperatura, luces y enchufes de una habitación.
+318	Termostatos
+319	Consejo: elige el contador principal en los ajustes
+320	Consejo: elige un contador principal en los ajustes y aquí aparecerá el historial de las últimas 24 horas.
+321	Toca una instancia para editarla.
+322	Token (vacío = sin cambios)
+323	Cambiar token …
+324	Quitar el token del llavero
+325	¿Guardar de todos modos?
+326	Resumen
+327	Resumen (todo en breve)
+328	Renombrar
+329	Desconocido
+330	error desconocido
+331	Fuera de casa
+332	Actualizar a %1 …
+333	No se puede actualizar
+334	No se pudieron buscar actualizaciones (%1).
+335	No se pudieron buscar actualizaciones.
+336	Actualizaciones:
+337	Conectando …
+338	Conectar
+339	Conexión
+340	Probar conexión
+341	Consumo %1
+342	Consumo de los enchufes con medición
+343	Consumo actual
+344	Consumo actual, historial y consumo de hoy (electricidad, agua, gas).
+345	Consumo de hoy
+346	Consumo total
+347	Conectado a %1 · %2
+348	Conectado a %1 · estado %2
+349	Conectado: %1 luces, %2 enchufes, %3 habitaciones con calefacción, %4 personas.
+350	Acercar
+351	Proporción respecto al pico de las últimas 24 horas
+352	Alejar
+353	Historial
+354	Cargando historial …
+355	Historial, modo, perfil, calor extra
+356	Versión %1
+357	Versión %1 · Home Assistant en la barra de menús
+358	Ya está aquí la versión %1
+359	La versión %1 está instalada y se aplicará en el próximo inicio.
+360	Versión %1 disponible
+361	Versión %1 disponible.
+362	Vista previa: calefacción (grande)
+363	Vista previa: resumen (mediano)
+364	Más calor
+365	¿Qué hay de nuevo?
+366	¿Qué debe mostrar el mosaico?
+367	Agua
+368	Contador de agua
+369	Contador de agua:
+370	Qué calefacción o qué habitación.
+371	Qué luz o grupo de luces muestra el widget.
+372	Qué enchufe muestra el widget.
+373	Qué habitación: temperatura, luces y enchufes.
+374	Menos
+375	Quién está en casa y a qué distancia están los demás.
+376	Parámetro del widget, p. ej. light:light.pasillo
+377	Parámetro del widget, p. ej. room:Cocina
+378	Widgets
+379	Configurar widgets (guía)
+380	Widgets de escritorio: clic derecho en el escritorio → «Editar widgets …» → «Home Assistant ToolBox».
+381	Descargando y comprobando …
+382	Descargando e instalando …
+383	¿Eliminar de verdad?
+384	p. ej. Casa, Casa de vacaciones (vacío = de Home Assistant)
+385	Número de luces encendidas en el icono
+386	Número de luces encendidas en la barra de menús
+387	Contadores (electricidad/agua/gas)
+388	Lecturas de contadores
+389	Objetivo
+390	Objetivo
+391	Objetivo %1
+392	Temperatura objetivo %1
+393	en casa
+394	En casa:
+395	En casa: %1
+396	Acceso denegado
+397	Acceso denegado: comprueba el token.
+398	Token de acceso
+399	Token de acceso:
+400	En casa
+401	Atrás
+402	total %1
+403	Vaciar caché

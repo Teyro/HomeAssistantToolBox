@@ -1,0 +1,402 @@
+0	« %1 » n’existe pas dans Home Assistant.
+1	« %1 » n’existe pas.
+2	« Automatique » utilise les compteurs du tableau de bord Énergie de Home Assistant et calcule exactement comme lui. Vos propres compteurs apparaissent après « Tester la connexion ».
+3	(groupe)
+4	(pas de description)
+7	%1 %
+8	%1 % d’humidité
+9	%1 prises · toutes éteintes
+10	%1 h
+11	%1 h %2 min
+12	%1 chauffent
+13	%1 lampes
+14	%1 lampes · toutes éteintes
+15	%1 lampes allumées
+16	%1 signale l’erreur %2.
+17	%1 min
+18	%1 pour cent
+19	%1 pièces
+20	%1 pièces chauffent
+21	Commuter %1
+22	%1 prises
+23	%1 sur %2 allumés
+24	%1 sur %2 lampes allumées
+25	%1 sur %2 prises allumées
+26	%1 sur %2 à la maison
+27	%1 à la maison
+28	1 prise · éteinte
+29	1 h
+30	1 lampe · éteinte
+31	1 lampe allumée
+32	1 pièce chauffe
+33	2 h
+34	24 h
+35	24 h :
+36	24 heures
+37	3 h
+38	30 min
+39	4 h
+40	Annuler
+41	Interroger toutes les (s) :
+42	Interroger toutes les %1 s (sans connexion en direct)
+43	Se déconnecter
+44	Absent
+45	Adresse
+46	Saisissez l’adresse de votre installation Home Assistant et un jeton d’accès longue durée.
+47	Adresse et jeton d’accès longue durée (dans Home Assistant : votre nom → Sécurité → Créer un jeton).
+48	Saisissez l’adresse et le jeton d’accès dans les paramètres.
+49	Adresse :
+50	Modifier l’adresse/le jeton
+51	active
+52	Activité
+53	Actualiser
+54	les %1 allumés
+55	Les %1 lampes sont éteintes
+56	Tout éteindre
+57	Toutes les lampes
+58	Éteindre toutes les lampes
+59	Tout afficher
+60	Tout le monde est à la maison
+61	Comme favori
+62	Définir comme favori
+63	allumé
+64	Allumé
+65	allumée · %1 %
+66	Afficher :
+67	Aussi les groupes classiques (group.*) avec lampes
+68	Voir sur GitHub
+69	éteint
+70	Éteint
+71	Masquer
+72	Masquer …
+73	Masquer :
+74	Sélection :
+75	Automatique
+76	Automatique
+77	Automatique (tableau de bord Énergie)
+78	Rechercher automatiquement les nouvelles versions (GitHub)
+79	Rechercher automatiquement les mises à jour (GitHub)
+80	Quitter
+81	Lancer à l’ouverture de session
+82	N’importe quelle entité (grande valeur)
+83	Veuillez choisir
+84	Boost
+85	Tableau de bord
+86	Ouvrir le tableau de bord
+87	Durée
+88	L’étoile marque le favori, affiché au démarrage. Changer dans le panneau via ⋯ → Changer d’instance.
+89	Le fichier téléchargé n’est pas Home Assistant ToolBox.
+90	Les compteurs viennent automatiquement du tableau de bord Énergie de Home Assistant ou sont choisis ci-dessus par instance.
+91	Ces réglages s’appliquent quand le widget est sur le bureau. Pour plusieurs tuiles (p. ex. une lampe, un chauffage et l’énergie), faites glisser le widget plusieurs fois sur le bureau et réglez chaque tuile séparément.
+92	Masquer les prises
+93	Afficher les prises
+94	Échec du téléchargement
+95	Moyenne :
+96	Éco
+97	Une pièce (température, lampes, prises)
+98	N’importe quelle entité (capteur, interrupteur …) avec une grande valeur.
+99	N’importe quelle entité avec une grande valeur.
+100	Un chauffage
+101	Une lampe ou un groupe de lampes
+102	Une lampe ou un groupe de lampes à commuter.
+103	Une prise
+104	Une prise avec consommation à commuter.
+105	Configurer …
+106	Paramètres
+107	Paramètres …
+108	Prises individuelles
+109	Énergie
+110	Énergie (historique, consommation du jour)
+111	Supprimer
+112	Déshumidifier
+113	Entité
+114	Choisir une entité : clic droit → « Modifier le widget »
+115	Entité :
+116	Entités à ne pas afficher, séparées par des virgules, aussi avec *, p. ex. light.couloir_veilleuse, switch.*_led
+117	Réessayer
+118	Chauffage d’appoint
+119	Chauffage d’appoint · encore %1, puis %2
+120	Chauffage d’appoint :
+121	Favori
+122	Favori : affiché au démarrage
+123	Favori : affiché en premier au démarrage
+124	Erreur %1 de Home Assistant.
+125	Fenêtre ouverte
+126	Fenêtre fermée
+127	Terminé
+128	Gaz
+129	Compteur de gaz
+130	Compteur de gaz :
+131	modifié %1
+132	à l’instant
+133	Aucune pièce ne chauffe actuellement
+134	hier
+135	hier %1
+136	Degrés
+137	Plus gros consommateurs
+138	Plus gros consommateurs en ce moment
+139	Groupes
+140	Groupes et multiprises
+141	Compteur principal
+142	Choisir le compteur principal
+143	Compteur principal :
+144	Chauffer
+145	Chauffer/Refroidir
+146	chauffe
+147	chauffe à %1
+148	Chauffage
+149	Chauffage (thermostats et températures des pièces)
+150	Chauffage allumé (%1 sur %2)
+151	Chauffage allumé (%1)
+152	Chauffage allumé dans %1 pièces
+153	Chauffage éteint
+154	Chauffage au repos
+155	Choisir un chauffage : clic droit → « Modifier le widget »
+156	Chauffage :
+157	Luminosité %1
+158	Déjà %1 % de la consommation d’hier
+159	Home Assistant
+160	Home Assistant · %1
+161	Home Assistant ne répond pas.
+162	Configurer Home Assistant
+163	Home Assistant a refusé le jeton. Veuillez en saisir un nouveau dans les paramètres.
+164	Ajouter Home Assistant
+165	Home Assistant est injoignable (%1).
+166	Ouvrir Home Assistant
+167	Home Assistant ToolBox
+168	Home Assistant ToolBox – Paramètres
+169	Home Assistant ToolBox – jeton Home Assistant
+170	Home Assistant ToolBox – Quoi de neuf ?
+171	Quitter Home Assistant ToolBox
+172	Configurer Home Assistant ToolBox
+173	Home Assistant ToolBox est à jour.
+174	Ouvrir Home Assistant ToolBox
+175	À choisir dans les paramètres sous « Bureau ».
+176	Il n’y a pas de thermostats dans Home Assistant.
+177	Aucune lampe trouvée dans Home Assistant
+178	Aucune personne n’est enregistrée dans Home Assistant.
+179	Dans Home Assistant : en bas à gauche sur votre nom → Sécurité → « Jetons d’accès longue durée » → Créer un jeton.
+180	Échec de l’installation : %1
+181	Installer
+182	Installer et redémarrer
+183	Installé
+184	Installé – Home Assistant ToolBox redémarre …
+185	Installé – la nouvelle version est active après le redémarrage de Plasma.
+186	installée : %1
+187	Installée : %1
+188	Instance
+189	Instance « %1 »
+190	Supprimer l’instance
+191	Ajouter une instance
+192	Changer d’instance
+193	Instance :
+194	Instances et affichage
+195	Instances :
+196	Actuelle
+197	maintenant
+198	La tuile affiche :
+199	Plus froid
+200	Aucun profil
+201	Pas d’historique
+202	Aucun changement trouvé.
+203	Aucun chauffage trouvé
+204	Aucune lampe
+205	Aucune lampe trouvée
+206	Aucune personne
+207	Aucune personne dans Home Assistant
+208	Aucune prise
+209	Aucune prise trouvée
+210	Aucun thermostat ni capteur de température trouvé
+211	pas de connexion
+212	Pas de connexion
+213	Pas de connexion.
+214	Aucun compteur trouvé. Configurez le tableau de bord Énergie dans Home Assistant ou choisissez des compteurs dans les paramètres.
+215	Aucun (somme des prises de mesure)
+216	Confort
+217	Complet (tous les onglets)
+218	Refroidir
+219	Chargement …
+220	Lampe
+221	Lampe allumée
+222	Choisir une lampe : clic droit → « Modifier le widget »
+223	Lampe :
+224	Lampes
+225	Lampes allumées
+226	Masquer les lampes
+227	Afficher les lampes
+228	Lampes, prises, chauffage, énergie et personnes de Home Assistant – dans le panneau et sur le bureau
+229	Lampes, prises, chauffage, consommation et qui est à la maison.
+230	Groupes de lampes
+231	Afficher les groupes de lampes
+232	Jeton d’accès longue durée
+233	vide = nom provenant de Home Assistant
+234	Capteur de puissance de votre compteur électrique
+235	Capteur de puissance du compteur électrique de cette instance (p. ex. Shelly 3EM, Tibber Pulse). Après « Tester la connexion », tous les capteurs de puissance apparaissent.
+236	Lumière dans %1 pièces
+237	Lumière dans 1 pièce
+238	Connecté en direct à %1
+239	Ventilation
+240	Humidité
+241	Plus
+242	Se connecter à Home Assistant
+243	Mode
+244	Mode :
+245	Rechercher des mises à jour
+246	Nom
+247	Nom (facultatif)
+248	Nom :
+249	Recharger
+250	Nouvelle instance
+251	Redémarrage impossible : %1
+252	Non configuré
+253	injoignable
+254	introuvable
+255	Introuvable
+256	Non connecté
+257	personne
+258	Personne à la maison
+259	pas encore d’adresse
+260	Aucune instance pour l’instant – ajoutez Home Assistant.
+261	Pas encore configuré – clic droit → Configurer
+262	Normalement, le widget se met à jour instantanément via la connexion en direct. L’intervalle ne s’applique que si ce n’est pas possible.
+263	Afficher uniquement les interrupteurs de type « prise »
+264	Ø %1
+265	Ø %1 dans %2 pièces
+266	hors ligne
+267	Sans pièce
+268	contributeurs d’OpenStreetMap
+269	Panneau :
+270	Personnes
+271	Personnes avec carte
+272	Redémarrer Plasma
+273	Profil
+274	Profil :
+275	Page du projet et mises à jour sur GitHub
+276	Pièce
+277	Pièce introuvable
+278	Choisir une pièce : clic droit → « Modifier le widget »
+279	Pièce :
+280	Pièces
+281	Pièces (zones de Home Assistant)
+282	Afficher les pièces (zones de Home Assistant)
+283	Température de la pièce et température cible à régler.
+284	Onglets
+285	au repos
+286	Commuter
+287	Échec de la commutation :
+288	Échec de la commutation : %1
+289	Sommeil
+290	Fermer
+291	Bureau
+292	depuis %1 j
+293	depuis %1 h
+294	depuis %1 min
+295	Lancez le script une fois dans Scriptable et ajoutez Home Assistant.
+296	Comment ajouter des widgets :\n1. Appui long sur l’écran d’accueil → « + » → Scriptable → choisir la taille.\n2. Appui long sur le widget → « Modifier le widget » → Script : « Home Assistant ToolBox ».\n3. Sous « Parameter », indiquez ce qu’il doit afficher :\n\n• (vide) – aperçu\n• lights – lampes (toucher pour commuter)\n• heating – toutes les pièces, heating:Salon – une pièce avec historique\n• energy – consommation, historique, électricité/eau/gaz du jour\n• people – qui est où\n• room:Cuisine – température, lampes et prises d’une pièce\n• light:light.couloir ou light:Lampadaire – une entité en grand\n• …@Maison de vacances – une autre instance que le favori\n\nSur l’écran verrouillé, le widget affiche brièvement lampes, chauffage et consommation.
+297	Divers
+298	Plus tard
+299	Enregistrer
+300	Pic :
+301	État à %1
+302	Démarrer
+303	Prise
+304	Choisir une prise : clic droit → « Modifier le widget »
+305	Prise :
+306	Prises
+307	Prises et énergie
+308	Prises :
+309	Électricité
+310	Compteur électrique
+311	Compteur électrique :
+312	Recherche de mises à jour …
+313	Icône aussi grande que le panneau (au lieu de la zone de notification)
+314	Température
+315	Température du chauffage d’appoint
+316	Régler la température
+317	Température, lampes et prises d’une pièce.
+318	Thermostats
+319	Astuce : choisissez le compteur principal dans les paramètres
+320	Astuce : choisissez un compteur principal dans les paramètres, l’historique des dernières 24 heures apparaîtra ici.
+321	Touchez une instance pour la modifier.
+322	Jeton (vide = inchangé)
+323	Changer le jeton …
+324	Retirer le jeton du trousseau
+325	Enregistrer quand même ?
+326	Aperçu
+327	Aperçu (tout en bref)
+328	Renommer
+329	Inconnu
+330	erreur inconnue
+331	En déplacement
+332	Mettre à jour vers %1 …
+333	Mise à jour impossible
+334	Impossible de rechercher les mises à jour (%1).
+335	Impossible de rechercher les mises à jour.
+336	Mises à jour :
+337	Connexion …
+338	Se connecter
+339	Connexion
+340	Tester la connexion
+341	Consommation %1
+342	Consommation des prises de mesure
+343	Consommation actuelle
+344	Consommation actuelle, historique et consommation du jour (électricité, eau, gaz).
+345	Consommation du jour
+346	Consommation totale
+347	Connecté à %1 · %2
+348	Connecté à %1 · état à %2
+349	Connecté : %1 lampes, %2 prises, %3 pièces avec chauffage, %4 personnes.
+350	Zoom avant
+351	Rapport au pic des dernières 24 heures
+352	Zoom arrière
+353	Historique
+354	Chargement de l’historique …
+355	Historique, mode, profil, chauffage d’appoint
+356	Version %1
+357	Version %1 · Home Assistant dans la barre des menus
+358	La version %1 est arrivée
+359	La version %1 est installée et prendra effet au prochain démarrage.
+360	Version %1 disponible
+361	Version %1 disponible.
+362	Aperçu : chauffage (grand)
+363	Aperçu : aperçu (moyen)
+364	Plus chaud
+365	Quoi de neuf ?
+366	Que doit afficher la tuile ?
+367	Eau
+368	Compteur d’eau
+369	Compteur d’eau :
+370	Quel chauffage ou quelle pièce.
+371	Quelle lampe ou quel groupe de lampes le widget affiche.
+372	Quelle prise le widget affiche.
+373	Quelle pièce : température, lampes et prises.
+374	Moins
+375	Qui est à la maison, qui est à quelle distance.
+376	Paramètre du widget, p. ex. light:light.couloir
+377	Paramètre du widget, p. ex. room:Cuisine
+378	Widgets
+379	Configurer les widgets (guide)
+380	Widgets de bureau : clic droit sur le bureau → « Modifier les widgets … » → « Home Assistant ToolBox ».
+381	Téléchargement et vérification …
+382	Téléchargement et installation …
+383	Vraiment supprimer ?
+384	p. ex. Maison, Maison de vacances (vide = depuis Home Assistant)
+385	Nombre de lampes allumées sur l’icône
+386	Nombre de lampes allumées dans la barre des menus
+387	Compteurs (électricité/eau/gaz)
+388	Relevés des compteurs
+389	Cible
+390	Cible
+391	Cible %1
+392	Température cible %1
+393	à la maison
+394	À la maison :
+395	À la maison : %1
+396	Accès refusé
+397	Accès refusé – veuillez vérifier le jeton.
+398	Jeton d’accès
+399	Jeton d’accès :
+400	À la maison
+401	Retour
+402	total %1
+403	Vider le cache

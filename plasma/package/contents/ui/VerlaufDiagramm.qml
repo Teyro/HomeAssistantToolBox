@@ -41,7 +41,7 @@ Item {
     function achse(v) {
         if (yMax >= 1000) {
             const kw = v / 1000;
-            return (Math.round(kw * 100) / 100).toString().replace(".", ",") + "\u202fkW";
+            return (Math.round(kw * 100) / 100).toString().replace(".", Logik._dezimal) + "\u202fkW";
         }
         return Math.round(v) + "\u202fW";
     }

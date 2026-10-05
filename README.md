@@ -30,22 +30,22 @@ Dazu gibt es **Widgets für den Schreibtisch** – und für **iPhone/iPad** eine
 
 ## Herunterladen
 
-Unter [Releases](https://github.com/Teyro/homeassistant-leiste/releases) liegen beide Programme:
+Unter [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) liegen beide Programme:
 
 | Datei | Für | Anleitung |
 |---|---|---|
-| `home-assistant.plasmoid` | KDE Plasma 6 (Manjaro, Arch, Fedora, Kubuntu …) | [plasma/README.md](plasma/README.md) |
-| `HA-Leiste-x.y.z.zip` | macOS 14 oder neuer (Apple Silicon und Intel) | [macos/README.md](macos/README.md) |
-| `HA-Leiste.js` | iPhone/iPad mit der App Scriptable | [ios/README.md](ios/README.md) |
+| `homeassistant-toolbox.plasmoid` | KDE Plasma 6 (Manjaro, Arch, Fedora, Kubuntu …) | [plasma/README.md](plasma/README.md) |
+| `HomeAssistantToolBox-macOS-x.y.z.zip` | macOS 14 oder neuer (Apple Silicon und Intel) | [macos/README.md](macos/README.md) |
+| `HomeAssistantToolBox.js` | iPhone/iPad mit der App Scriptable | [ios/README.md](ios/README.md) |
 
 Kurz:
 
 ```bash
 # KDE (erstmals -i, Update -u)
-kpackagetool6 -t Plasma/Applet -u home-assistant.plasmoid && plasmashell --replace &
+kpackagetool6 -t Plasma/Applet -u homeassistant-toolbox.plasmoid && plasmashell --replace &
 
-# macOS: ZIP entpacken, „HA Leiste“ nach Programme ziehen, dann einmal
-xattr -dr com.apple.quarantine "/Applications/HA Leiste.app"
+# macOS: ZIP entpacken, „Home Assistant ToolBox“ nach Programme ziehen, dann einmal
+xattr -dr com.apple.quarantine "/Applications/Home Assistant ToolBox.app"
 ```
 
 ## Aufbau

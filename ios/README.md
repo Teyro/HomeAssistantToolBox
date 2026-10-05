@@ -1,4 +1,4 @@
-# HA Leiste für iPhone und iPad (Scriptable)
+# Home Assistant ToolBox für iPhone und iPad (Scriptable)
 
 Home Assistant als Widgets auf dem Homebildschirm und Sperrbildschirm, dazu ein Dashboard zum
 Schalten – mit der kostenlosen App [Scriptable](https://apps.apple.com/app/scriptable/id1405459188).
@@ -24,9 +24,9 @@ Gleicher Funktionsumfang wie das KDE-Widget und die Mac-App, die Logik ist diese
 ## Installation
 
 1. **Scriptable** aus dem App Store laden.
-2. `HA-Leiste.js` aus den [Releases](https://github.com/Teyro/homeassistant-leiste/releases) in Safari
+2. `HomeAssistantToolBox.js` aus den [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) in Safari
    öffnen → Teilen → **In Dateien sichern** → *iCloud Drive → Scriptable*.
-   (Oder: in Scriptable ein neues Skript anlegen, den Inhalt der Datei einfügen und „HA Leiste“ nennen.)
+   (Oder: in Scriptable ein neues Skript anlegen, den Inhalt der Datei einfügen und „Home Assistant ToolBox“ nennen.)
 3. Das Skript in Scriptable einmal starten → **Home Assistant hinzufügen**: Adresse und
    langlebigen Zugriffstoken eintragen (In Home Assistant: unten links dein Name → Sicherheit →
    Langlebige Zugriffstoken → Token erstellen). Den Namen übernimmt das Skript aus Home Assistant.
@@ -34,7 +34,7 @@ Gleicher Funktionsumfang wie das KDE-Widget und die Mac-App, die Logik ist diese
 ## Widgets
 
 Homebildschirm lange drücken → **+** → **Scriptable** → Größe wählen → Widget hinzufügen.
-Dann das Widget lange drücken → **Widget bearbeiten** → *Script*: **HA Leiste**, bei *Parameter*:
+Dann das Widget lange drücken → **Widget bearbeiten** → *Script*: **Home Assistant ToolBox**, bei *Parameter*:
 
 | Parameter | zeigt |
 |---|---|
@@ -68,5 +68,5 @@ Die Token liegen im Schlüsselbund von iOS.
 
 ## Entwicklung
 
-`ios/quelle/HA-Leiste.js` ist die Vorlage, `node ios/baue.mjs` setzt die gemeinsame Logik aus dem
-Plasma-Widget (`logik.js`) ein und schreibt `ios/HA-Leiste.js`.
+`ios/quelle/HomeAssistantToolBox.js` ist die Vorlage, `node ios/baue.mjs` setzt die gemeinsame Logik aus dem
+Plasma-Widget (`logik.js`) ein und schreibt `ios/HomeAssistantToolBox.js`.

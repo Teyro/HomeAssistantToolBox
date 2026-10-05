@@ -3,9 +3,10 @@ import SwiftUI
 import AppIntents
 import HALogik
 
-/// Alle Widgets von HA Leiste für den Schreibtisch und die Mitteilungszentrale.
+/// Alle Widgets von Home Assistant ToolBox für den Schreibtisch und die Mitteilungszentrale.
 @main
-struct HALeisteWidgets: WidgetBundle {
+struct HAToolBoxWidgets: WidgetBundle {
+    init() { Sprache.laden() }
     var body: some Widget {
         UebersichtWidget()
         LampeWidget()
@@ -70,8 +71,8 @@ struct UebersichtWidget: Widget {
         StaticConfiguration(kind: "uebersicht", provider: FesterAnbieter()) { e in
             UebersichtAnsicht(e: e)
         }
-        .configurationDisplayName("Übersicht")
-        .description("Lampen, Steckdosen, Heizung, Verbrauch und wer zu Hause ist.")
+        .configurationDisplayName(T("Übersicht"))
+        .description(T("Lampen, Steckdosen, Heizung, Verbrauch und wer zu Hause ist."))
         .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
@@ -91,8 +92,8 @@ struct LampeWidget: Widget {
                 Hintergrund(farbe: l?.an == true ? Color(widgetHex: l?.farbe ?? "#ffc65c") : .gray)
             }
         }
-        .configurationDisplayName("Lampe")
-        .description("Eine Lampe oder Lichtgruppe zum Schalten.")
+        .configurationDisplayName(T("Lampe"))
+        .description(T("Eine Lampe oder Lichtgruppe zum Schalten."))
         .supportedFamilies([.systemSmall])
     }
 }
@@ -103,8 +104,8 @@ struct SteckdoseWidget: Widget {
             let d = e.daten.steckdosen.first { $0.id == e.auswahl }
             SteckdoseKachel(dose: d).containerBackground(for: .widget) { Hintergrund(farbe: d?.an == true ? .accentColor : .gray) }
         }
-        .configurationDisplayName("Steckdose")
-        .description("Eine Steckdose mit Verbrauch zum Schalten.")
+        .configurationDisplayName(T("Steckdose"))
+        .description(T("Eine Steckdose mit Verbrauch zum Schalten."))
         .supportedFamilies([.systemSmall])
     }
 }
@@ -115,8 +116,8 @@ struct HeizungWidget: Widget {
             let h = e.daten.heizungen.first { $0.id == e.auswahl }
             HeizungKachel(heizung: h).containerBackground(for: .widget) { Hintergrund(farbe: h?.heizt == true ? .orange : .blue) }
         }
-        .configurationDisplayName("Heizung")
-        .description("Raumtemperatur und Zieltemperatur zum Verstellen.")
+        .configurationDisplayName(T("Heizung"))
+        .description(T("Raumtemperatur und Zieltemperatur zum Verstellen."))
         .supportedFamilies([.systemSmall])
     }
 }
@@ -126,8 +127,8 @@ struct RaumWidget: Widget {
         AppIntentConfiguration(kind: "raum", intent: RaumEinstellung.self, provider: WahlAnbieter<RaumEinstellung>()) { e in
             RaumAnsicht(e: e)
         }
-        .configurationDisplayName("Raum")
-        .description("Temperatur, Lampen und Steckdosen eines Raums.")
+        .configurationDisplayName(T("Raum"))
+        .description(T("Temperatur, Lampen und Steckdosen eines Raums."))
         .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
@@ -143,8 +144,8 @@ struct RaumAnsicht: View {
 struct EnergieWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "energie", provider: FesterAnbieter()) { e in EnergieAnsicht(e: e) }
-            .configurationDisplayName("Energie")
-            .description("Verbrauch gerade, Verlauf und Verbrauch heute (Strom, Wasser, Gas).")
+            .configurationDisplayName(T("Energie"))
+            .description(T("Verbrauch gerade, Verlauf und Verbrauch heute (Strom, Wasser, Gas)."))
             .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
@@ -159,8 +160,8 @@ struct EnergieAnsicht: View {
 struct PersonenWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "personen", provider: FesterAnbieter()) { e in PersonenAnsicht(e: e) }
-            .configurationDisplayName("Personen")
-            .description("Wer ist zu Hause, wer ist wie weit weg.")
+            .configurationDisplayName(T("Personen"))
+            .description(T("Wer ist zu Hause, wer ist wie weit weg."))
             .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
@@ -177,8 +178,8 @@ struct WertWidget: Widget {
         AppIntentConfiguration(kind: "entitaet", intent: WertEinstellung.self, provider: WahlAnbieter<WertEinstellung>()) { e in
             WertKachel(wert: e.daten.werte.first { $0.id == e.auswahl }).containerBackground(for: .widget) { Hintergrund() }
         }
-        .configurationDisplayName("Entität")
-        .description("Eine beliebige Entität (Sensor, Schalter …) mit großem Wert.")
+        .configurationDisplayName(T("Entität"))
+        .description(T("Eine beliebige Entität (Sensor, Schalter …) mit großem Wert."))
         .supportedFamilies([.systemSmall])
     }
 }

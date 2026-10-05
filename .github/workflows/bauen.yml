@@ -25,26 +25,32 @@ jobs:
           node --version
           node plasma/test/logik-test.mjs
 
+      - name: Übersetzungen vollständig und aktuell?
+        run: |
+          node werkzeuge/texte.mjs
+          node werkzeuge/baue-uebersetzungen.mjs
+          git add -N . && git diff --stat --exit-code -- i18n plasma/package/contents/locale macos/ressourcen
+
       - name: Plasmoid packen
         run: |
           mkdir -p build
-          (cd plasma/package && zip -qr ../../build/home-assistant.plasmoid metadata.json contents)
-          unzip -l build/home-assistant.plasmoid | tail -1
+          (cd plasma/package && zip -qr ../../build/homeassistant-toolbox.plasmoid metadata.json contents)
+          unzip -l build/homeassistant-toolbox.plasmoid | tail -1
 
       - name: iOS-Skript (Scriptable) bauen
         run: |
           VERSION=$(node -p "require('./plasma/package/metadata.json').KPlugin.Version")
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF#refs/tags/v}"; fi
           node ios/baue.mjs "$VERSION"
-          node -e "new (async function () {}).constructor(require('fs').readFileSync('ios/HA-Leiste.js', 'utf8')); console.log('iOS-Skript ok')"
-          cp ios/HA-Leiste.js build/
+          node -e "new (async function () {}).constructor(require('fs').readFileSync('ios/HomeAssistantToolBox.js', 'utf8')); console.log('iOS-Skript ok')"
+          cp ios/HomeAssistantToolBox.js build/
 
       - uses: actions/upload-artifact@v5
         with:
           name: plasmoid
           path: |
-            build/home-assistant.plasmoid
-            build/HA-Leiste.js
+            build/homeassistant-toolbox.plasmoid
+            build/HomeAssistantToolBox.js
 
   macos:
     name: Mac-App
@@ -77,12 +83,12 @@ jobs:
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
             HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token HA_UPDATE_URL=http://127.0.0.1:8123/github/releases \
-            HA_BILDER="$PWD/bilder-ci" "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau $m || echo "Lauf $m: $?"
+            HA_BILDER="$PWD/bilder-ci" "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau $m || echo "Lauf $m: $?"
           done
           # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)
           cp mock.log mock.log.vorher
           HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=falsch HA_NUR_ERSTES=7_falscher_token HA_BILDER="$PWD/bilder-ci" \
-            "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark || true
+            "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau Dark || true
           N=$(( $(wc -l < mock.log) - $(wc -l < mock.log.vorher) ))
           echo "Anfragen mit falschem Token: $N"
           tail -n $N mock.log | cut -c1-120
@@ -91,11 +97,11 @@ jobs:
 
       - name: Widgets beim System angemeldet?
         run: |
-          cp -R "build/HA Leiste.app" /Applications/
-          open "/Applications/HA Leiste.app" --args --nur-starten || true
+          cp -R "build/Home Assistant ToolBox.app" /Applications/
+          open "/Applications/Home Assistant ToolBox.app" --args --nur-starten || true
           sleep 8
-          pluginkit -mAvvv -p com.apple.widgetkit-extension 2>&1 | grep -i -A3 haleiste || echo "WARNUNG: Widget-Erweiterung nicht gefunden"
-          pkill -f "HA Leiste.app" || true
+          pluginkit -mAvvv -p com.apple.widgetkit-extension 2>&1 | grep -i -A3 homeassistanttoolbox || echo "WARNUNG: Widget-Erweiterung nicht gefunden"
+          pkill -f "Home Assistant ToolBox.app" || true
 
       - uses: actions/upload-artifact@v5
         with:
@@ -105,7 +111,7 @@ jobs:
       - uses: actions/upload-artifact@v5
         with:
           name: app
-          path: macos/build/HA-Leiste-*.zip
+          path: macos/build/HomeAssistantToolBox-macOS-*.zip
 
   release:
     name: Release
@@ -122,4 +128,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la dateien
-          gh release upload "$GITHUB_REF_NAME" dateien/home-assistant.plasmoid dateien/HA-Leiste-*.zip dateien/HA-Leiste.js --clobber -R "$GITHUB_REPOSITORY"
+          gh release upload "$GITHUB_REF_NAME" dateien/homeassistant-toolbox.plasmoid dateien/HomeAssistantToolBox-macOS-*.zip dateien/HomeAssistantToolBox.js --clobber -R "$GITHUB_REPOSITORY"

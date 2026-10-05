@@ -220,7 +220,7 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 2
-        text: "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap-Mitwirkende</a>"
+        text: "© <a href=\"https://www.openstreetmap.org/copyright\">" + i18n("OpenStreetMap-Mitwirkende") + "</a>"
         textFormat: Text.StyledText
         font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
         color: karte.dunkel ? "#cccccc" : "#444444"

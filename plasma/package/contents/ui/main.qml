@@ -43,11 +43,12 @@ PlasmoidItem {
         })
     }
 
-    // ---- Instanzen mit anderen Widgets teilen (~/.config/homeassistant-leiste/instanzen.json) ----
+    // ---- Instanzen mit anderen Widgets teilen (~/.config/homeassistanttoolbox/instanzen.json) ----
     // Ein neu hinzugefügtes Widget (z. B. eine Kachel auf dem Schreibtisch) übernimmt so die
     // schon eingerichteten Instanzen, ohne dass man Adresse und Token erneut eintippen muss.
-    readonly property string teilDatei: "\"$HOME/.config/homeassistant-leiste/instanzen.json\""
-    readonly property string leseBefehl: "cat " + teilDatei + " 2>/dev/null"
+    readonly property string teilDatei: "\"$HOME/.config/homeassistanttoolbox/instanzen.json\""
+    // Übernahme aus der Vorgängerversion ("Home Assistant Leiste"), falls es noch keine eigene Datei gibt
+    readonly property string leseBefehl: "cat " + teilDatei + " 2>/dev/null || cat \"$HOME/.config/homeassistant-leiste/instanzen.json\" 2>/dev/null"
     P5Support.DataSource {
         id: shell
         engine: "executable"
@@ -62,14 +63,20 @@ PlasmoidItem {
     function teilen() {
         if (!instanzen.length) return;
         const b64 = Qt.btoa(JSON.stringify(instanzen));
-        shell.connectSource("sh -c 'umask 077; mkdir -p \"$HOME/.config/homeassistant-leiste\" && printf %s " + b64
+        shell.connectSource("sh -c 'umask 077; mkdir -p \"$HOME/.config/homeassistanttoolbox\" && printf %s " + b64
                             + " | base64 -d > " + teilDatei.replace(/'/g, "") + "' # " + Date.now());
     }
     Connections {
         target: Plasmoid.configuration
         function onValueChanged(schluessel, wert) { if (schluessel === "instanzen") root.teilen(); }
     }
+    // Gemeinsame Logik übersetzen (Platzhalter %1 … bleiben stehen, die Logik setzt sie ein)
+    function uebersetze(text) {
+        const n = (text.match(/%\d/g) || []).length;
+        return n === 0 ? i18n(text) : n === 1 ? i18n(text, "%1") : n === 2 ? i18n(text, "%1", "%2") : i18n(text, "%1", "%2", "%3");
+    }
     Component.onCompleted: {
+        Logik.sprache(uebersetze, Qt.locale().decimalPoint, Qt.locale().textDirection === Qt.RightToLeft);
         if (instanzen.length === 0) shell.connectSource(leseBefehl);
         else if (!Plasmoid.configuration.instanzen) {
             // alte Einzel-Einstellung (Adresse/Token) als erste Instanz übernehmen

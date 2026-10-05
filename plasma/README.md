@@ -61,10 +61,10 @@ und alles ist da.
    sudo pacman -S qt6-websockets
    ```
    (Ohne das Paket funktioniert das Widget auch – es fragt dann regelmäßig ab.)
-2. Die Datei `home-assistant.plasmoid` aus den
-   [Releases](https://github.com/Teyro/homeassistant-leiste/releases) laden und installieren:
+2. Die Datei `homeassistant-toolbox.plasmoid` aus den
+   [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) laden und installieren:
    ```bash
-   kpackagetool6 -t Plasma/Applet -i home-assistant.plasmoid
+   kpackagetool6 -t Plasma/Applet -i homeassistant-toolbox.plasmoid
    ```
    Update auf eine neue Version: gleicher Befehl mit `-u` statt `-i`.
    Alternativ aus dem Quellcode: `kpackagetool6 -t Plasma/Applet -i package`
@@ -98,7 +98,7 @@ und alles ist da.
 - **Extra heizen** setzt die Temperatur zurück, solange das Widget läuft (Plasma ist an). War
   der Rechner aus, passiert das beim nächsten Start.
 - Die Instanzen (mit Token) werden zum Übernehmen in weitere Widgets unter
-  `~/.config/homeassistant-leiste/instanzen.json` abgelegt (nur für dich lesbar).
+  `~/.config/homeassistanttoolbox/instanzen.json` abgelegt (nur für dich lesbar).
 
 - **Lampengruppen** sind Lichtgruppen aus Home Assistant (*Einstellungen → Geräte & Dienste →
   Helfer → Gruppe → Licht-Gruppe*) und klassische Gruppen, die nur Lampen enthalten.

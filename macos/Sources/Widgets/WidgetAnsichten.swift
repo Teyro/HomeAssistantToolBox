@@ -72,7 +72,7 @@ struct LampeKachel: View {
                 }
                 Spacer(minLength: 0)
                 Text(l.name).font(.headline).lineLimit(2)
-                Text(!l.verfuegbar ? "nicht erreichbar" : !l.an ? "aus" : l.helligkeit.map { "an · \($0) %" } ?? "an")
+                Text(!l.verfuegbar ? T("nicht erreichbar") : !l.an ? T("aus") : l.helligkeit.map { T("an · %1 %", "\($0)") } ?? T("an"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let h = l.helligkeit, l.an {
@@ -86,7 +86,7 @@ struct LampeKachel: View {
                 }
             }
         } else {
-            WidgetHinweis(text: "Lampe wählen: Rechtsklick → „Widget bearbeiten“")
+            WidgetHinweis(text: T("Lampe wählen: Rechtsklick → „Widget bearbeiten“"))
         }
     }
 }
@@ -109,7 +109,7 @@ struct SteckdoseKachel: View {
                 Spacer(minLength: 0)
                 Text(d.name).font(.headline).lineLimit(2)
                 HStack(spacing: 4) {
-                    Text(!d.verfuegbar ? "nicht erreichbar" : d.an ? "an" : "aus").foregroundStyle(.secondary)
+                    Text(!d.verfuegbar ? T("nicht erreichbar") : d.an ? T("an") : T("aus")).foregroundStyle(.secondary)
                     if let w = d.watt {
                         Text("· \(Logik.formatWatt(w))").foregroundStyle(w > 0 ? .orange : .secondary).monospacedDigit()
                     }
@@ -117,7 +117,7 @@ struct SteckdoseKachel: View {
                 .font(.caption)
             }
         } else {
-            WidgetHinweis(text: "Steckdose wählen: Rechtsklick → „Widget bearbeiten“")
+            WidgetHinweis(text: T("Steckdose wählen: Rechtsklick → „Widget bearbeiten“"))
         }
     }
 }
@@ -131,13 +131,13 @@ struct HeizungKachel: View {
         if let h = heizung {
             VStack(alignment: .leading, spacing: 4) {
                 WidgetKopf(symbol: h.heizt ? "flame.fill" : "heater.vertical", titel: h.name,
-                           rechts: h.fensterOffen ? "Fenster offen" : (h.feuchte.map { "\(Int($0.rounded())) %" } ?? ""))
+                           rechts: h.fensterOffen ? T("Fenster offen") : (h.feuchte.map { "\(Int($0.rounded())) %" } ?? ""))
                 Spacer(minLength: 0)
                 Text(Logik.formatTemp(h.ist))
                     .font(.system(size: groesse == .klein ? 30 : 36, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .minimumScaleFactor(0.7)
-                Text(h.klima.isEmpty ? "Temperatur" : h.aus ? "Heizung aus" : h.heizt ? "heizt auf \(Logik.formatTemp(h.ziel))" : "Ziel \(Logik.formatTemp(h.ziel))")
+                Text(h.klima.isEmpty ? T("Temperatur") : h.aus ? T("Heizung aus") : h.heizt ? T("heizt auf %1", "\(Logik.formatTemp(h.ziel))") : T("Ziel %1", "\(Logik.formatTemp(h.ziel))"))
                     .font(.caption)
                     .foregroundStyle(h.heizt ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
                     .lineLimit(1)
@@ -156,7 +156,7 @@ struct HeizungKachel: View {
                 }
             }
         } else {
-            WidgetHinweis(text: "Heizung wählen: Rechtsklick → „Widget bearbeiten“")
+            WidgetHinweis(text: T("Heizung wählen: Rechtsklick → „Widget bearbeiten“"))
         }
     }
 }
@@ -206,7 +206,7 @@ struct RaumKachel: View {
                 }
             }
         } else {
-            WidgetHinweis(text: "Raum wählen: Rechtsklick → „Widget bearbeiten“")
+            WidgetHinweis(text: T("Raum wählen: Rechtsklick → „Widget bearbeiten“"))
         }
     }
 }
@@ -220,7 +220,7 @@ struct EnergieKachel: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 0) {
-                    WidgetKopf(symbol: "bolt.fill", titel: "Verbrauch gerade")
+                    WidgetKopf(symbol: "bolt.fill", titel: T("Verbrauch gerade"))
                     Text(Logik.formatWatt(daten.watt))
                         .font(.system(size: 30, weight: .semibold, design: .rounded))
                         .monospacedDigit()
@@ -275,7 +275,7 @@ struct EnergieKachel: View {
     }
 }
 
-func widgetTitel(_ a: VerbrauchsArt) -> String { a == .strom ? "Strom" : a == .wasser ? "Wasser" : "Gas" }
+func widgetTitel(_ a: VerbrauchsArt) -> String { a == .strom ? T("Strom") : a == .wasser ? T("Wasser") : T("Gas") }
 func widgetSymbol(_ a: VerbrauchsArt) -> String { a == .strom ? "bolt.fill" : a == .wasser ? "drop.fill" : "flame.fill" }
 func widgetFarbe(_ a: VerbrauchsArt) -> Color {
     a == .strom ? Color(red: 0.95, green: 0.7, blue: 0.1) : a == .wasser ? Color(red: 0.2, green: 0.6, blue: 1) : .orange
@@ -292,24 +292,24 @@ struct UebersichtKachel: View {
         let zuhause = daten.personen.filter(\.zuhause)
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                WidgetKopf(symbol: "house.fill", titel: daten.instanz.isEmpty ? "Home Assistant" : daten.instanz)
+                WidgetKopf(symbol: "house.fill", titel: daten.instanz.isEmpty ? T("Home Assistant") : daten.instanz)
                 Button(intent: AlleAusAbsicht()) {
-                    Label("Alle aus", systemImage: "power")
+                    Label(T("Alle aus"), systemImage: "power")
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
             }
-            zeile("lightbulb.fill", farbe: daten.lichterAn > 0 ? .yellow : .secondary, "\(daten.lichterAn) von \(daten.lichterGesamt) Lampen an")
+            zeile("lightbulb.fill", farbe: daten.lichterAn > 0 ? .yellow : .secondary, T("%1 von %2 Lampen an", "\(daten.lichterAn)", "\(daten.lichterGesamt)"))
             if !daten.steckdosen.isEmpty {
-                zeile("poweroutlet.type.f.fill", farbe: .accentColor, "\(daten.steckdosen.filter(\.an).count) von \(daten.steckdosen.count) Steckdosen an")
+                zeile("poweroutlet.type.f.fill", farbe: .accentColor, T("%1 von %2 Steckdosen an", "\(daten.steckdosen.filter(\.an).count)", "\(daten.steckdosen.count)"))
             }
             if !daten.heizungen.isEmpty {
                 zeile("heater.vertical.fill", farbe: heizen > 0 ? .orange : .secondary,
-                      (heizen > 0 ? "Heizung an (\(heizen))" : "Heizung ruht") + (temps.isEmpty ? "" : " · Ø " + Logik.formatTemp(temps.reduce(0, +) / Double(temps.count))))
+                      (heizen > 0 ? T("Heizung an (%1)", "\(heizen)") : T("Heizung ruht")) + (temps.isEmpty ? "" : " · Ø " + Logik.formatTemp(temps.reduce(0, +) / Double(temps.count))))
             }
-            if daten.watt != nil { zeile("bolt.fill", farbe: .secondary, "Verbrauch \(Logik.formatWatt(daten.watt))") }
+            if daten.watt != nil { zeile("bolt.fill", farbe: .secondary, T("Verbrauch %1", "\(Logik.formatWatt(daten.watt))")) }
             if !daten.personen.isEmpty {
-                zeile("person.2.fill", farbe: .green, zuhause.isEmpty ? "Niemand zu Hause" : "Zu Hause: " + zuhause.map(\.name).joined(separator: ", "))
+                zeile("person.2.fill", farbe: .green, zuhause.isEmpty ? T("Niemand zu Hause") : T("Zu Hause: ") + zuhause.map(\.name).joined(separator: ", "))
             }
             if groesse == .gross {
                 Divider()
@@ -342,7 +342,7 @@ struct PersonenKachel: View {
     var body: some View {
         let zuhause = daten.personen.filter(\.zuhause).count
         VStack(alignment: .leading, spacing: 8) {
-            WidgetKopf(symbol: "person.2.fill", titel: "Personen", rechts: "\(zuhause) von \(daten.personen.count) zu Hause")
+            WidgetKopf(symbol: "person.2.fill", titel: T("Personen"), rechts: T("%1 von %2 zu Hause", "\(zuhause)", "\(daten.personen.count)"))
             ForEach(daten.personen.prefix(groesse == .gross ? 8 : 3)) { p in
                 HStack(spacing: 8) {
                     ZStack(alignment: .bottomTrailing) {
@@ -390,7 +390,7 @@ struct WertKachel: View {
                 Text(w.id).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
             }
         } else {
-            WidgetHinweis(text: "Entität wählen: Rechtsklick → „Widget bearbeiten“")
+            WidgetHinweis(text: T("Entität wählen: Rechtsklick → „Widget bearbeiten“"))
         }
     }
 }
@@ -399,7 +399,7 @@ struct WertKachel: View {
 struct WidgetStand: View {
     let daten: Schnappschuss
     var body: some View {
-        Text(daten.stand == .distantPast ? "HA Leiste öffnen" : "Stand \(daten.stand.formatted(date: .omitted, time: .shortened))")
+        Text(daten.stand == .distantPast ? T("Home Assistant ToolBox öffnen") : T("Stand %1", "\(daten.stand.formatted(date: .omitted, time: .shortened))"))
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }

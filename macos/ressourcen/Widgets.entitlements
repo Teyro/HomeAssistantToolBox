@@ -4,10 +4,10 @@
 <dict>
 	<!-- Widgets müssen in der Sandbox laufen -->
 	<key>com.apple.security.app-sandbox</key><true/>
-	<!-- Nur lesen: die Datei, die HA Leiste für die Widgets schreibt -->
+	<!-- Nur lesen: die Datei, die Home Assistant ToolBox für die Widgets schreibt -->
 	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
 	<array>
-		<string>/Library/Application Support/HA Leiste/</string>
+		<string>/Library/Application Support/Home Assistant ToolBox/</string>
 	</array>
 </dict>
 </plist>

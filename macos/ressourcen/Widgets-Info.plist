@@ -3,10 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key><string>de</string>
-	<key>CFBundleDisplayName</key><string>HA Leiste</string>
+	<key>CFBundleLocalizations</key><array><string>de</string><string>en</string><string>zh-Hans</string><string>hi</string><string>es</string><string>ar</string><string>fr</string><string>bn</string></array>
+	<key>CFBundleDisplayName</key><string>Home Assistant ToolBox</string>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleName</key><string>HA Leiste Widgets</string>
+	<key>CFBundleName</key><string>Home Assistant ToolBox Widgets</string>
 	<key>CFBundlePackageType</key><string>XPC!</string>
 	<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>

@@ -1,4 +1,4 @@
-# HA Leiste – Home Assistant in der macOS-Menüleiste
+# Home Assistant ToolBox – Home Assistant in der macOS-Menüleiste
 
 Lampen, Steckdosen und Energieverbrauch aus [Home Assistant](https://www.home-assistant.io/) mit einem Klick
 in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstück zum
@@ -46,12 +46,12 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
 
 ## Installation
 
-1. `HA-Leiste-x.y.z.zip` aus den [Releases](https://github.com/Teyro/homeassistant-leiste/releases) laden,
-   entpacken und **HA Leiste** in den Ordner *Programme* ziehen.
+1. `HomeAssistantToolBox-macOS-x.y.z.zip` aus den [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) laden,
+   entpacken und **Home Assistant ToolBox** in den Ordner *Programme* ziehen.
 2. Die App ist nicht bei Apple beglaubigt (dafür bräuchte es ein kostenpflichtiges Entwicklerkonto).
    Beim ersten Start meldet macOS deshalb, dass sie nicht geöffnet werden kann. Dann einmal im Terminal:
    ```bash
-   xattr -dr com.apple.quarantine "/Applications/HA Leiste.app"
+   xattr -dr com.apple.quarantine "/Applications/Home Assistant ToolBox.app"
    ```
    oder: *Systemeinstellungen → Datenschutz & Sicherheit* → ganz unten **„Dennoch öffnen“**.
 3. App starten – oben rechts in der Menüleiste erscheint eine Glühbirne. Klick darauf → **Einrichten …**
@@ -59,14 +59,14 @@ in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstüc
    unten links auf deinen Namen → **Sicherheit** → **Langlebige Zugriffstoken** → **Token erstellen**.
    Auf **Verbinden** klicken. macOS fragt evtl., ob die App auf Geräte im lokalen Netzwerk zugreifen darf → **Erlauben**.
 
-Nach einem Update fragt macOS evtl. einmal, ob HA Leiste den Token im Schlüsselbund lesen darf → **Immer erlauben**.
+Nach einem Update fragt macOS evtl. einmal, ob Home Assistant ToolBox den Token im Schlüsselbund lesen darf → **Immer erlauben**.
 
 ### Widgets auf den Schreibtisch legen
 
-Rechtsklick auf den Schreibtisch → **Widgets bearbeiten …** → links **HA Leiste** suchen → Widget
+Rechtsklick auf den Schreibtisch → **Widgets bearbeiten …** → links **Home Assistant ToolBox** suchen → Widget
 auf den Schreibtisch ziehen. Bei Lampe, Steckdose, Heizung, Raum und Entität: Rechtsklick auf das
 Widget → **Widget bearbeiten** → auswählen, was es zeigen soll. Die Widgets bekommen ihre Daten
-von der laufenden App (HA Leiste muss also laufen – am besten „Beim Anmelden starten“ einschalten).
+von der laufenden App (Home Assistant ToolBox muss also laufen – am besten „Beim Anmelden starten“ einschalten).
 
 ![Widgets](bilder/widgets-hell.png)
 
@@ -87,17 +87,17 @@ von der laufenden App (HA Leiste muss also laufen – am besten „Beim Anmelden
 
 - Wird der Token abgelehnt, fragt die App nicht weiter nach – Home Assistant sperrt sonst nach einigen
   Fehlversuchen die IP-Adresse (`ip_ban`). Adresse und Token werden erst nach erfolgreichem Test übernommen.
-- Beenden: Klick auf das Symbol → **⋯** → **HA Leiste beenden**.
+- Beenden: Klick auf das Symbol → **⋯** → **Home Assistant ToolBox beenden**.
 
 ## Entwicklung
 
 ```bash
 cd macos
 swift test                 # Logik prüfen
-./scripts/baue-app.sh      # build/HA Leiste.app mit Widgets und ZIP (Xcode + XcodeGen nötig)
+./scripts/baue-app.sh      # build/Home Assistant ToolBox.app mit Widgets und ZIP (Xcode + XcodeGen nötig)
 node ../test/ha-mock.mjs & # nachgebautes Home Assistant auf Port 8123 (Token: test-token)
 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
-  "build/HA Leiste.app/Contents/MacOS/HALeiste" --vorschau Dark   # Bildschirmfotos
+  "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau Dark   # Bildschirmfotos
 ```
 
 Der GitHub-Workflow baut auf macOS 26, testet, macht die Bildschirmfotos und hängt bei einem

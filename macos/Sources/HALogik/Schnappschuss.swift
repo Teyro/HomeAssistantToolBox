@@ -54,14 +54,14 @@ public struct Schnappschuss: Codable, Equatable, Sendable {
     /// Ort der Datei (die App schreibt, die Widgets lesen)
     public static var datei: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/HA Leiste", isDirectory: true)
+            .appendingPathComponent("Library/Application Support/Home Assistant ToolBox", isDirectory: true)
             .appendingPathComponent("widgets.json")
     }
 
     public static func lesen() -> Schnappschuss? {
         // In der Sandbox der Widgets zeigt homeDirectoryForCurrentUser in den Container –
         // darum den echten Pfad aus dem Benutzerverzeichnis zusammensetzen.
-        let echt = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Application Support/HA Leiste/widgets.json")
+        let echt = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Application Support/Home Assistant ToolBox/widgets.json")
         for url in [echt, datei] {
             if let d = try? Data(contentsOf: url) {
                 let dec = JSONDecoder()
@@ -82,8 +82,8 @@ public struct Schnappschuss: Codable, Equatable, Sendable {
 
     // MARK: Befehle der Widgets an die App (als verteilte Mitteilung, ohne Token im Widget)
 
-    public static let befehlsName = "de.teyro.haleiste.befehl"
-    public static let neuLadenName = "de.teyro.haleiste.widgets"
+    public static let befehlsName = "de.teyro.homeassistanttoolbox.befehl"
+    public static let neuLadenName = "de.teyro.homeassistanttoolbox.widgets"
 
     /// "schalte|light.x|1", "temp|climate.x|21.5", "alleaus"
     public static func befehl(_ teile: String...) -> String { teile.joined(separator: "|") }
@@ -150,7 +150,7 @@ public extension Logik {
             let d = domain(e.id)
             let schaltbar = d == "light" || d == "switch"
             let text: String
-            if schaltbar { text = e.istAn ? "an" : (e.state == "off" ? "aus" : e.state) }
+            if schaltbar { text = e.istAn ? T("an") : (e.state == "off" ? T("aus") : e.state) }
             else if d == "climate" { text = formatTemp(klimaStatus(e)?.ist) }
             else if d == "person" { text = ortText(e.state) }
             else if let w = e.wert {

@@ -168,15 +168,16 @@ public extension Logik {
                          fensterOffen: offen, thermostat: t)
     }
 
-    static func formatTemp(_ t: Double?, stellen: Int = 1) -> String {
+    static func formatTemp(_ t: Double?, stellen: Int = 1) -> String { Sprache.iso(formatTempRoh(t, stellen: stellen)) }
+    static func formatTempRoh(_ t: Double?, stellen: Int = 1) -> String {
         guard let t, !t.isNaN else { return "–" }
         return komma(t, stellen) + " °C"
     }
 
     static func modusName(_ m: String) -> String {
-        [ "off": "Aus", "heat": "Heizen", "auto": "Automatik", "heat_cool": "Heizen/Kühlen", "cool": "Kühlen", "dry": "Entfeuchten",
-          "fan_only": "Lüfter", "eco": "Eco", "comfort": "Komfort", "boost": "Boost", "away": "Abwesend", "home": "Zuhause",
-          "sleep": "Schlafen", "activity": "Aktiv" ][m] ?? m
+        [ "off": T("Aus"), "heat": T("Heizen"), "auto": T("Automatik"), "heat_cool": T("Heizen/Kühlen"), "cool": T("Kühlen"), "dry": T("Entfeuchten"),
+          "fan_only": T("Lüfter"), "eco": T("Eco"), "comfort": T("Komfort"), "boost": T("Boost"), "away": T("Abwesend"), "home": T("Zuhause"),
+          "sleep": T("Schlafen"), "activity": T("Aktiv") ][m] ?? m
     }
 
     /// Temperatur auf den Schritt des Thermostats runden und begrenzen
@@ -188,9 +189,9 @@ public extension Logik {
 
     static func formatDauer(_ sekunden: TimeInterval) -> String {
         let min = Int((sekunden / 60).rounded(.up))
-        if min < 60 { return "\(min) min" }
+        if min < 60 { return T("%1 min", "\(min)") }
         let h = min / 60, m = min % 60
-        return m > 0 ? "\(h) h \(m) min" : "\(h) h"
+        return m > 0 ? T("%1 h %2 min", "\(h)", "\(m)") : T("%1 h", "\(h)")
     }
 
     /// Heizungsverlauf aus der History-API (je Entität eine Liste, Thermostat mit Attributen)
@@ -255,9 +256,9 @@ public extension Logik {
 
     static func ortText(_ zustand: String) -> String {
         switch zustand {
-        case "home": "Zuhause"
-        case "not_home": "Unterwegs"
-        case "unknown", "unavailable": "Unbekannt"
+        case "home": T("Zuhause")
+        case "not_home": T("Unterwegs")
+        case "unknown", "unavailable": T("Unbekannt")
         default: zustand
         }
     }
@@ -280,10 +281,10 @@ public extension Logik {
     static func formatSeit(_ d: Date?, jetzt: Date = Date()) -> String {
         guard let d else { return "" }
         let min = Swift.max(0, Int((jetzt.timeIntervalSince(d) / 60).rounded()))
-        if min < 1 { return "gerade eben" }
-        if min < 60 { return "seit \(min) min" }
+        if min < 1 { return T("gerade eben") }
+        if min < 60 { return T("seit %1 min", "\(min)") }
         let h = min / 60
-        return h < 24 ? "seit \(h) h" : "seit \(h / 24) d"
+        return h < 24 ? T("seit %1 h", "\(h)") : T("seit %1 d", "\(h / 24)")
     }
 
     static func initialen(_ name: String) -> String {

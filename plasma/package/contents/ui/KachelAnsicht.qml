@@ -289,7 +289,7 @@ Item {
                         const einheit = e.attributes.unit_of_measurement || "";
                         if (isNaN(z)) return e.state;
                         if (einheit === "W" || einheit === "kW") return Logik.formatWatt(einheit === "kW" ? z * 1000 : z);
-                        return (Math.abs(z) >= 100 ? Math.round(z) : z.toFixed(1)).toString().replace(".", ",") + (einheit ? " " + einheit : "");
+                        return (Math.abs(z) >= 100 ? Math.round(z) : z.toFixed(1)).toString().replace(".", Logik._dezimal) + (einheit ? " " + einheit : "");
                     }
                     elide: Text.ElideRight
                     font.features: { "tnum": 1 }

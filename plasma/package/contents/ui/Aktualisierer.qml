@@ -13,7 +13,7 @@ Item {
     id: akt
 
     property string aktuelleVersion: "0"
-    property string quelle: "https://api.github.com/repos/Teyro/homeassistant-leiste/releases?per_page=20"
+    property string quelle: "https://api.github.com/repos/Teyro/HomeAssistantToolBox/releases?per_page=20"
     property bool automatisch: true
 
     // Neuere Version: { version, url, seite, notizen: [{ version, titel, text }] } oder null
@@ -39,8 +39,8 @@ Item {
             }
             let liste = [];
             try { liste = JSON.parse(xhr.responseText); } catch (e) { liste = []; }
-            update = Logik.updateAusReleases(liste, aktuelleVersion, "home-assistant.plasmoid");
-            alleNotizen = liste.filter(r => r && !r.draft && !r.prerelease).slice(0, 6)
+            update = Logik.updateAusReleases(liste, aktuelleVersion, "homeassistant-toolbox.plasmoid");
+            alleNotizen = (Array.isArray(liste) ? liste : []).filter(r => r && typeof r.tag_name === "string" && !r.draft && !r.prerelease).slice(0, 6)
                                .map(r => ({ version: r.tag_name.replace(/^v/, ""), titel: r.name || r.tag_name, text: r.body || "" }));
             status = update ? "" : "aktuell";
         };
@@ -49,7 +49,7 @@ Item {
 
     function installieren() {
         // nur einfache Adressen von GitHub (keine Zeichen, die in der Shell etwas bedeuten)
-        if (!update || !update.url || !/^https:\/\/github\.com\/[A-Za-z0-9._\/-]+$/.test(update.url)) return;
+        if (!update || !update.url || !/^https:\/\/github\.com\/[A-Za-z0-9._\/-]+$/.test(update.url) || update.url.indexOf("..") >= 0) return;
         status = "laedt";
         meldung = "";
         // Adresse ist geprüft (nur Downloads aus diesem Projekt), enthält keine Anführungszeichen

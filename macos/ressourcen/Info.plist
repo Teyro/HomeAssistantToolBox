@@ -3,10 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key><string>de</string>
+	<key>CFBundleLocalizations</key><array><string>de</string><string>en</string><string>zh-Hans</string><string>hi</string><string>es</string><string>ar</string><string>fr</string><string>bn</string></array>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key><string>de.teyro.haleiste</string>
-	<key>CFBundleName</key><string>HA Leiste</string>
-	<key>CFBundleDisplayName</key><string>HA Leiste</string>
+	<key>CFBundleIdentifier</key><string>de.teyro.homeassistanttoolbox</string>
+	<key>CFBundleName</key><string>Home Assistant ToolBox</string>
+	<key>CFBundleDisplayName</key><string>Home Assistant ToolBox</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key><string>$(MARKETING_VERSION)</string>
@@ -22,7 +23,7 @@
 		<key>NSAllowsArbitraryLoads</key><true/>
 		<key>NSAllowsLocalNetworking</key><true/>
 	</dict>
-	<key>NSLocalNetworkUsageDescription</key><string>HA Leiste verbindet sich mit Home Assistant in deinem Heimnetz.</string>
-	<key>NSHumanReadableCopyright</key><string>GPL-3.0-or-later · github.com/Teyro/homeassistant-leiste</string>
+	<key>NSLocalNetworkUsageDescription</key><string>Home Assistant ToolBox verbindet sich mit Home Assistant in deinem Heimnetz.</string>
+	<key>NSHumanReadableCopyright</key><string>GPL-3.0-or-later · github.com/Teyro/HomeAssistantToolBox</string>
 </dict>
 </plist>

@@ -1,0 +1,191 @@
+import SwiftUI
+import HALogik
+
+/// Reiter "Lampen": oben die Gruppen, darunter die Räume, zuletzt Lampen ohne Raum.
+/// Ein Klick auf eine Gruppe/einen Raum klappt die einzelnen Lampen auf.
+struct LampenSeite: View {
+    let ha: HaVerbindung
+    let einstellungen: Einstellungen
+    @Bindable var zustand: PanelZustand
+
+    private var raeumeMitLicht: [Raum] { einstellungen.zeigeRaeume ? ha.raeume.filter { !$0.lichter.isEmpty } : [] }
+    private var einzelne: [String] { einstellungen.zeigeRaeume && !ha.raeume.isEmpty ? ha.ohneRaum : ha.lichter }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    UebersichtKarte(symbol: ha.lichterAn > 0 ? "lightbulb.fill" : "lightbulb",
+                                    titel: zusammenfassung, untertitel: untertitel,
+                                    anteil: ha.lichter.isEmpty ? 0 : Double(ha.lichterAn) / Double(ha.lichter.count),
+                                    farbe: Logik.gruppenFarbe(ha.lichter, ha.zustaende)?.farbe ?? Color(red: 1, green: 0.78, blue: 0.36)) {
+                        Button {
+                            ha.alleLichterAus()
+                        } label: {
+                            Label(T("Alle aus"), systemImage: "power")
+                        }
+                        .glasKnopf()
+                        .disabled(ha.lichterAn == 0)
+                    }
+                    if einstellungen.zeigeGruppen && !ha.gruppen.isEmpty {
+                        Abschnitt(titel: T("Gruppen"), symbol: "square.stack.3d.up.fill")
+                        ForEach(ha.gruppen) { g in
+                            GruppenKarte(ha: ha, titel: g.name, symbol: "lightbulb.2.fill", steuerId: g.id, mitglieder: g.mitglieder,
+                                         aufgeklappt: zustand.offen.contains("g:" + g.id)) { zustand.umschalten("g:" + g.id) }
+                        }
+                    }
+                    if !raeumeMitLicht.isEmpty {
+                        Abschnitt(titel: T("Räume"), symbol: "house.fill")
+                        ForEach(raeumeMitLicht) { r in
+                            GruppenKarte(ha: ha, titel: r.name, symbol: "house.fill", steuerId: "", mitglieder: r.lichter,
+                                         aufgeklappt: zustand.offen.contains("r:" + r.id)) { zustand.umschalten("r:" + r.id) }
+                        }
+                    }
+                    if !einzelne.isEmpty {
+                        Abschnitt(titel: einstellungen.zeigeRaeume && !ha.raeume.isEmpty ? T("Ohne Raum") : T("Alle Lampen"),
+                                  anzahl: einzelne.count, offen: $zustand.einzelneLampenOffen)
+                        if zustand.einzelneLampenOffen {
+                            ForEach(einzelne, id: \.self) { id in
+                                LampenZeile(ha: ha, entityId: id).karte(farbe: kartenFarbe(id)).anheben()
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+                .padding(.top, 2)
+            }
+            .scrollIndicators(.automatic)
+        }
+    }
+
+    private var zusammenfassung: String {
+        if ha.lichter.isEmpty { return T("Keine Lampen") }
+        if ha.lichterAn == 0 { return T("Alle Lampen aus") }
+        return T("%1 von %2 an", "\(ha.lichterAn)", "\(ha.lichter.count)")
+    }
+
+    private var untertitel: String {
+        if ha.lichter.isEmpty { return T("In Home Assistant keine Lampen gefunden") }
+        let raeume = Set(ha.raeume.filter { r in r.lichter.contains { Logik.istAn(ha.zustaende[$0]) } }.map(\.id)).count
+        if ha.lichterAn > 0 && raeume > 0 { return raeume == 1 ? T("Licht in 1 Raum") : T("Licht in %1 Räumen", "\(raeume)") }
+        return T("%1 Lampen", "\(ha.lichter.count)")
+    }
+
+    private func kartenFarbe(_ id: String) -> Color? {
+        Logik.lampenFarbe(ha.zustaende[id]).map { $0.farbe.opacity(0.35) }
+    }
+}
+
+/// Lichtgruppe oder Raum: gemeinsamer Schalter und Regler, aufklappbar.
+struct GruppenKarte: View {
+    let ha: HaVerbindung
+    let titel: String
+    let symbol: String
+    /// Gruppen-Entität; leer bei Räumen (dann werden die Lampen gemeinsam geschaltet)
+    let steuerId: String
+    let mitglieder: [String]
+    let aufgeklappt: Bool
+    let klick: () -> Void
+
+    var body: some View {
+        let status = Logik.gruppenStatus(mitglieder, ha.zustaende)
+        let farbe = Logik.gruppenFarbe(mitglieder, ha.zustaende)?.farbe
+        let an = status.an > 0
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                SymbolKreis(symbol: symbol, farbe: an ? farbe : nil, verfuegbar: status.verfuegbar > 0)
+                    .onTapGesture { schalten(!an) }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(titel).font(.body.weight(.semibold)).lineLimit(1)
+                    Text(untertitel(status))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(aufgeklappt ? 180 : 0))
+                Toggle("", isOn: Binding(get: { an }, set: { schalten($0) }))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .controlSize(.small)
+                    .disabled(status.verfuegbar == 0)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { withAnimation(.snappy) { klick() } }
+
+            if an && status.dimmbar {
+                HelligkeitsRegler(wert: status.helligkeit, farbe: farbe ?? .yellow) { p in
+                    if !steuerId.isEmpty { ha.dimme(steuerId, p) } else { ha.dimmeMehrere(mitglieder, p) }
+                }
+            }
+
+            if aufgeklappt {
+                VStack(spacing: 0) {
+                    ForEach(Array(mitglieder.enumerated()), id: \.element) { i, id in
+                        if i > 0 { Divider().padding(.leading, 40) }
+                        LampenZeile(ha: ha, entityId: id, klein: true).padding(.vertical, 6)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .karte(farbe: an ? (farbe ?? .yellow).opacity(0.35) : nil)
+        .anheben()
+        .animation(.snappy, value: aufgeklappt)
+    }
+
+    private func untertitel(_ s: GruppenStatus) -> String {
+        if s.verfuegbar == 0 { return T("nicht erreichbar") }
+        if s.an == 0 { return s.gesamt == 1 ? T("1 Lampe · aus") : T("%1 Lampen · alle aus", "\(s.gesamt)") }
+        let teil = s.gesamt == 1 ? T("an") : s.an == s.gesamt ? T("alle %1 an", "\(s.gesamt)") : T("%1 von %2 an", "\(s.an)", "\(s.gesamt)")
+        return s.dimmbar ? "\(teil) · \(s.helligkeit) %" : teil
+    }
+
+    private func schalten(_ ein: Bool) {
+        if !steuerId.isEmpty { ha.schalte(steuerId, ein) } else { ha.schalteMehrere(mitglieder, ein) }
+    }
+}
+
+/// Eine Lampe: Symbol in Lampenfarbe, Name, Zustand, Schalter und Helligkeitsregler.
+struct LampenZeile: View {
+    let ha: HaVerbindung
+    let entityId: String
+    var klein = false
+
+    var body: some View {
+        let e = ha.zustaende[entityId]
+        let an = Logik.istAn(e)
+        let verfuegbar = Logik.istVerfuegbar(e)
+        let farbe = Logik.lampenFarbe(e)?.farbe
+        let dimmbar = Logik.dimmbar(e)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                SymbolKreis(symbol: an ? "lightbulb.fill" : "lightbulb", farbe: farbe, verfuegbar: verfuegbar, groesse: klein ? 26 : 32)
+                    .onTapGesture { if verfuegbar { ha.schalte(entityId, !an) } }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(e?.name ?? entityId).font(klein ? .callout : .body.weight(.medium)).lineLimit(1)
+                    Text(!verfuegbar ? T("nicht erreichbar") : !an ? T("aus") : dimmbar ? T("an · %1 %", "\(Logik.helligkeit(e))") : T("an"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 4)
+                Toggle("", isOn: Binding(get: { an }, set: { ha.schalte(entityId, $0) }))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .controlSize(.small)
+                    .disabled(!verfuegbar)
+            }
+            if an && dimmbar {
+                HelligkeitsRegler(wert: Logik.helligkeit(e), farbe: farbe ?? .yellow) { ha.dimme(entityId, $0) }
+                    .padding(.leading, klein ? 36 : 0)
+            }
+        }
+    }
+}

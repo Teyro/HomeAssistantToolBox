@@ -2,7 +2,7 @@
 macos/.build/
 macos/build/
 macos/bilder-ci/
-macos/HALeiste.xcodeproj/
+macos/HAToolBox.xcodeproj/
 macos/ressourcen/AppIcon.icns
 *.zip
 .DS_Store

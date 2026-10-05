@@ -1,5 +1,5 @@
 # Xcode-Projekt für App + Widgets. Erzeugen: xcodegen generate
-name: HALeiste
+name: HAToolBox
 options:
   bundleIdPrefix: de.teyro
   deploymentTarget:
@@ -11,7 +11,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.3.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     # Ohne Apple-Entwicklerkonto: lokal signieren ("Sign to Run Locally")
@@ -23,47 +23,57 @@ settings:
     ONLY_ACTIVE_ARCH: NO
     DEAD_CODE_STRIPPING: YES
 targets:
-  HALeiste:
+  HAToolBox:
     type: application
     platform: macOS
     sources:
-      - path: Sources/HALeiste
+      - path: Sources/HAToolBox
       - path: Sources/Widgets
       - path: ressourcen/AppIcon.icns
         buildPhase: resources
+      - path: ressourcen/i18n
+        type: folder
+        buildPhase: resources
+      - path: ressourcen/sprachen
+        buildPhase: resources
     dependencies:
       - package: HALogik
-      - target: HALeisteWidgets
+      - target: HAToolBoxWidgets
         embed: true
         codeSign: true
     settings:
       base:
-        PRODUCT_NAME: "HA Leiste"
-        EXECUTABLE_NAME: HALeiste
-        PRODUCT_BUNDLE_IDENTIFIER: de.teyro.haleiste
+        PRODUCT_NAME: "Home Assistant ToolBox"
+        EXECUTABLE_NAME: HAToolBox
+        PRODUCT_BUNDLE_IDENTIFIER: de.teyro.homeassistanttoolbox
         INFOPLIST_FILE: ressourcen/Info.plist
         GENERATE_INFOPLIST_FILE: NO
-  HALeisteWidgets:
+  HAToolBoxWidgets:
     type: app-extension
     platform: macOS
     sources:
       - path: Sources/WidgetErweiterung
       - path: Sources/Widgets
+      - path: ressourcen/i18n
+        type: folder
+        buildPhase: resources
+      - path: ressourcen/sprachen
+        buildPhase: resources
     dependencies:
       - package: HALogik
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
     settings:
       base:
-        PRODUCT_NAME: HALeisteWidgets
-        PRODUCT_BUNDLE_IDENTIFIER: de.teyro.haleiste.widgets
+        PRODUCT_NAME: HAToolBoxWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: de.teyro.homeassistanttoolbox.widgets
         INFOPLIST_FILE: ressourcen/Widgets-Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: ressourcen/Widgets.entitlements
         SKIP_INSTALL: YES
 schemes:
-  HALeiste:
+  HAToolBox:
     build:
       targets:
-        HALeiste: all
-        HALeisteWidgets: all
+        HAToolBox: all
+        HAToolBoxWidgets: all

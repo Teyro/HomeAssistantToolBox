@@ -1,0 +1,402 @@
+0	“%1” does not exist in Home Assistant.
+1	“%1” does not exist.
+2	“Automatic” uses the meters from the Home Assistant energy dashboard and calculates exactly like it. Your own meters appear after “Test connection”.
+3	(group)
+4	(no description)
+7	%1 %
+8	%1 % humidity
+9	%1 sockets · all off
+10	%1 h
+11	%1 h %2 min
+12	%1 heating
+13	%1 lights
+14	%1 lights · all off
+15	%1 lights on
+16	%1 reports error %2.
+17	%1 min
+18	%1 percent
+19	%1 rooms
+20	%1 rooms heating
+21	Switch %1
+22	%1 sockets
+23	%1 of %2 on
+24	%1 of %2 lights on
+25	%1 of %2 sockets on
+26	%1 of %2 at home
+27	%1 at home
+28	1 socket · off
+29	1 h
+30	1 light · off
+31	1 light on
+32	1 room heating
+33	2 h
+34	24 h
+35	24 h:
+36	24 hours
+37	3 h
+38	30 min
+39	4 h
+40	Cancel
+41	Poll every (sec.):
+42	Poll every %1 s (without live connection)
+43	Sign out
+44	Away
+45	Address
+46	Enter the address of your Home Assistant installation and a long-lived access token.
+47	Address and long-lived access token (in Home Assistant: your name → Security → Create token).
+48	Enter address and access token in the settings.
+49	Address:
+50	Change address/token
+51	active
+52	Activity
+53	Refresh
+54	all %1 on
+55	All %1 lights are off
+56	All off
+57	All lights
+58	All lights off
+59	Show all
+60	Everyone at home
+61	Set as favorite
+62	Set as favorite
+63	on
+64	On
+65	on · %1 %
+66	Show:
+67	Also classic groups (group.*) with lights
+68	View on GitHub
+69	off
+70	Off
+71	Hide
+72	Hide …
+73	Hide:
+74	Selection:
+75	Auto
+76	Automatic
+77	Automatic (energy dashboard)
+78	Automatically check for new versions (GitHub)
+79	Automatically check for updates (GitHub)
+80	Quit
+81	Start at login
+82	Any entity (large value)
+83	Please choose
+84	Boost
+85	Dashboard
+86	Open dashboard
+87	Duration
+88	The star marks the favorite – it is shown at startup. Switch in the panel via ⋯ → Switch instance.
+89	The downloaded file is not Home Assistant ToolBox.
+90	The meters come automatically from the Home Assistant energy dashboard or are chosen per instance above.
+91	These settings apply when the widget is on the desktop. For several tiles (e.g. a light, a heater and energy), drag the widget onto the desktop several times and set up each tile individually.
+92	Hide sockets
+93	Show sockets
+94	Download failed
+95	Average:
+96	Eco
+97	A room (temperature, lights, sockets)
+98	Any entity (sensor, switch …) with a large value.
+99	Any entity with a large value.
+100	A heater
+101	A light or light group
+102	A light or light group to switch.
+103	A socket
+104	A socket with consumption to switch.
+105	Set up …
+106	Settings
+107	Settings …
+108	Single sockets
+109	Energy
+110	Energy (history, consumption today)
+111	Remove
+112	Dry
+113	Entity
+114	Choose an entity: right-click → “Edit Widget”
+115	Entity:
+116	Entities that should not appear – separated by commas, also with *, e.g. light.hall_nightlight, switch.*_led
+117	Try again
+118	Extra heating
+119	Extra heating · %1 left, then %2
+120	Extra heating:
+121	Favorite
+122	Favorite: shown at startup
+123	Favorite: shown first at startup
+124	Error %1 from Home Assistant.
+125	Window open
+126	Window closed
+127	Done
+128	Gas
+129	Gas meter
+130	Gas meter:
+131	changed %1
+132	just now
+133	No room is heating right now
+134	yesterday
+135	yesterday %1
+136	Degrees
+137	Biggest consumers
+138	Biggest consumers right now
+139	Groups
+140	Groups & power strips
+141	Main meter
+142	Choose main meter
+143	Main meter:
+144	Heat
+145	Heat/Cool
+146	heating
+147	heating to %1
+148	Heating
+149	Heating (thermostats and room temperatures)
+150	Heating on (%1 of %2)
+151	Heating on (%1)
+152	Heating on in %1 rooms
+153	Heating off
+154	Heating idle
+155	Choose a heater: right-click → “Edit Widget”
+156	Heater:
+157	Brightness %1
+158	Already %1 % of yesterday’s consumption
+159	Home Assistant
+160	Home Assistant · %1
+161	Home Assistant does not respond.
+162	Set up Home Assistant
+163	Home Assistant rejected the token. Please enter a new one in the settings.
+164	Add Home Assistant
+165	Home Assistant is not reachable (%1).
+166	Open Home Assistant
+167	Home Assistant ToolBox
+168	Home Assistant ToolBox – Settings
+169	Home Assistant ToolBox – Home Assistant token
+170	Home Assistant ToolBox – What’s new?
+171	Quit Home Assistant ToolBox
+172	Set up Home Assistant ToolBox
+173	Home Assistant ToolBox is up to date.
+174	Open Home Assistant ToolBox
+175	Choose in the settings under “Desktop”.
+176	There are no thermostats in Home Assistant.
+177	No lights found in Home Assistant
+178	There are no people set up in Home Assistant.
+179	In Home Assistant: bottom left on your name → Security → “Long-lived access tokens” → Create token.
+180	Installation failed: %1
+181	Install
+182	Install and restart
+183	Installed
+184	Installed – Home Assistant ToolBox is restarting …
+185	Installed – the new version is active after restarting Plasma.
+186	installed: %1
+187	Installed: %1
+188	Instance
+189	Instance “%1”
+190	Remove instance
+191	Add instance
+192	Switch instance
+193	Instance:
+194	Instances & display
+195	Instances:
+196	Current
+197	now
+198	Tile shows:
+199	Colder
+200	No preset
+201	No history available
+202	No changes found.
+203	No heating found
+204	No lights
+205	No lights found
+206	No people
+207	No people in Home Assistant
+208	No sockets
+209	No sockets found
+210	No thermostats or temperature sensors found
+211	no connection
+212	No connection
+213	No connection.
+214	No meters found. Set up the energy dashboard in Home Assistant or choose meters in the settings.
+215	None (sum of measuring sockets)
+216	Comfort
+217	Complete (all tabs)
+218	Cool
+219	Loading …
+220	Light
+221	Light on
+222	Choose a light: right-click → “Edit Widget”
+223	Light:
+224	Lights
+225	Lights on
+226	Hide lights
+227	Show lights
+228	Lights, sockets, heating, energy and people from Home Assistant – in the panel and on the desktop
+229	Lights, sockets, heating, consumption and who is at home.
+230	Light groups
+231	Show light groups
+232	Long-lived access token
+233	empty = name from Home Assistant
+234	Power sensor of your electricity meter
+235	Power sensor of this instance’s electricity meter (e.g. Shelly 3EM, Tibber Pulse). After “Test connection” all power sensors appear.
+236	Lights on in %1 rooms
+237	Lights on in 1 room
+238	Live connected to %1
+239	Fan
+240	Humidity
+241	More
+242	Connect to Home Assistant
+243	Mode
+244	Mode:
+245	Check for updates
+246	Name
+247	Name (optional)
+248	Name:
+249	Reload
+250	New instance
+251	Restart not possible: %1
+252	Not set up
+253	not reachable
+254	not found
+255	Not found
+256	Not connected
+257	nobody
+258	Nobody at home
+259	no address yet
+260	No instance yet – add Home Assistant.
+261	Not set up yet – right-click → Set up
+262	Normally the widget updates instantly via the live connection. The interval only applies if that is not possible.
+263	Only show switches of type “outlet”
+264	Ø %1
+265	Ø %1 in %2 rooms
+266	offline
+267	Without room
+268	OpenStreetMap contributors
+269	Panel:
+270	People
+271	People with map
+272	Restart Plasma
+273	Preset
+274	Preset:
+275	Project page and updates on GitHub
+276	Room
+277	Room not found
+278	Choose a room: right-click → “Edit Widget”
+279	Room:
+280	Rooms
+281	Rooms (areas from Home Assistant)
+282	Show rooms (areas from Home Assistant)
+283	Room temperature and target temperature to adjust.
+284	Tabs
+285	idle
+286	Switch
+287	Switching failed:
+288	Switching failed: %1
+289	Sleep
+290	Close
+291	Desktop
+292	for %1 d
+293	for %1 h
+294	for %1 min
+295	Run the script in Scriptable once and add Home Assistant.
+296	How to add widgets:\n1. Long-press the home screen → “+” → Scriptable → choose a size.\n2. Long-press the widget → “Edit Widget” → Script: “Home Assistant ToolBox”.\n3. Under “Parameter” enter what it should show:\n\n• (empty) – overview\n• lights – lights (tap to switch)\n• heating – all rooms, heating:Living room – one room with history\n• energy – consumption, history, electricity/water/gas today\n• people – who is where\n• room:Kitchen – temperature, lights and sockets of a room\n• light:light.hall or light:Floor lamp – one entity, large\n• …@Holiday home – another instance than the favorite\n\nOn the lock screen the widget briefly shows lights, heating and consumption.
+297	Other
+298	Later
+299	Save
+300	Peak:
+301	As of %1
+302	Start
+303	Socket
+304	Choose a socket: right-click → “Edit Widget”
+305	Socket:
+306	Sockets
+307	Sockets & energy
+308	Sockets:
+309	Electricity
+310	Electricity meter
+311	Electricity meter:
+312	Checking for updates …
+313	Icon as large as the panel (instead of like the system tray)
+314	Temperature
+315	Temperature for extra heating
+316	Set temperature
+317	Temperature, lights and sockets of a room.
+318	Thermostats
+319	Tip: choose the main meter in the settings
+320	Tip: choose a main meter in the settings, then the history of the last 24 hours appears here.
+321	Tap an instance to edit it.
+322	Token (empty = unchanged)
+323	Change token …
+324	Remove token from the keychain
+325	Save anyway?
+326	Overview
+327	Overview (everything in brief)
+328	Rename
+329	Unknown
+330	unknown error
+331	Away
+332	Update to %1 …
+333	Update not possible
+334	Could not check for updates (%1).
+335	Could not check for updates.
+336	Updates:
+337	Connecting …
+338	Connect
+339	Connection
+340	Test connection
+341	Consumption %1
+342	Consumption of the measuring sockets
+343	Consumption right now
+344	Consumption right now, history and consumption today (electricity, water, gas).
+345	Consumption today
+346	Total consumption
+347	Connected to %1 · %2
+348	Connected to %1 · as of %2
+349	Connected: %1 lights, %2 sockets, %3 rooms with heating, %4 people.
+350	Zoom in
+351	Ratio to the peak of the last 24 hours
+352	Zoom out
+353	History
+354	Loading history …
+355	History, mode, preset, extra heating
+356	Version %1
+357	Version %1 · Home Assistant in the menu bar
+358	Version %1 is here
+359	Version %1 is installed and takes effect at the next start.
+360	Version %1 is available
+361	Version %1 is available.
+362	Preview: heating (large)
+363	Preview: overview (medium)
+364	Warmer
+365	What’s new?
+366	What should the tile show?
+367	Water
+368	Water meter
+369	Water meter:
+370	Which heater or which room.
+371	Which light or light group the widget shows.
+372	Which socket the widget shows.
+373	Which room: temperature, lights and sockets.
+374	Less
+375	Who is at home, who is how far away.
+376	Widget parameter e.g. light:light.hall
+377	Widget parameter e.g. room:Kitchen
+378	Widgets
+379	Set up widgets (guide)
+380	Desktop widgets: right-click on the desktop → “Edit Widgets …” → “Home Assistant ToolBox”.
+381	Downloading and checking …
+382	Downloading and installing …
+383	Really remove?
+384	e.g. Home, Holiday home (empty = from Home Assistant)
+385	Number of lights on at the icon
+386	Number of lights on in the menu bar
+387	Meters (electricity/water/gas)
+388	Meter readings
+389	Target
+390	Target
+391	Target %1
+392	Target temperature %1
+393	at home
+394	At home:
+395	At home: %1
+396	Access denied
+397	Access denied – please check the token.
+398	Access token
+399	Access token:
+400	Home
+401	Back
+402	total %1
+403	Clear cache

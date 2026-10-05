@@ -309,10 +309,11 @@ public enum Logik {
     // MARK: Zahlen
 
     static func komma(_ x: Double, _ stellen: Int) -> String {
-        String(format: "%.\(stellen)f", x).replacingOccurrences(of: ".", with: ",")
+        String(format: "%.\(stellen)f", x).replacingOccurrences(of: ".", with: Sprache.dezimal)
     }
 
-    public static func formatWatt(_ w: Double?) -> String {
+    public static func formatWatt(_ w: Double?) -> String { Sprache.iso(formatWattRoh(w)) }
+    static func formatWattRoh(_ w: Double?) -> String {
         guard let w, !w.isNaN else { return "–" }
         if w == 0 { return "0 W" }
         if abs(w) >= 10000 { return komma(w / 1000, 1) + " kW" }
@@ -321,7 +322,8 @@ public enum Logik {
         return komma(w, 1) + " W"
     }
 
-    public static func formatKwh(_ k: Double?) -> String {
+    public static func formatKwh(_ k: Double?) -> String { Sprache.iso(formatKwhRoh(k)) }
+    static func formatKwhRoh(_ k: Double?) -> String {
         guard let k, !k.isNaN else { return "–" }
         // Zählerstände wie auf dem Zähler: 12.456 kWh
         if k >= 1000 { return tausender(Int(k.rounded())) + " kWh" }
@@ -332,14 +334,15 @@ public enum Logik {
     static func tausender(_ n: Int) -> String {
         var s = String(n), ergebnis = ""
         while s.count > 3 {
-            ergebnis = "." + s.suffix(3) + ergebnis
+            ergebnis = (Sprache.dezimal == "," ? "." : ",") + s.suffix(3) + ergebnis
             s = String(s.dropLast(3))
         }
         return s + ergebnis
     }
 
     /// Menge mit passender Einheit: Strom in kWh, Wasser in Litern bzw. m³, Gas in m³ oder kWh.
-    public static func formatMenge(_ wert: Double?, _ einheit: String, _ art: VerbrauchsArt) -> String {
+    public static func formatMenge(_ wert: Double?, _ einheit: String, _ art: VerbrauchsArt) -> String { Sprache.iso(formatMengeRoh(wert, einheit, art)) }
+    static func formatMengeRoh(_ wert: Double?, _ einheit: String, _ art: VerbrauchsArt) -> String {
         guard let wert, !wert.isNaN else { return "–" }
         switch art {
         case .strom:

@@ -22,6 +22,26 @@ var BEREICHE_TEMPLATE =
 
 var EINSTELLUNGS_SCHALTER = /(^|[\s_.-])(led|leds|indikator|indicator|kindersicherung|child[\s_]?lock|tastensperre|button[\s_]?lock|nachtmodus|night[\s_]?mode|do[\s_]?not[\s_]?disturb|auto[\s_-]?update|firmware|beta|ota|neustart|restart|reboot|identify|identifizieren|power[\s_]?on[\s_]?behavio(u)?r|einschaltverhalten|überlastschutz|overload|benachrichtigung|notification|signalton|beep|buzzer|statuslicht|status[\s_]?light|ecomodus|eco[\s_]?mode)($|[\s_.-])/i;
 
+// ------------------------------------------------------------------ Sprache
+// Übersetzung und Dezimalzeichen setzt das Programm beim Start (KDE: i18n, iOS: eigene Tabelle).
+var _uebersetzen = function (s) { return s; };
+var _dezimal = ",";
+var _rtl = false;
+function sprache(uebersetzen, dezimal, rtl) {
+    if (uebersetzen) _uebersetzen = uebersetzen;
+    if (dezimal) _dezimal = dezimal;
+    _rtl = !!rtl;
+}
+/** Zahl mit Einheit in Rechts-nach-links-Sprachen als Block isolieren (sonst wird aus "21 °C" "C° 21") */
+function iso(s) { return _rtl && s !== "–" ? "\u2066" + s + "\u2069" : s; }
+/** Text übersetzen; %1, %2 … durch Werte ersetzen */
+function t(text) {
+    var s = _uebersetzen(text) || text, werte = Array.prototype.slice.call(arguments, 1);
+    for (var i = werte.length; i >= 1; i--) s = s.split("%" + i).join(String(werte[i - 1]));
+    return s;
+}
+function komma(zahlText) { return String(zahlText).replace(".", _dezimal); }
+
 function domain(id) { return id.split(".")[0]; }
 
 function name(e) {
@@ -288,21 +308,23 @@ function gruppenFarbe(mitglieder, zustaende) {
     return "#" + hex2(r / n) + hex2(g / n) + hex2(b / n);
 }
 
-function formatWatt(w) {
+function formatWatt(w) { return iso(_formatWatt(w)); }
+function _formatWatt(w) {
     if (w === null || w === undefined || isNaN(w)) return "–";
     if (w === 0) return "0 W";
-    if (Math.abs(w) >= 10000) return (w / 1000).toFixed(1).replace(".", ",") + " kW";
-    if (Math.abs(w) >= 1000) return (w / 1000).toFixed(2).replace(".", ",") + " kW";
+    if (Math.abs(w) >= 10000) return komma((w / 1000).toFixed(1)) + " kW";
+    if (Math.abs(w) >= 1000) return komma((w / 1000).toFixed(2)) + " kW";
     if (Math.abs(w) >= 10) return Math.round(w) + " W";
-    return w.toFixed(1).replace(".", ",") + " W";
+    return w.toFixed(1).replace(".", _dezimal) + " W";
 }
 
-function formatKwh(k) {
+function formatKwh(k) { return iso(_formatKwh(k)); }
+function _formatKwh(k) {
     if (k === null || k === undefined || isNaN(k)) return "–";
     // Zählerstände wie auf dem Zähler: 12.456 kWh
-    if (k >= 1000) return Math.round(k).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " kWh";
+    if (k >= 1000) return Math.round(k).toString().replace(/\B(?=(\d{3})+(?!\d))/g, _dezimal === "," ? "." : ",") + " kWh";
     if (k >= 100) return Math.round(k) + " kWh";
-    return k.toFixed(k >= 10 ? 1 : 2).replace(".", ",") + " kWh";
+    return k.toFixed(k >= 10 ? 1 : 2).replace(".", _dezimal) + " kWh";
 }
 
 /** Verlauf (History-API, minimal_response) in Punkte [{t, w}] umwandeln. */
@@ -419,7 +441,8 @@ function tagesVerbrauch(liste, heuteStart) {
 }
 
 /** Menge mit passender Einheit: Strom in kWh, Wasser in Litern bzw. m³, Gas in m³ oder kWh. */
-function formatMenge(wert, einheit, art) {
+function formatMenge(wert, einheit, art) { return iso(_formatMenge(wert, einheit, art)); }
+function _formatMenge(wert, einheit, art) {
     if (wert === null || wert === undefined || isNaN(wert)) return "–";
     var e = einheit || "";
     if (art === "strom") {
@@ -428,12 +451,12 @@ function formatMenge(wert, einheit, art) {
     }
     if (art === "wasser") {
         var liter = e === "m³" || e === "m3" ? wert * 1000 : e === "gal" ? wert * 3.785 : e === "ft³" ? wert * 28.317 : wert;
-        if (liter >= 1000) return (liter / 1000).toFixed(2).replace(".", ",") + " m³";
+        if (liter >= 1000) return komma((liter / 1000).toFixed(2)) + " m³";
         return Math.round(liter) + " L";
     }
     // Gas
     if (e === "kWh" || e === "Wh" || e === "MWh") return formatKwh(e === "Wh" ? wert / 1000 : e === "MWh" ? wert * 1000 : wert);
-    return wert.toFixed(wert >= 10 ? 1 : 2).replace(".", ",") + " " + (e || "m³");
+    return wert.toFixed(wert >= 10 ? 1 : 2).replace(".", _dezimal) + " " + (e || "m³");
 }
 
 
@@ -508,15 +531,16 @@ function raumKlima(raum, zustaende) {
     };
 }
 
-function formatTemp(t, stellen) {
+function formatTemp(t, stellen) { return iso(_formatTemp(t, stellen)); }
+function _formatTemp(t, stellen) {
     if (t === null || t === undefined || isNaN(t)) return "–";
-    return t.toFixed(stellen === undefined ? 1 : stellen).replace(".", ",") + " °C";
+    return t.toFixed(stellen === undefined ? 1 : stellen).replace(".", _dezimal) + " °C";
 }
 
 /** Name eines Heizmodus bzw. Presets auf Deutsch */
 function modusName(m) {
-    return ({ off: "Aus", heat: "Heizen", auto: "Automatik", heat_cool: "Heizen/Kühlen", cool: "Kühlen", dry: "Entfeuchten", fan_only: "Lüfter",
-              eco: "Eco", comfort: "Komfort", boost: "Boost", away: "Abwesend", home: "Zuhause", sleep: "Schlafen", activity: "Aktiv" })[m] || m;
+    return ({ off: t("Aus"), heat: t("Heizen"), auto: t("Automatik"), heat_cool: t("Heizen/Kühlen"), cool: t("Kühlen"), dry: t("Entfeuchten"), fan_only: t("Lüfter"),
+              eco: t("Eco"), comfort: t("Komfort"), boost: t("Boost"), away: t("Abwesend"), home: t("Zuhause"), sleep: t("Schlafen"), activity: t("Aktiv") })[m] || m;
 }
 
 /** Temperatur auf den Schritt des Thermostats runden und begrenzen */
@@ -530,9 +554,9 @@ function rundeZiel(t, k) {
 function boostRest(b, jetzt) { return b ? Math.max(0, b.bis - jetzt) : 0; }
 function formatDauer(ms) {
     var min = Math.ceil(ms / 60000);
-    if (min < 60) return min + " min";
+    if (min < 60) return t("%1 min", min);
     var h = Math.floor(min / 60), m = min % 60;
-    return m ? h + " h " + m + " min" : h + " h";
+    return m ? t("%1 h %2 min", h, m) : t("%1 h", h);
 }
 
 // ------------------------------------------------------------------ Personen
@@ -560,9 +584,9 @@ function zonen(zustaende) {
 }
 
 function ortText(zustand) {
-    if (zustand === "home") return "Zuhause";
-    if (zustand === "not_home") return "Unterwegs";
-    if (zustand === "unknown" || zustand === "unavailable") return "Unbekannt";
+    if (zustand === "home") return t("Zuhause");
+    if (zustand === "not_home") return t("Unterwegs");
+    if (zustand === "unknown" || zustand === "unavailable") return t("Unbekannt");
     return zustand;
 }
 
@@ -578,18 +602,18 @@ function entfernung(lat1, lon1, lat2, lon2) {
 function formatEntfernung(km) {
     if (km === null || km === undefined) return "";
     if (km < 1) return Math.round(km * 1000 / 10) * 10 + " m";
-    return (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km)) + " km";
+    return (km < 10 ? km.toFixed(1).replace(".", _dezimal) : Math.round(km)) + " km";
 }
 
 /** "seit 2 h", "seit 15 min" */
 function formatSeit(ms, jetzt) {
     if (!ms) return "";
     var min = Math.max(0, Math.round((jetzt - ms) / 60000));
-    if (min < 1) return "gerade eben";
-    if (min < 60) return "seit " + min + " min";
+    if (min < 1) return t("gerade eben");
+    if (min < 60) return t("seit %1 min", min);
     var h = Math.floor(min / 60);
-    if (h < 24) return "seit " + h + " h";
-    return "seit " + Math.floor(h / 24) + " d";
+    if (h < 24) return t("seit %1 h", h);
+    return t("seit %1 d", Math.floor(h / 24));
 }
 
 /** Kartenkacheln (Web-Mercator): Längen-/Breitengrad → Kachelkoordinaten (Bruchteil) */
@@ -618,7 +642,7 @@ function instanzenLesen(json, alteAdresse, alterToken) {
     try { liste = JSON.parse(json || "[]") || []; } catch (e) { liste = []; }
     liste = liste.filter(function (i) { return i && i.adresse; });
     if (!liste.length && alteAdresse && alterToken)
-        liste = [{ id: "i1", name: "Zuhause", adresse: alteAdresse, token: alterToken, favorit: true }];
+        liste = [{ id: "i1", name: "", adresse: alteAdresse, token: alterToken, favorit: true }];
     if (liste.length && !liste.some(function (i) { return i.favorit; })) liste[0].favorit = true;
     return liste;
 }
@@ -698,17 +722,19 @@ function versionNeuer(a, b) {
 
 /** Aus der Release-Liste von GitHub: alle neueren Versionen mit Änderungen und die Download-Adresse */
 function updateAusReleases(releases, aktuell, dateiname) {
-    var neuer = (releases || []).filter(function (r) { return r && !r.draft && !r.prerelease && versionNeuer(r.tag_name, aktuell); });
+    var neuer = (releases || []).filter(function (r) { return r && typeof r.tag_name === "string" && !r.draft && !r.prerelease && versionNeuer(r.tag_name, aktuell); });
     neuer.sort(function (a, b) { return versionNeuer(a.tag_name, b.tag_name) ? -1 : 1; });
     if (!neuer.length) return null;
     var asset = (neuer[0].assets || []).filter(function (a) { return a.name === dateiname || (dateiname.indexOf("*") >= 0 && new RegExp("^" + dateiname.replace(/[.]/g, "\\.").replace("*", ".*") + "$").test(a.name)); })[0];
     var url = asset ? asset.browser_download_url : "";
     // nur Downloads aus diesem Projekt auf GitHub
-    if (url && url.indexOf("https://github.com/Teyro/homeassistant-leiste/releases/download/") !== 0) url = "";
+    if (url && (url.indexOf("https://github.com/Teyro/HomeAssistantToolBox/releases/download/") !== 0 || url.indexOf("..") >= 0)) url = "";
+    var seite = String(neuer[0].html_url || "");
+    if (seite.indexOf("https://github.com/Teyro/HomeAssistantToolBox/") !== 0) seite = "https://github.com/Teyro/HomeAssistantToolBox/releases";
     return {
         version: neuer[0].tag_name.replace(/^v/, ""),
         url: url,
-        seite: neuer[0].html_url || "https://github.com/Teyro/homeassistant-leiste/releases",
+        seite: seite,
         notizen: neuer.map(function (r) { return { version: r.tag_name.replace(/^v/, ""), titel: r.name || r.tag_name, text: r.body || "" }; })
     };
 }

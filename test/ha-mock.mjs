@@ -219,11 +219,11 @@ const server = http.createServer((req, res) => {
     // Nachgebaute GitHub-Releases für den Updater-Test (ohne Anmeldung)
     if (req.url.startsWith('/github/releases')) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      const basis = 'https://github.com/Teyro/homeassistant-leiste/releases/download/';
+      const basis = 'https://github.com/Teyro/HomeAssistantToolBox/releases/download/';
       return res.end(JSON.stringify([
-        { tag_name: 'v2.3.0', name: '2.3.0 – Testversion', draft: false, prerelease: false, html_url: 'https://github.com/Teyro/homeassistant-leiste/releases/tag/v2.3.0',
+        { tag_name: 'v2.3.0', name: '2.3.0 – Testversion', draft: false, prerelease: false, html_url: 'https://github.com/Teyro/HomeAssistantToolBox/releases/tag/v2.3.0',
           body: '**Neu**\n\n- Testfunktion A für die Heizung\n- Testfunktion B: schönere Karte\n\n**Behoben**\n\n- Ein Fehler beim Wechseln der Instanz',
-          assets: [{ name: 'home-assistant.plasmoid', browser_download_url: basis + 'v2.3.0/home-assistant.plasmoid' }, { name: 'HA-Leiste-2.3.0.zip', browser_download_url: basis + 'v2.3.0/HA-Leiste-2.3.0.zip' }] },
+          assets: [{ name: 'homeassistant-toolbox.plasmoid', browser_download_url: basis + 'v2.3.0/homeassistant-toolbox.plasmoid' }, { name: 'HomeAssistantToolBox-macOS-2.3.0.zip', browser_download_url: basis + 'v2.3.0/HomeAssistantToolBox-macOS-2.3.0.zip' }] },
         { tag_name: 'v2.2.0', name: '2.2.0', draft: false, prerelease: false, body: 'Updater, Fenster offen, Verlauf der Heizung', assets: [] },
         { tag_name: 'v2.1.0', name: '2.1.0', draft: false, prerelease: false, body: 'Instanzen, Heizung, Personen, Widgets', assets: [] }]));
     }
