@@ -1,9 +1,10 @@
-# Home Assistant Leiste – für KDE Plasma und macOS
+# Home Assistant Leiste – für KDE Plasma, macOS und iPhone
 
 Lampen, Steckdosen und Energieverbrauch aus [Home Assistant](https://www.home-assistant.io/) mit einem Klick –
 als **Plasma-Widget für KDE** (neben der Uhr, im Breeze-Look) und als **Menüleisten-App für macOS**
 (im Liquid-Glass-Design von macOS 26). Beide können dasselbe; die Logik ist die gleiche.
-Dazu gibt es auf beiden Systemen **Widgets für den Schreibtisch**.
+Dazu gibt es **Widgets für den Schreibtisch** – und für **iPhone/iPad** eine Version für
+[Scriptable](https://scriptable.app) mit Homebildschirm- und Sperrbildschirm-Widgets.
 
 | KDE Plasma 6 | macOS |
 |---|---|
@@ -35,6 +36,7 @@ Unter [Releases](https://github.com/Teyro/homeassistant-leiste/releases) liegen 
 |---|---|---|
 | `home-assistant.plasmoid` | KDE Plasma 6 (Manjaro, Arch, Fedora, Kubuntu …) | [plasma/README.md](plasma/README.md) |
 | `HA-Leiste-x.y.z.zip` | macOS 14 oder neuer (Apple Silicon und Intel) | [macos/README.md](macos/README.md) |
+| `HA-Leiste.js` | iPhone/iPad mit der App Scriptable | [ios/README.md](ios/README.md) |
 
 Kurz:
 
@@ -51,6 +53,7 @@ xattr -dr com.apple.quarantine "/Applications/HA Leiste.app"
 ```
 plasma/   KDE-Widget (QML, Plasma 6)
 macos/    Mac-App (SwiftUI, Swift-Paket)
+ios/      Skript für Scriptable (iOS) – wird aus der gemeinsamen Logik gebaut
 test/     nachgebautes Home Assistant zum Testen (Token: test-token)
 ```
 

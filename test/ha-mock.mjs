@@ -54,7 +54,7 @@ schalter('switch.kaffeemaschine_led', 'Kaffeemaschine LED', true, 'switch');
 schalter('switch.tv_kindersicherung', 'Fernseher Kindersicherung', false, 'switch');
 lampe('light.alter_strahler', 'Alter Strahler (versteckt)', true, { brightness: 200 });
 // Sensoren
-function sensor(id, name, wert, einheit, klasse) { z[id] = { entity_id: id, state: String(wert), last_changed: jetzt(), attributes: { friendly_name: name, unit_of_measurement: einheit, device_class: klasse, state_class: 'measurement' } }; }
+function sensor(id, name, wert, einheit, klasse) { z[id] = { entity_id: id, state: String(wert), last_changed: jetzt(), attributes: { friendly_name: name, unit_of_measurement: einheit, device_class: klasse, state_class: ['energy', 'water', 'gas'].includes(klasse) ? 'total_increasing' : 'measurement' } }; }
 sensor('sensor.kaffeemaschine_leistung', 'Kaffeemaschine Leistung', 4.2, 'W', 'power');
 sensor('sensor.tv_power', 'Fernseher Leistung', 86.3, 'W', 'power');
 sensor('sensor.pc_leistung', 'Rechner Leistung', 143.8, 'W', 'power');

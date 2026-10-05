@@ -31,10 +31,20 @@ jobs:
           (cd plasma/package && zip -qr ../../build/home-assistant.plasmoid metadata.json contents)
           unzip -l build/home-assistant.plasmoid | tail -1
 
+      - name: iOS-Skript (Scriptable) bauen
+        run: |
+          VERSION=$(node -p "require('./plasma/package/metadata.json').KPlugin.Version")
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF#refs/tags/v}"; fi
+          node ios/baue.mjs "$VERSION"
+          node -e "new (async function () {}).constructor(require('fs').readFileSync('ios/HA-Leiste.js', 'utf8')); console.log('iOS-Skript ok')"
+          cp ios/HA-Leiste.js build/
+
       - uses: actions/upload-artifact@v5
         with:
           name: plasmoid
-          path: build/home-assistant.plasmoid
+          path: |
+            build/home-assistant.plasmoid
+            build/HA-Leiste.js
 
   macos:
     name: Mac-App
@@ -112,4 +122,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la dateien
-          gh release upload "$GITHUB_REF_NAME" dateien/home-assistant.plasmoid dateien/HA-Leiste-*.zip --clobber -R "$GITHUB_REPOSITORY"
+          gh release upload "$GITHUB_REF_NAME" dateien/home-assistant.plasmoid dateien/HA-Leiste-*.zip dateien/HA-Leiste.js --clobber -R "$GITHUB_REPOSITORY"
