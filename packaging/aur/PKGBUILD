@@ -1,0 +1,20 @@
+# Maintainer: Teyro <https://github.com/Teyro>
+pkgname=plasma6-applets-homeassistant-toolbox
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Home Assistant in the KDE Plasma 6 panel: lights, sockets, heating, energy and people"
+arch=('any')
+url="https://github.com/Teyro/HomeAssistantToolBox"
+license=('GPL-3.0-or-later')
+depends=('plasma-workspace' 'qt6-websockets')
+source=("homeassistant-toolbox-$pkgver.plasmoid::$url/releases/download/v$pkgver/homeassistant-toolbox.plasmoid")
+noextract=("homeassistant-toolbox-$pkgver.plasmoid")
+sha256sums=('SKIP')
+
+package() {
+  local ziel="$pkgdir/usr/share/plasma/plasmoids/de.teyro.homeassistanttoolbox"
+  install -dm755 "$ziel"
+  bsdtar -xf "$srcdir/homeassistant-toolbox-$pkgver.plasmoid" -C "$ziel"
+  find "$ziel" -type d -exec chmod 755 {} +
+  find "$ziel" -type f -exec chmod 644 {} +
+}

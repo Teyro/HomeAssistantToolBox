@@ -522,7 +522,7 @@ function personPunkt(eltern, p, groesse) {
 function widgetLampen(w, familie, instanz, c, m) {
   w.backgroundGradient = hintergrund("lampen");
   w.url = aktionsURL("dashboard", { reiter: "lampen", instanz: instanz.id });
-  const max = familie === "large" ? 9 : familie === "medium" ? 4 : 3;
+  const max = familie === "large" ? 7 : 3;
   kopf(w, "lightbulb.fill", T("Lampen"), T("%1 von %2 an", m.lichterAn, m.lichter.length), F.gelb);
   w.addSpacer(6);
   // Gruppen zuerst, dann die eingeschalteten, dann der Rest
@@ -1090,7 +1090,7 @@ function seiteEnergie() {
 function seitePersonen() {
   const heim = D.zonen.find(z => z.heim);
   return '<div id="karte"></div><div class="karte">' + D.personen.map(p => '<div class="zeile"><div class="punkt" style="background:' + p.farbe + '">' + esc(p.name.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase()) + '</div><div class="mitte"><div class="name">' + esc(p.name) + '</div><div class="info" style="color:' + (p.zustand === "home" ? "var(--gruen)" : "") + '">' + esc(p.zustand === "home" ? t("Zuhause") : p.zustand === "not_home" ? t("Unterwegs") : p.zustand) + (seit(p.seit) ? " · " + seit(p.seit) : "") + "</div></div>"
-    + (p.zustand !== "home" && heim && entfernung(p.lat, p.lon, heim.lat, heim.lon) != null ? '<div class="info" style="font-weight:600">' + (e => e < 1 ? Math.round(e * 100) * 10 + " m" : e.toFixed(e < 10 ? 1 : 0).replace(".", ",") + " km")(entfernung(p.lat, p.lon, heim.lat, heim.lon)) + "</div>" : "") + "</div>").join("") + "</div>";
+    + (p.zustand !== "home" && heim && entfernung(p.lat, p.lon, heim.lat, heim.lon) != null ? '<div class="info" style="font-weight:600">' + (e => e < 1 ? Math.round(e * 100) * 10 + " m" : ISO(e.toFixed(e < 10 ? 1 : 0).replace(".", DEZ) + " km"))(entfernung(p.lat, p.lon, heim.lat, heim.lon)) + "</div>" : "") + "</div>").join("") + "</div>";
 }
 function karteZeichnen() {
   if (typeof L === "undefined" || !document.getElementById("karte")) return;

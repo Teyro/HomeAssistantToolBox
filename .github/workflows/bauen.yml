@@ -83,7 +83,11 @@ jobs:
           for m in Dark Light; do
             HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
             HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token HA_UPDATE_URL=http://127.0.0.1:8123/github/releases \
-            HA_BILDER="$PWD/bilder-ci" "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau $m || echo "Lauf $m: $?"
+            HA_BILDER="$PWD/bilder-ci" "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau $m -AppleLanguages "(de)" || echo "Lauf $m: $?"
+            # dasselbe auf Englisch (für die englische Anleitung)
+            HA_ADRESSE=http://127.0.0.1:8123 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
+            HA_ADRESSE2=http://127.0.0.1:8124 HA_TOKEN2=ferien-token HA_UPDATE_URL=http://127.0.0.1:8123/github/releases \
+            HA_BILDER="$PWD/bilder-ci/en" "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau $m -AppleLanguages "(en)" || echo "Lauf $m en: $?"
           done
           # Falscher Token: Fehleranzeige, und es darf nicht ständig weiter angefragt werden (ip_ban)
           cp mock.log mock.log.vorher

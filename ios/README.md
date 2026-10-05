@@ -1,72 +1,78 @@
-# Home Assistant ToolBox für iPhone und iPad (Scriptable)
+# Home Assistant ToolBox for iPhone and iPad (Scriptable)
 
-Home Assistant als Widgets auf dem Homebildschirm und Sperrbildschirm, dazu ein Dashboard zum
-Schalten – mit der kostenlosen App [Scriptable](https://apps.apple.com/app/scriptable/id1405459188).
-Gleicher Funktionsumfang wie das KDE-Widget und die Mac-App, die Logik ist dieselbe.
+**English** · [Deutsch](README.de.md)
 
-| Widgets (dunkel) | Widgets (hell) |
+Home Assistant as widgets on your home screen and lock screen, plus a dashboard for switching – with the free app
+[Scriptable](https://apps.apple.com/app/scriptable/id1405459188). Same features as the KDE widget and the Mac app;
+the logic is shared.
+
+| Widgets (dark) | Widgets (light) |
 |---|---|
-| ![Widgets dunkel](bilder/widgets-dunkel.png) | ![Widgets hell](bilder/widgets-hell.png) |
+| ![Widgets dark](bilder/en/widgets-dark.png) | ![Widgets light](bilder/en/widgets-light.png) |
 
-| Dashboard in der App | Personen, Steckdosen, Heizung |
+| Dashboard | People, sockets, heating |
 |---|---|
-| ![Dashboard](bilder/dashboard-dunkel.png) | ![Dashboard hell](bilder/dashboard-hell.png) |
+| ![Dashboard](bilder/en/dashboard-dark.png) | ![Dashboard light](bilder/en/dashboard-light.png) |
 
-## Akkuschonend
+## Battery friendly
 
-- Eine einzige Abfrage je Widget-Aktualisierung (`/api/states`); Räume nur 1× am Tag,
-  Verläufe höchstens alle 30 Minuten – alles andere kommt aus dem Zwischenspeicher.
-- Keine Dauerverbindung, keine Hintergrundarbeit. Wann Widgets neu geladen werden, entscheidet
-  iOS (meist alle 15–30 Minuten).
-- Ohne Netz bleibt der letzte Stand stehen (mit Uhrzeit und Hinweis).
-- Nur das offene Dashboard aktualisiert sich alle 10 Sekunden – und hört beim Schließen auf.
+- One request per widget refresh (`/api/states`); rooms once a day, history at most every 30 minutes – everything
+  else comes from the cache.
+- No permanent connection, no background work. iOS decides when widgets refresh (usually every 15–30 minutes).
+- Offline the last state stays visible (with time and a hint).
+- Only the open dashboard refreshes every 10 seconds – and stops when closed.
 
 ## Installation
 
-1. **Scriptable** aus dem App Store laden.
-2. `HomeAssistantToolBox.js` aus den [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) in Safari
-   öffnen → Teilen → **In Dateien sichern** → *iCloud Drive → Scriptable*.
-   (Oder: in Scriptable ein neues Skript anlegen, den Inhalt der Datei einfügen und „Home Assistant ToolBox“ nennen.)
-3. Das Skript in Scriptable einmal starten → **Home Assistant hinzufügen**: Adresse und
-   langlebigen Zugriffstoken eintragen (In Home Assistant: unten links dein Name → Sicherheit →
-   Langlebige Zugriffstoken → Token erstellen). Den Namen übernimmt das Skript aus Home Assistant.
+1. Install **Scriptable** from the App Store.
+2. Open `HomeAssistantToolBox.js` from the [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases/latest)
+   in Safari → Share → **Save to Files** → *iCloud Drive → Scriptable*.
+   (Or create a new script in Scriptable, paste the file content and name it “Home Assistant ToolBox”.)
+3. Run the script in Scriptable once → **Add Home Assistant**: enter address and long‑lived access token
+   (in Home Assistant: your name bottom left → Security → Long‑lived access tokens → Create token).
 
 ## Widgets
 
-Homebildschirm lange drücken → **+** → **Scriptable** → Größe wählen → Widget hinzufügen.
-Dann das Widget lange drücken → **Widget bearbeiten** → *Script*: **Home Assistant ToolBox**, bei *Parameter*:
+Long‑press the home screen → **+** → **Scriptable** → choose a size → add widget.
+Then long‑press the widget → **Edit Widget** → *Script*: **Home Assistant ToolBox**, *Parameter*:
 
-| Parameter | zeigt |
+| Parameter | shows |
 |---|---|
-| *(leer)* | Übersicht: Lampen, Heizung, Verbrauch, wer zu Hause ist |
-| `lampen` | Lampen und Gruppen – **Tippen schaltet** |
-| `heizung` | alle Räume mit Temperatur, Fenster offen/zu, heizt? |
-| `heizung:Wohnzimmer` | ein Raum groß, mit 24-Stunden-Verlauf (mittel/groß) |
-| `energie` | Verbrauch gerade, Verlauf, Strom/Wasser/Gas heute, größte Verbraucher |
-| `personen` | wer ist wo, wie weit weg |
-| `raum:Küche` | Temperatur, Lampen und Steckdosen eines Raums |
-| `lampe:Stehlampe` oder `lampe:light.flur` | eine Entität groß (Tippen schaltet) |
-| `…@Ferienhaus` | eine andere Instanz als den Favoriten, z. B. `energie@Ferienhaus` |
+| *(empty)* | overview: lights, heating, consumption, who is home |
+| `lights` | lights and groups – **tap to switch** |
+| `heating` | all rooms with temperature, window open/closed, heating? |
+| `heating:Living room` | one room large, with 24‑hour chart (medium/large) |
+| `energy` | current consumption, chart, electricity/water/gas today, biggest consumers |
+| `people` | who is where, how far away |
+| `room:Kitchen` | temperature, lights and sockets of a room |
+| `light:Floor lamp` or `light:light.hall` | one entity large (tap to switch) |
+| `…@Holiday house` | another instance than the favourite, e.g. `energy@Holiday house` |
 
-Alle Größen werden unterstützt (klein, mittel, groß) und auf dem **Sperrbildschirm** rechteckig,
-rund und als Zeile. Ein Tipp auf ein Widget öffnet das Dashboard.
+(The German keywords `lampen`, `heizung`, `energie`, `personen`, `raum`, `lampe` work as well.)
 
-**Schalten:** Widgets in iOS können selbst keine Schalter haben. Ein Tipp auf eine Lampe öffnet
-kurz Scriptable, schaltet und zeigt das Dashboard. Dort geht alles direkt: Schalter, Helligkeit,
-Zieltemperatur mit −/+, „Alle aus“, Instanz wechseln.
+All sizes are supported (small, medium, large) and on the **lock screen** rectangular, circular and inline.
+Tapping a widget opens the dashboard.
 
-## Einstellungen (Skript in Scriptable starten → Einstellungen)
+**Switching:** iOS widgets cannot have real switches. Tapping a light briefly opens Scriptable, switches and shows
+the dashboard. In the dashboard everything works directly: switches, brightness, target temperature with −/+,
+“All off”, switching instances. Switch links contain a secret key, so other apps or websites cannot switch your
+lights through Scriptable.
 
-- Mehrere Home-Assistant-Instanzen, eine als **Favorit (★)**
-- Hauptzähler (Leistung des Stromzählers) und Zähler für Strom/Wasser/Gas – ohne Auswahl sucht
-  das Skript passende Zähler selbst
-- Entitäten ausblenden (mit `*`)
-- **Nach Updates suchen**: zeigt die Änderungen und ersetzt das Skript auf Wunsch durch die neue
-  Version (nur Downloads aus diesem Projekt). In der App wird höchstens einmal am Tag nachgesehen.
+## Settings (run the script in Scriptable → Settings)
 
-Die Token liegen im Schlüsselbund von iOS.
+- Several Home Assistant instances, one as **favourite (★)**
+- Main meter and meters for electricity/water/gas – without a choice the script finds suitable meters itself
+- Hide entities (wildcards with `*`)
+- **Check for updates**: shows the changes and replaces the script with the new version on request (only
+  downloads from this project). The app checks at most once a day.
 
-## Entwicklung
+Tokens are stored in the iOS Keychain.
 
-`ios/quelle/HomeAssistantToolBox.js` ist die Vorlage, `node ios/baue.mjs` setzt die gemeinsame Logik aus dem
-Plasma-Widget (`logik.js`) ein und schreibt `ios/HomeAssistantToolBox.js`.
+## Development
+
+`ios/quelle/HomeAssistantToolBox.js` is the template; `node ios/baue.mjs` inserts the shared logic from the Plasma
+widget (`logik.js`) and the translations and writes `ios/HomeAssistantToolBox.js`.
+
+## License
+
+GPL-3.0-or-later

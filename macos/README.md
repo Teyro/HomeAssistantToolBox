@@ -1,108 +1,97 @@
-# Home Assistant ToolBox – Home Assistant in der macOS-Menüleiste
+# Home Assistant ToolBox for the macOS menu bar
 
-Lampen, Steckdosen und Energieverbrauch aus [Home Assistant](https://www.home-assistant.io/) mit einem Klick
-in der Menüleiste – im **Liquid-Glass-Design von macOS 26 Tahoe**. Gegenstück zum
-[Plasma-Widget für KDE](../plasma/README.md) mit dem gleichen Funktionsumfang.
+**English** · [Deutsch](README.de.md)
 
-| Lampen (Dunkel) | Steckdosen (Hell) | Energie (Dunkel) |
+Lights, sockets, heating, energy and people from [Home Assistant](https://www.home-assistant.io/) one click away in
+the menu bar – in the **Liquid Glass design of macOS 26 Tahoe**, with desktop widgets. Same features as the
+[KDE Plasma widget](../plasma/README.md).
+
+| Lights (dark) | Sockets (light) | Energy (dark) |
 |---|---|---|
-| ![Lampen](bilder/lampen-dunkel.png) | ![Steckdosen](bilder/steckdosen-hell.png) | ![Energie](bilder/energie-dunkel.png) |
+| ![Lights](bilder/en/lights-dark.png) | ![Sockets](bilder/en/sockets-light.png) | ![Energy](bilder/en/energy-dark.png) |
 
-| Heizung | Personen |
+| Heating | People |
 |---|---|
-| ![Heizung](bilder/heizung-dunkel.png) | ![Personen](bilder/personen-hell.png) |
+| ![Heating](bilder/en/heating-dark.png) | ![People](bilder/en/people-light.png) |
 
-## Was es kann
+## Features
 
-- **Lampen**: Lampengruppen und Räume aus Home Assistant zum Aufklappen, Lampen ohne Raum.
-  Schalter und Helligkeitsregler für jede Lampe, jede Gruppe und jeden Raum. Das Symbol
-  leuchtet in der echten Lampenfarbe bzw. im Weißton der Farbtemperatur. „Alle aus“ mit einem Klick.
-- **Steckdosen**: Schaltergruppen und Geräte mit mehreren Dosen (Steckdosenleisten) als eine Zeile
-  mit gemeinsamem Schalter und Gesamtverbrauch, zum Aufklappen. Einzelne Steckdosen darunter,
-  nach Raum sortiert und zunächst eingeklappt. Geräte-Einstellungen (LED, Kindersicherung …)
-  werden herausgefiltert.
-- **Energie**: aktueller Verbrauch mit Kennzahlen der letzten 24 Stunden (Energie, Durchschnitt,
-  Spitze), Verlauf mit Werten beim Überfahren mit der Maus, **Verbrauch heute** an Strom, Wasser
-  und Gas (mit dem Wert von gestern), die größten Verbraucher mit Anteil und alle Zählerstände.
-- **Heizung**: alle Räume mit Temperatur (live) und Luftfeuchte, Zieltemperatur mit Regler
-  (blau → orange) und −/+, Modus, Profil und **Extra heizen** für 30 Minuten bis 4 Stunden –
-  danach geht die Temperatur von selbst zurück.
-- **Fenster und Verlauf**: bei jeder Heizung ein Symbol für Fenster offen/zu; ein Klick auf die
-  Heizung zeigt den Verlauf der letzten 24 Stunden (Ist, Ziel, Heizphasen).
-- **Updates**: neue Versionen werden im Panel gemeldet. „Was ist neu?“ zeigt die Änderungen,
-  „Installieren und neu starten“ lädt das Update von GitHub, prüft es und tauscht die App aus.
-- **Personen**: Apple-Karte mit Zonen (Zuhause, Arbeit …) und allen Personen, darunter wer wo
-  ist, seit wann und wie weit weg – und ob gerade geheizt wird.
-- **Mehrere Instanzen**: beliebig viele Home-Assistant-Installationen, eine als Favorit (★, wird
-  beim Start gezeigt). Wechseln im Panel über ⋯ → „Instanz wechseln“.
-- **Widgets für den Schreibtisch**: Übersicht, Lampe, Steckdose, Heizung, Raum, Energie,
-  Personen und eine beliebige Entität – Lampen und Steckdosen lassen sich direkt im Widget
-  schalten, die Heizung mit −/+ verstellen.
-- **Live**: Änderungen (Schalter an der Wand, Automationen, App) erscheinen sofort über die
-  WebSocket-Schnittstelle von Home Assistant. Nach dem Ruhezustand verbindet sich die App neu.
-- **Menüleiste**: Glühbirne mit der Zahl der eingeschalteten Lampen.
-- Der Zugriffstoken liegt im **Schlüsselbund** von macOS.
-- Läuft ab macOS 14; Liquid Glass ab macOS 26, davor mit dem bisherigen Material-Look.
+- **Lights**: light groups and rooms from Home Assistant that expand, lights without a room. Switch and
+  brightness slider for every light, group and room; the icon glows in the real light colour. “All off”.
+- **Sockets**: switch groups and power strips as one row with shared switch and total consumption; single
+  sockets by room. Device settings (LED, child lock …) are filtered out.
+- **Energy**: current consumption with 24‑hour figures, chart with values on hover, **today’s usage** of
+  electricity, water and gas (compared with yesterday), biggest consumers and all meters.
+- **Heating**: every room with live temperature and humidity, target temperature with slider and −/+, mode,
+  preset and **boost** for 30 minutes to 4 hours – then back automatically.
+- **Windows and history**: window open/closed icon on every radiator; click it for the last 24 hours
+  (actual, target, heating phases).
+- **People**: Apple Maps with zones and all people, who is where, since when and how far away.
+- **Several instances** with a favourite (★); switch via ⋯ → “Switch instance”.
+- **Desktop widgets**: overview, light, socket, heating, room, energy, people and any entity – switch lights and
+  sockets right in the widget, change the temperature with −/+.
+- **Live** via the Home Assistant WebSocket API; reconnects after sleep.
+- **Updates**: new versions are announced in the panel, “What’s new?” shows the changes, “Install and restart”
+  downloads the update from GitHub, verifies it and replaces the app.
+- Token stored in the **macOS Keychain**.
+- 8 languages, following the system language. Runs on macOS 14+; Liquid Glass on macOS 26.
 
 ## Installation
 
-1. `HomeAssistantToolBox-macOS-x.y.z.zip` aus den [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases) laden,
-   entpacken und **Home Assistant ToolBox** in den Ordner *Programme* ziehen.
-2. Die App ist nicht bei Apple beglaubigt (dafür bräuchte es ein kostenpflichtiges Entwicklerkonto).
-   Beim ersten Start meldet macOS deshalb, dass sie nicht geöffnet werden kann. Dann einmal im Terminal:
+1. Download `HomeAssistantToolBox-macOS-x.y.z.zip` from the
+   [Releases](https://github.com/Teyro/HomeAssistantToolBox/releases/latest), unzip it and drag
+   **Home Assistant ToolBox** into *Applications*.
+2. The app is not notarised by Apple (that requires a paid developer account), so macOS refuses to open it the
+   first time. Run once in Terminal:
    ```bash
    xattr -dr com.apple.quarantine "/Applications/Home Assistant ToolBox.app"
    ```
-   oder: *Systemeinstellungen → Datenschutz & Sicherheit* → ganz unten **„Dennoch öffnen“**.
-3. App starten – oben rechts in der Menüleiste erscheint eine Glühbirne. Klick darauf → **Einrichten …**
-4. Adresse eintragen (z. B. `http://homeassistant.local:8123`) und einen Token: In Home Assistant
-   unten links auf deinen Namen → **Sicherheit** → **Langlebige Zugriffstoken** → **Token erstellen**.
-   Auf **Verbinden** klicken. macOS fragt evtl., ob die App auf Geräte im lokalen Netzwerk zugreifen darf → **Erlauben**.
+   or: *System Settings → Privacy & Security* → at the bottom **“Open Anyway”**.
+3. Start the app – a light bulb appears in the menu bar. Click it → **Set up …**
+4. Enter the address (e.g. `http://homeassistant.local:8123`) and a token: in Home Assistant click your name
+   (bottom left) → **Security** → **Long‑lived access tokens** → **Create token**. Click **Connect**.
+   macOS may ask whether the app may access devices on your local network → **Allow**.
 
-Nach einem Update fragt macOS evtl. einmal, ob Home Assistant ToolBox den Token im Schlüsselbund lesen darf → **Immer erlauben**.
+Upgrading from *Home Assistant Leiste*: your instances are taken over; macOS may ask once whether the app may read
+the token from the keychain → **Always Allow**. Then delete the old app.
 
-### Widgets auf den Schreibtisch legen
+### Desktop widgets
 
-Rechtsklick auf den Schreibtisch → **Widgets bearbeiten …** → links **Home Assistant ToolBox** suchen → Widget
-auf den Schreibtisch ziehen. Bei Lampe, Steckdose, Heizung, Raum und Entität: Rechtsklick auf das
-Widget → **Widget bearbeiten** → auswählen, was es zeigen soll. Die Widgets bekommen ihre Daten
-von der laufenden App (Home Assistant ToolBox muss also laufen – am besten „Beim Anmelden starten“ einschalten).
+Right‑click the desktop → **Edit Widgets …** → search **Home Assistant ToolBox** → drag a widget to the desktop.
+For light, socket, heating, room and entity: right‑click the widget → **Edit Widget** → choose what it shows.
+Widgets get their data from the running app (enable “Start at login”).
 
-![Widgets](bilder/widgets-hell.png)
+![Widgets](bilder/en/widgets-light.png)
 
-## Einstellungen
+## Settings
 
-![Einstellungen](bilder/einstellungen-hell.png)
+![Settings](bilder/en/settings-light.png)
 
-- Gruppen und/oder Räume anzeigen, klassische `group.*`-Gruppen einbeziehen
-- Nur Schalter vom Typ „Steckdose“ zeigen
-- Hauptzähler (Leistungssensor des Stromzählers) für Verlauf und Anteile
-- Verbrauch heute: Strom, Wasser und Gas einzeln ein- und ausblenden. Die Zähler kommen
-  automatisch aus dem Energie-Dashboard von Home Assistant (gleiche Werte wie dort) oder lassen
-  sich von Hand wählen.
-- Entitäten ausblenden, auch mit `*`: `light.flur_nachtlicht, switch.*_kindersicherung`
-- Zahl am Menüleisten-Symbol, beim Anmelden starten, Abfrage-Intervall ohne Live-Verbindung
+- Show groups and/or rooms, include classic `group.*` groups
+- Only show switches of type “outlet”
+- Main meter (power sensor of the electricity meter) for chart and shares
+- Today’s usage: electricity, water and gas individually; meters come from the Home Assistant energy dashboard
+  or can be chosen by hand
+- Hide entities, wildcards allowed: `light.hall_nightlight, switch.*_child_lock`
+- Badge in the menu bar, start at login, polling interval without live connection
 
-## Gut zu wissen
+## Good to know
 
-- Wird der Token abgelehnt, fragt die App nicht weiter nach – Home Assistant sperrt sonst nach einigen
-  Fehlversuchen die IP-Adresse (`ip_ban`). Adresse und Token werden erst nach erfolgreichem Test übernommen.
-- Beenden: Klick auf das Symbol → **⋯** → **Home Assistant ToolBox beenden**.
+- If the token is rejected the app stops asking – Home Assistant would otherwise ban your IP (`ip_ban`).
+  Address and token are only saved after a successful test.
+- Quit: click the icon → **⋯** → **Quit Home Assistant ToolBox**.
 
-## Entwicklung
+## Development
 
 ```bash
 cd macos
-swift test                 # Logik prüfen
-./scripts/baue-app.sh      # build/Home Assistant ToolBox.app mit Widgets und ZIP (Xcode + XcodeGen nötig)
-node ../test/ha-mock.mjs & # nachgebautes Home Assistant auf Port 8123 (Token: test-token)
+swift test                 # logic tests
+./scripts/baue-app.sh      # build/Home Assistant ToolBox.app with widgets + ZIP (needs Xcode + XcodeGen)
+node ../test/ha-mock.mjs & # mock Home Assistant on port 8123 (token: test-token)
 HA_TOKEN=test-token HA_HAUPTZAEHLER=sensor.stromzaehler_leistung \
-  "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau Dark   # Bildschirmfotos
+  "build/Home Assistant ToolBox.app/Contents/MacOS/HAToolBox" --vorschau Dark   # screenshots
 ```
 
-Der GitHub-Workflow baut auf macOS 26, testet, macht die Bildschirmfotos und hängt bei einem
-Tag `v*` das ZIP (zusammen mit dem KDE-Widget) an das Release.
-
-## Lizenz
+## License
 
 GPL-3.0-or-later
