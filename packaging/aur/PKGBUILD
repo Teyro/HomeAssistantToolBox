@@ -9,7 +9,7 @@ license=('GPL-3.0-or-later')
 depends=('plasma-workspace' 'qt6-websockets')
 source=("homeassistant-toolbox-$pkgver.plasmoid::$url/releases/download/v$pkgver/homeassistant-toolbox.plasmoid")
 noextract=("homeassistant-toolbox-$pkgver.plasmoid")
-sha256sums=('SKIP')
+sha256sums=('c2e023068859377e3604fed1149ee8ef5cfbdef07c9435d1f9541aeffa9d21fc')
 
 package() {
   local ziel="$pkgdir/usr/share/plasma/plasmoids/de.teyro.homeassistanttoolbox"

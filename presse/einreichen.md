@@ -13,7 +13,7 @@ anhängen, was größer als ein paar MB ist.
 |---|---|---|
 | **KDE Store** – https://store.kde.org | Anmelden → *Add Product* → Kategorie *Plasma 6 Applets* → Text aus `texte.md`, Datei `homeassistant-toolbox.plasmoid`, Bilder `plasma/bilder/en`. Danach ist das Widget direkt in Plasma unter *Widgets hinzufügen → Neue Widgets holen* zu finden. | ☐ |
 | **AUR** (Arch, Manjaro, EndeavourOS) – https://aur.archlinux.org | `packaging/aur/PKGBUILD` (siehe README dort): AUR-Konto mit SSH-Schlüssel, dann `git clone ssh://aur@aur.archlinux.org/plasma6-applets-homeassistant-toolbox.git`, PKGBUILD + `.SRCINFO` hinein, pushen. | ☐ |
-| **GitHub** | Repository-Themen (Topics) sind gesetzt; Release 1.0.0 mit allen Dateien. | ☑ |
+| **GitHub** | Repository öffentlich, Themen (Topics) gesetzt, Diskussionen und privates Melden von Sicherheitslücken aktiv, Release 1.0.0 mit allen Dateien. | ☑ |
 
 ## 2. Linux-Seiten (deutsch)
 
