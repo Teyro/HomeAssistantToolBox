@@ -1,6 +1,7 @@
 /*
- * Kleine Karte für den Reiter "Personen": Kartenkacheln von OpenStreetMap Deutschland (tile.openstreetmap.de, im dunklen
- * Farbschema abgedunkelt), Zonen als Kreise, Personen als runde Marker.
+ * Kleine Karte für den Reiter "Personen" bzw. "Wo ist?": Kartenkacheln von OpenStreetMap Deutschland (tile.openstreetmap.de, im
+ * dunklen Farbschema abgedunkelt) oder Satellitenbild (Esri), Zonen als Kreise, Personen als runde Marker, Geräte und Objekte
+ * mit Symbol, dazu auf Wunsch der zurückgelegte Weg.
  * Verschieben mit der Maus, Zoomen mit dem Mausrad oder den Knöpfen.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -15,7 +16,10 @@ import "logik.js" as Logik
 Item {
     id: karte
 
-    property var personen: []          // [{ id, name, lat, lon, zustand }]
+    property var personen: []          // [{ id, name, lat, lon, zustand, art? }]
+    property var spuren: []            // "Wo ist?": [{ farbe, punkte: [{ t, lat, lon }] }]
+    property bool satellitMoeglich: false
+    property bool satellit: false
     property var zonen: []             // [{ id, name, lat, lon, radius, heim }]
     property string auswahl: ""
     signal personGewaehlt(string id)
@@ -34,9 +38,11 @@ Item {
     clip: true
 
     function einpassen() {
-        const punkte = sichtbarePersonen.slice();
+        // mit Weg: genau den Weg zeigen, sonst alle und das Zuhause
+        const punkte = spuren.length ? [] : sichtbarePersonen.slice();
         const heim = zonen.find(z => z.heim);
-        if (heim) punkte.push(heim);
+        if (heim && !spuren.length) punkte.push(heim);
+        for (const s of spuren) for (const p of s.punkte) punkte.push(p);
         if (!punkte.length || width <= 0) return;
         zoom = Logik.passenderZoom(punkte, width, height);
         const xs = punkte.map(p => Logik.kachelX(p.lon, zoom)), ys = punkte.map(p => Logik.kachelY(p.lat, zoom));
@@ -59,6 +65,7 @@ Item {
     }
 
     onPersonenChanged: if (!selbstBewegt) einpassen()
+    onSpurenChanged: if (spuren.length) { selbstBewegt = false; einpassen(); }
     onWidthChanged: if (!selbstBewegt) einpassen()
     onHeightChanged: if (!selbstBewegt) einpassen()
 
@@ -76,7 +83,9 @@ Item {
             for (let y = y0; y <= y1; y++)
                 for (let x = x0; x <= x1; x++)
                     liste.push({ px: x * 256 - karte.mitteX + karte.width / 2, py: y * 256 - karte.mitteY + karte.height / 2,
-                                 url: "https://tile.openstreetmap.de/" + karte.zoom + "/" + (((x % n) + n) % n) + "/" + y + ".png" });
+                                 url: karte.satellit
+                                      ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/" + karte.zoom + "/" + y + "/" + (((x % n) + n) % n)
+                                      : "https://tile.openstreetmap.de/" + karte.zoom + "/" + (((x % n) + n) % n) + "/" + y + ".png" });
             return liste;
         }
         delegate: Image {
@@ -93,7 +102,57 @@ Item {
     }
     }
     // Im dunklen Farbschema abdunkeln (ohne Shader – geht auch bei Software-Darstellung)
-    Rectangle { anchors.fill: parent; visible: karte.dunkel; color: "#000000"; opacity: 0.5 }
+    Rectangle { anchors.fill: parent; visible: karte.dunkel && !karte.satellit; color: "#000000"; opacity: 0.5 }
+
+    // Zurückgelegter Weg: ältere Abschnitte blasser, Startpunkt als Kreis
+    Canvas {
+        id: wege
+        anchors.fill: parent
+        visible: karte.spuren.length > 0
+        onPaint: {
+            const c = getContext("2d");
+            c.reset();
+            c.lineCap = "round";
+            c.lineJoin = "round";
+            for (const s of karte.spuren) {
+                const pts = s.punkte.map(p => karte.bildschirm(p.lat, p.lon));
+                if (pts.length < 2) continue;
+                c.globalAlpha = 0.85;
+                c.strokeStyle = "white";
+                c.lineWidth = 7;
+                c.beginPath();
+                c.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
+                c.stroke();
+                c.strokeStyle = s.farbe;
+                c.lineWidth = 4;
+                for (let i = 1; i < pts.length; i++) {
+                    c.globalAlpha = 0.35 + 0.65 * i / (pts.length - 1);
+                    c.beginPath();
+                    c.moveTo(pts[i - 1].x, pts[i - 1].y);
+                    c.lineTo(pts[i].x, pts[i].y);
+                    c.stroke();
+                }
+                c.globalAlpha = 1;
+                c.fillStyle = s.farbe;
+                c.strokeStyle = "white";
+                c.lineWidth = 2;
+                c.beginPath();
+                c.arc(pts[0].x, pts[0].y, 5, 0, Math.PI * 2);
+                c.fill();
+                c.stroke();
+            }
+        }
+        Connections {
+            target: karte
+            function onSpurenChanged() { wege.requestPaint(); }
+            function onMitteXChanged() { wege.requestPaint(); }
+            function onMitteYChanged() { wege.requestPaint(); }
+            function onZoomChanged() { wege.requestPaint(); }
+        }
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+    }
 
     // Zonen (Zuhause, Arbeit …)
     Repeater {
@@ -159,9 +218,19 @@ Item {
                 border.width: karte.auswahl === marker.modelData.id ? 3 : 2
                 PC3.Label {
                     anchors.centerIn: parent
+                    visible: !marker.modelData.art || marker.modelData.art === "personen"
                     text: Logik.initialen(marker.modelData.name)
                     color: "white"
                     font.weight: Font.Bold
+                }
+                Kirigami.Icon {
+                    anchors.centerIn: parent
+                    visible: !!marker.modelData.art && marker.modelData.art !== "personen"
+                    width: parent.width * 0.55
+                    height: width
+                    source: marker.modelData.art === "geraete" ? "smartphone" : "mark-location"
+                    color: "white"
+                    isMask: true
                 }
             }
             MouseArea {
@@ -169,7 +238,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: karte.personGewaehlt(marker.modelData.id)
             }
-            PC3.ToolTip.text: marker.modelData.name + " · " + Logik.ortText(marker.modelData.zustand)
+            PC3.ToolTip.text: marker.modelData.name + " · " + (marker.modelData.ort || Logik.ortText(marker.modelData.zustand))
             PC3.ToolTip.visible: maus.containsMouse
             MouseArea { id: maus; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
         }
@@ -198,7 +267,8 @@ Item {
         spacing: 2
         Repeater {
             model: [{ symbol: "zoom-in", text: i18n("Vergrößern"), schritt: 1 }, { symbol: "zoom-out", text: i18n("Verkleinern"), schritt: -1 },
-                    { symbol: "zoom-fit-best", text: i18n("Alle zeigen"), schritt: 0 }]
+                    { symbol: "zoom-fit-best", text: i18n("Alle zeigen"), schritt: 0 }].concat(karte.satellitMoeglich
+                    ? [{ symbol: "globe", text: karte.satellit ? i18n("Straßenkarte") : i18n("Satellitenbild"), schritt: 9 }] : [])
             delegate: PC3.Button {
                 required property var modelData
                 icon.name: modelData.symbol
@@ -206,7 +276,8 @@ Item {
                 text: modelData.text
                 implicitWidth: implicitHeight
                 onClicked: {
-                    if (modelData.schritt) karte.zoomen(modelData.schritt);
+                    if (modelData.schritt === 9) karte.satellit = !karte.satellit;
+                    else if (modelData.schritt) karte.zoomen(modelData.schritt);
                     else { karte.selbstBewegt = false; karte.einpassen(); }
                 }
                 PC3.ToolTip.text: text
@@ -220,7 +291,7 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 2
-        text: "© <a href=\"https://www.openstreetmap.org/copyright\">" + i18n("OpenStreetMap-Mitwirkende") + "</a>"
+        text: karte.satellit ? "© Esri, Maxar, Earthstar Geographics" : "© <a href=\"https://www.openstreetmap.org/copyright\">" + i18n("OpenStreetMap-Mitwirkende") + "</a>"
         textFormat: Text.StyledText
         font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
         color: karte.dunkel ? "#cccccc" : "#444444"

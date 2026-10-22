@@ -32,6 +32,11 @@ final class PanelZustand {
     var offen: Set<String> = []
     var einzelneLampenOffen = true
     var einzelneSteckdosenOffen = false
+    // "Wo ist?" (bleibt beim Schließen erhalten)
+    var woArt: OrtArt = .personen
+    var woAuswahl: String?
+    var woStufe = 0
+    var woSatellit = false
 
     func umschalten(_ schluessel: String) {
         if offen.contains(schluessel) { offen.remove(schluessel) } else { offen.insert(schluessel) }
@@ -52,7 +57,8 @@ struct PanelAnsicht: View {
         Reiter.allCases.filter { r in
             switch r {
             case .heizung: einstellungen.zeigeHeizung && !ha.heizungen.isEmpty
-            case .personen: einstellungen.zeigePersonen && !ha.personen.isEmpty
+            case .personen: einstellungen.zeigePersonen
+                && (einstellungen.woIst ? !ha.orter.isEmpty || einstellungen.instanzen.count > 1 : !ha.personen.isEmpty)
             default: true
             }
         }
@@ -111,7 +117,8 @@ struct PanelAnsicht: View {
                     case .steckdosen: SteckdosenSeite(ha: ha, zustand: zustand)
                     case .heizung: HeizungSeite(kern: kern)
                     case .energie: EnergieSeite(ha: ha, einstellungen: einstellungen, instanz: kern.aktiv)
-                    case .personen: PersonenSeite(ha: ha)
+                    case .personen:
+                        if einstellungen.woIst { WoIstSeite(kern: kern) } else { PersonenSeite(ha: ha) }
                     }
                 }
             }
@@ -192,6 +199,8 @@ struct PanelAnsicht: View {
         .padding(.bottom, 8)
     }
 
+    private func titel(_ r: Reiter) -> String { r == .personen && einstellungen.woIst ? T("Wo ist?") : r.titel }
+
     private func reiterKnopf(_ r: Reiter) -> some View {
         let gewaehlt = zustand.reiter == r
         let anzahl: Int? = switch r {
@@ -208,7 +217,7 @@ struct PanelAnsicht: View {
                 Image(systemName: r.symbol).font(.system(size: 12, weight: .semibold))
                 // Bei fünf Reitern nur beim gewählten den Namen zeigen
                 if gewaehlt || reiter.count <= 3 {
-                    Text(r.titel)
+                    Text(titel(r))
                         .font(.system(size: 12, weight: gewaehlt ? .semibold : .medium))
                         .lineLimit(1)
                         .fixedSize()
@@ -240,8 +249,8 @@ struct PanelAnsicht: View {
         }
         .buttonStyle(.plain)
         .keyboardShortcut(KeyEquivalent(Character("\(r.rawValue + 1)")), modifiers: .command)
-        .help("\(r.titel) (⌘\(r.rawValue + 1))")
-        .accessibilityLabel(r.titel)
+        .help("\(titel(r)) (⌘\(r.rawValue + 1))")
+        .accessibilityLabel(titel(r))
     }
 
     // MARK: Fuß: Verbindungsstatus

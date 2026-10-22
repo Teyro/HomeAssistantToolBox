@@ -19,6 +19,8 @@ PlasmaExtras.Representation {
     property var steuerung: null    // PlasmoidItem: Instanzen, Extra heizen
     property bool zeigeHeizung: true
     property bool zeigePersonen: true
+    property bool woIst: false
+    property string ausgeblendet: ""
     property bool zeigeGruppen: true
     property bool zeigeRaeume: true
     property string hauptzaehler: ""
@@ -54,7 +56,8 @@ PlasmaExtras.Representation {
                 Reiter { text: i18n("Heizung"); symbol: "heizung"; visible: voll.zeigeHeizung && voll.ha.heizungen.length > 0
                          zahl: voll.ha.heizungen.filter(r => Logik.raumKlima(r, voll.ha.zustaende).heizt).length }
                 Reiter { text: i18n("Energie"); symbol: "energie"; visible: voll.ha.leistung.length > 0 || voll.ha.energie.length > 0 || voll.ha.hauptWatt !== null }
-                Reiter { text: i18n("Personen"); symbol: "person"; visible: voll.zeigePersonen && voll.ha.personen.length > 0
+                Reiter { text: voll.woIst ? i18n("Wo ist?") : i18n("Personen"); symbol: "person"
+                         visible: voll.zeigePersonen && (voll.woIst ? voll.ha.orter.length > 0 || voll.instanzen.length > 1 : voll.ha.personen.length > 0)
                          zahl: voll.ha.personen.filter(p => p.zustand === "home").length }
             }
             // Ein Menü wie bei den Plasma-eigenen Widgets: Instanz wechseln, neu laden, …
@@ -254,8 +257,23 @@ PlasmaExtras.Representation {
                 eigeneZaehler: voll.eigeneZaehler
                 aktiv: voll.offen && reiter.currentIndex === 3
             }
-            PersonenSeite {
-                ha: voll.ha
+            Item {
+                PersonenSeite {
+                    anchors.fill: parent
+                    visible: !voll.woIst
+                    ha: voll.ha
+                }
+                Loader {
+                    anchors.fill: parent
+                    active: voll.woIst
+                    sourceComponent: WoIstSeite {
+                        ha: voll.ha
+                        instanzen: voll.instanzen
+                        aktiveId: voll.steuerung ? voll.steuerung.aktiveInstanzId : ""
+                        ausgeblendet: voll.ausgeblendet
+                        aktiv: voll.offen && reiter.currentIndex === 4
+                    }
+                }
             }
         }
     }

@@ -299,6 +299,9 @@ public enum Logik {
     public static func relevant(_ id: String, _ e: Entitaet?, _ hauptzaehler: String) -> Bool {
         let d = domain(id)
         if ["light", "switch", "group", "climate", "person", "zone"].contains(d) { return true }
+        // "Wo ist?": Ortungsgeräte mit GPS-Standort und deren Akkustand
+        if d == "device_tracker" { return e?.attribute["latitude"] != nil }
+        if d == "sensor" && (id.hasSuffix("_battery_level") || id.hasSuffix("_battery")) { return true }
         let k = e?.klasse
         if d == "binary_sensor" { return k == "window" || k == "opening" }
         if d != "sensor" { return false }

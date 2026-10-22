@@ -1,6 +1,10 @@
+"… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "… as “Where is?”: also devices and items, battery and path";
 "„%1“ gibt es in Home Assistant nicht." = "“%1” does not exist in Home Assistant.";
 "„%1“ gibt es nicht." = "“%1” does not exist.";
+"„%1“ nicht erreichbar" = "“%1” not reachable";
+"„%1“: Zugriff verweigert" = "“%1”: access denied";
 "„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“." = "“Automatic” uses the meters from the Home Assistant energy dashboard and calculates exactly like it. Your own meters appear after “Test connection”.";
+"„Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "“Where is?”: also devices and items, battery and path";
 "(Gruppe)" = "(group)";
 "(keine Beschreibung)" = "(no description)";
 "%1 %" = "%1 %";
@@ -19,6 +23,7 @@
 "%1 Räume heizen" = "%1 rooms heating";
 "%1 schalten" = "Switch %1";
 "%1 Steckdosen" = "%1 sockets";
+"%1 unterwegs seit %2" = "%1 travelled since %2";
 "%1 von %2 an" = "%1 of %2 on";
 "%1 von %2 Lampen an" = "%1 of %2 lights on";
 "%1 von %2 Steckdosen an" = "%1 of %2 sockets on";
@@ -84,6 +89,7 @@
 "Dashboard" = "Dashboard";
 "Dashboard öffnen" = "Open dashboard";
 "Dauer" = "Duration";
+"Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "The “People” tab now also shows devices and items with a location, the battery and, on request, the path. With several Home Assistant instances, the people and devices of all instances appear on one map.";
 "Der Stern markiert den Favoriten – er wird beim Start gezeigt. Wechseln geht im Panel über ⋯ → Instanz wechseln." = "The star marks the favorite – it is shown at startup. Switch in the panel via ⋯ → Switch instance.";
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "The downloaded file is not Home Assistant ToolBox.";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "The meters come automatically from the Home Assistant energy dashboard or are chosen per instance above.";
@@ -130,11 +136,13 @@
 "geändert %1" = "changed %1";
 "gerade eben" = "just now";
 "Gerade heizt kein Raum" = "No room is heating right now";
+"Geräte" = "Devices";
 "gestern " = "yesterday ";
 "gestern %1" = "yesterday %1";
 "Grad" = "Degrees";
 "Größte Verbraucher" = "Biggest consumers";
 "Größte Verbraucher gerade" = "Biggest consumers right now";
+"Gruppe" = "Group";
 "Gruppen" = "Groups";
 "Gruppen & Steckdosenleisten" = "Groups & power strips";
 "Hauptzähler" = "Main meter";
@@ -198,6 +206,7 @@
 "Kälter" = "Colder";
 "Kein Profil" = "No preset";
 "Kein Verlauf vorhanden" = "No history available";
+"Kein Weg" = "No path";
 "Keine Änderungen gefunden." = "No changes found.";
 "Keine Heizung gefunden" = "No heating found";
 "Keine Lampen" = "No lights";
@@ -239,6 +248,7 @@
 "Luftfeuchte" = "Humidity";
 "Mehr" = "More";
 "Mit Home Assistant verbinden" = "Connect to Home Assistant";
+"Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "With several Home Assistant instances, the people and devices of all instances appear on one map.";
 "Modus" = "Mode";
 "Modus:" = "Mode:";
 "Nach Updates suchen" = "Check for updates";
@@ -253,6 +263,7 @@
 "nicht gefunden" = "not found";
 "Nicht gefunden" = "Not found";
 "Nicht verbunden" = "Not connected";
+"Nichts mit Standort in dieser Gruppe" = "Nothing with a location in this group";
 "niemand" = "nobody";
 "Niemand zu Hause" = "Nobody at home";
 "noch keine Adresse" = "no address yet";
@@ -262,9 +273,11 @@
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "Only show switches of type “outlet”";
 "Ø %1" = "Ø %1";
 "Ø %1 in %2 Räumen" = "Ø %1 in %2 rooms";
+"Objekte" = "Items";
 "offline" = "offline";
 "Ohne Raum" = "Without room";
 "OpenStreetMap-Mitwirkende" = "OpenStreetMap contributors";
+"Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "Trackers (device_tracker) with GPS, e.g. from the Companion app or tracking tags, appear here.";
 "Panel:" = "Panel:";
 "Personen" = "People";
 "Personen mit Karte" = "People with map";
@@ -281,7 +294,11 @@
 "Räume (Bereiche aus Home Assistant) zeigen" = "Show rooms (areas from Home Assistant)";
 "Raumtemperatur und Zieltemperatur zum Verstellen." = "Room temperature and target temperature to adjust.";
 "Reiter" = "Tabs";
+"Route" = "Directions";
+"Route im Browser planen (OpenStreetMap)" = "Plan directions in the browser (OpenStreetMap)";
+"Route in Apple Karten" = "Directions in Apple Maps";
 "ruht" = "idle";
+"Satellitenbild" = "Satellite";
 "Schalten" = "Switch";
 "Schalten fehlgeschlagen: " = "Switching failed: ";
 "Schalten fehlgeschlagen: %1" = "Switching failed: %1";
@@ -305,6 +322,7 @@
 "Steckdosen" = "Sockets";
 "Steckdosen & Energie" = "Sockets & energy";
 "Steckdosen:" = "Sockets:";
+"Straßenkarte" = "Street map";
 "Strom" = "Electricity";
 "Stromzähler" = "Electricity meter";
 "Stromzähler:" = "Electricity meter:";
@@ -366,6 +384,8 @@
 "Wasser" = "Water";
 "Wasserzähler" = "Water meter";
 "Wasserzähler:" = "Water meter:";
+"Weg zeigen" = "Show path";
+"Weg: %1" = "Path: %1";
 "Welche Heizung bzw. welcher Raum." = "Which heater or which room.";
 "Welche Lampe oder Lichtgruppe das Widget zeigt." = "Which light or light group the widget shows.";
 "Welche Steckdose das Widget zeigt." = "Which socket the widget shows.";
@@ -380,6 +400,8 @@
 "Wird geladen und geprüft …" = "Downloading and checking …";
 "Wird geladen und installiert …" = "Downloading and installing …";
 "Wirklich entfernen?" = "Really remove?";
+"Wo ist?" = "Where is?";
+"Wo war jemand in den letzten 30 Minuten, 3 oder 6 Stunden?" = "Where was someone in the last 30 minutes, 3 or 6 hours?";
 "z. B. Zuhause, Ferienhaus (leer = aus Home Assistant)" = "e.g. Home, Holiday home (empty = from Home Assistant)";
 "Zahl der eingeschalteten Lampen am Symbol" = "Number of lights on at the icon";
 "Zahl der eingeschalteten Lampen in der Menüleiste" = "Number of lights on in the menu bar";

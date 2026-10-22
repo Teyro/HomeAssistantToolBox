@@ -174,6 +174,8 @@ PlasmoidItem {
             zeigeRaeume: Plasmoid.configuration.zeigeRaeume
             zeigeHeizung: Plasmoid.configuration.zeigeHeizung
             zeigePersonen: Plasmoid.configuration.zeigePersonen
+            woIst: Plasmoid.configuration.woIst
+            ausgeblendet: Plasmoid.configuration.ausgeblendet
             hauptzaehler: verbindung.optionen.hauptzaehler || ""
             verbrauchAnzeige: ({ strom: Plasmoid.configuration.zeigeStromHeute,
                                  wasser: Plasmoid.configuration.zeigeWasserHeute,

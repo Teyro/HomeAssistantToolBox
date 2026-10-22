@@ -377,6 +377,9 @@ function wattVon(e) {
 function relevant(id, e, hauptzaehler) {
     var d = domain(id);
     if (d === "light" || d === "switch" || d === "group" || d === "climate" || d === "person" || d === "zone") return true;
+    // "Wo ist?": Ortungsgeräte mit GPS-Standort und deren Akkustand
+    if (d === "device_tracker") return !!(e && e.attributes && e.attributes.latitude !== undefined);
+    if (d === "sensor" && /_battery(_level)?$/.test(id)) return true;
     var k = e && e.attributes ? e.attributes.device_class : null;
     if (d === "binary_sensor") return k === "window" || k === "opening";
     if (d !== "sensor") return false;
@@ -674,10 +677,112 @@ function personFarbe(name) {
 }
 
 function initialen(name) {
-    var teile = (name || "?").trim().split(/\s+/);
+    // nur Wörter, die mit einem Buchstaben beginnen ("Anna (Ferienhaus)" → "AF")
+    var teile = (name || "?").trim().split(/\s+/).map(function (w) { return w.replace(/^[()\[\]{}"'„“«».,:;!?\-–]+/, ""); }).filter(function (w) { return w; });
+    if (!teile.length) teile = ["?"];
     return ((teile[0] || "?")[0] + (teile.length > 1 ? teile[teile.length - 1][0] : "")).toUpperCase();
 }
 
+// ------------------------------------------------------------------ Wo ist?
+// Personen und Ortungsgeräte (device_tracker mit GPS) wie in Apples „Wo ist?“ – auf Wunsch aus
+// mehreren Installationen auf einer Karte. Einträge weiterer Installationen bekommen den
+// Schlüssel "<entität>@<instanz>", damit gleiche Namen (person.anna hier und dort) nicht kollidieren.
+
+var ORT_GERAET = /iphone|ipad|handy|phone|pixel|galaxy|smartphone|watch|uhr|macbook|imac|laptop|notebook|tablet|computer/i;
+var VERLAUF_STUFEN = [0, 30, 180, 360];   // Minuten: aus, 30 min, 3 h, 6 h
+
+/** personen | geraete | objekte */
+function ortArt(id, anzeigeName) {
+    if (domain(id) === "person") return "personen";
+    return ORT_GERAET.test(id + " " + (anzeigeName || "")) ? "geraete" : "objekte";
+}
+
+/** Akkustand in % aus dem Attribut oder dem Sensor der Companion-App (sensor.<gerät>_battery_level), sonst null */
+function ortAkku(e, zustaende) {
+    if (!e) return null;
+    var a = e.attributes || {};
+    var quelle = a.source ? zustaende[a.source] : null;
+    var kandidaten = [e, quelle];
+    for (var i = 0; i < kandidaten.length; i++) {
+        var k = kandidaten[i];
+        if (!k || !k.attributes) continue;
+        var w = zahl(k.attributes.battery_level !== undefined ? k.attributes.battery_level : k.attributes.battery);
+        if (w !== null) return Math.round(w);
+    }
+    var basis = ((quelle || e).entity_id || "").split(".")[1] || "";
+    var sensor = zustaende["sensor." + basis + "_battery_level"] || zustaende["sensor." + basis + "_battery"];
+    var s = sensor ? zahl(sensor.state) : null;
+    return s !== null ? Math.round(s) : null;
+}
+
+/**
+ * Alle Personen und Ortungsgeräte mit Standort einer Installation.
+ * instanz: { id, name }; weitere = true für jede außer der eigenen (Schlüssel und Ortsname).
+ */
+function orter(zustaende, versteckt, instanz, weitere) {
+    var liste = [];
+    var iid = (instanz && instanz.id) || "";
+    var iname = (instanz && instanz.name) || "";
+    Object.keys(zustaende).forEach(function (id) {
+        var d = domain(id);
+        if ((d !== "person" && d !== "device_tracker") || ausgeblendet(id, versteckt || [])) return;
+        var e = zustaende[id], a = e.attributes || {};
+        var lat = zahl(a.latitude), lon = zahl(a.longitude);
+        if (lat === null || lon === null) return;
+        var n = name(e);
+        var ort = ortText(e.state);
+        if (weitere && e.state === "home" && iname) ort = t("Zuhause") + " · " + iname;
+        liste.push({ id: weitere ? id + "@" + iid : id, entitaet: id, instanz: iid, name: n, art: ortArt(id, n), zustand: e.state, ort: ort,
+                     lat: lat, lon: lon, genau: zahl(a.gps_accuracy) || 0, seit: Date.parse(e.last_updated || e.last_changed || "") || 0,
+                     akku: ortAkku(e, zustaende), farbe: personFarbe(n) });
+    });
+    liste.sort(vergleicheName);
+    return liste;
+}
+
+/** Weg aus der History-API (ohne minimal_response): [{ t, lat, lon }], ungenaue Ortungen (> 250 m) und Stillstand weggelassen */
+function ortSpur(antwort, entitaet, ab) {
+    var reihe = [];
+    (antwort || []).forEach(function (l) { if (l && l.length && l[0] && l[0].entity_id === entitaet) reihe = l; });
+    var spur = [];
+    reihe.forEach(function (p) {
+        var a = p.attributes || {}, lat = zahl(a.latitude), lon = zahl(a.longitude);
+        if (lat === null || lon === null || (zahl(a.gps_accuracy) || 0) > 250) return;
+        var v = spur[spur.length - 1];
+        if (v && Math.abs(v.lat - lat) < 2e-5 && Math.abs(v.lon - lon) < 2e-5) return;
+        spur.push({ t: Math.max(Date.parse(p.last_updated || p.last_changed || "") || 0, ab || 0), lat: lat, lon: lon });
+    });
+    return spur;
+}
+
+/** Spur auf die letzten minuten kürzen und den aktuellen Standort anhängen */
+function spurSeit(spur, minuten, jetzt, aktuell) {
+    if (!minuten) return [];
+    var ab = jetzt - minuten * 60000;
+    var teil = (spur || []).filter(function (p) { return p.t >= ab; });
+    var v = teil[teil.length - 1];
+    if (aktuell && (!v || v.lat !== aktuell.lat || v.lon !== aktuell.lon)) teil.push({ t: aktuell.seit || jetzt, lat: aktuell.lat, lon: aktuell.lon });
+    return teil.length > 1 ? teil : [];
+}
+
+/** Zurückgelegte Strecke in km */
+function streckeKm(spur) {
+    var km = 0;
+    for (var i = 1; i < (spur || []).length; i++) km += entfernung(spur[i - 1].lat, spur[i - 1].lon, spur[i].lat, spur[i].lon);
+    return km;
+}
+
+function verlaufStufeText(minuten) {
+    if (!minuten) return t("Aus");
+    return minuten < 60 ? t("%1 min", minuten) : t("%1 h", minuten / 60);
+}
+
+/** Akkusymbol (Breeze-Namen) */
+function akkuSymbol(prozent) {
+    if (prozent === null || prozent === undefined) return "";
+    var stufe = Math.max(0, Math.min(100, Math.round(prozent / 10) * 10));
+    return "battery-" + ("00" + stufe).slice(-3);
+}
 
 /**
  * Heizungsverlauf aus der History-API: Ist-Temperatur (Raumsensor, sonst Thermostat),

@@ -159,6 +159,55 @@ function cacheSchreiben(instanz, c) {
   fm.writeString(cacheDatei(instanz), JSON.stringify(c));
 }
 
+// Allgemeine Einstellungen (nicht je Instanz), z. B. „Wo ist?“
+const optionenDatei = fm.joinPath(fm.documentsDirectory(), "hatoolbox-optionen.json");
+function optionenLesen() { try { return fm.fileExists(optionenDatei) ? JSON.parse(fm.readString(optionenDatei)) : {}; } catch (e) { return {}; } }
+function optionenSpeichern(o) { fm.writeString(optionenDatei, JSON.stringify(o)); }
+
+// ---------------------------------------------------------------- Wo ist?
+// Personen und Ortungsgeräte aller Instanzen auf einer Karte. Weitere Instanzen werden nur gelesen
+// (Zustände höchstens jede Minute, der Weg nur auf Wunsch), und nur solange das Dashboard offen ist.
+
+function versteckt(instanz) { return String(instanz.ausgeblendet || "").split(/[\s,;]+/).filter((x) => x); }
+function instanzAnzeige(i) { return i.name || String(i.adresse || "").replace(/^https?:\/\//, ""); }
+
+async function fremdeOrterLaden(instanz, fremd) {
+  for (const i of instanzenLaden().filter((x) => x.id !== instanz.id)) {
+    if (fremd[i.id] && Date.now() - fremd[i.id].stand < 60e3) continue;
+    try {
+      const liste = await ha(i, "GET", "/api/states");
+      const z = {};
+      for (const e of liste || []) if (Logik.relevant(e.entity_id, e, "")) z[e.entity_id] = e;
+      fremd[i.id] = { stand: Date.now(), orter: Logik.orter(z, versteckt(i), { id: i.id, name: instanzAnzeige(i) }, true), fehler: "" };
+    } catch (e) {
+      fremd[i.id] = { stand: Date.now(), orter: (fremd[i.id] && fremd[i.id].orter) || [], fehler: instanzAnzeige(i) + ": " + String(e.message || e) };
+    }
+  }
+}
+
+function alleOrter(instanz, c, fremd) {
+  let liste = Logik.orter(c.zustaende || {}, versteckt(instanz), { id: instanz.id, name: instanzAnzeige(instanz) }, false);
+  for (const i of instanzenLaden().filter((x) => x.id !== instanz.id)) if (fremd[i.id]) liste = liste.concat(fremd[i.id].orter);
+  return liste;
+}
+
+/** Weg der letzten 6 Stunden – je Instanz eine Abfrage */
+async function ortWegeLaden(orter, wege) {
+  const ab = Date.now() - 6 * 3600e3;
+  const je = {};
+  for (const o of orter) (je[o.instanz] = je[o.instanz] || []).push(o);
+  for (const iid of Object.keys(je)) {
+    const i = instanzenLaden().find((x) => x.id === iid);
+    if (!i) continue;
+    try {
+      const v = await ha(i, "GET", "/api/history/period/" + encodeURIComponent(new Date(ab).toISOString()) + "?filter_entity_id="
+        + encodeURIComponent(je[iid].map((o) => o.entitaet).join(",")) + "&significant_changes_only=0", undefined, 20);
+      for (const o of je[iid]) wege[o.id] = Logik.ortSpur(v, o.entitaet, ab);
+    } catch (e) { /* ohne Weg */ }
+  }
+  wege._stand = Date.now();
+}
+
 // ---------------------------------------------------------------- Home Assistant
 
 async function ha(instanz, methode, pfad, daten, sekunden = 12) {
@@ -917,21 +966,31 @@ async function dashboard(instanz, reiter) {
   let c = await datenLaden(instanz, { verlauf: true, tage: true });
   const wv = new WebView();
   let offen = true;
+  const woIst = !!optionenLesen().woIst;
+  const fremd = {}, wege = {};
   const senden = async () => {
     const m = modell(instanz, c);
+    let wo = {};
+    if (woIst) {
+      await fremdeOrterLaden(instanz, fremd);
+      const fehler = Object.values(fremd).map((f) => f.fehler).filter((x) => x);
+      wo = { woIst: true, orter: alleOrter(instanz, c, fremd), wege, ortFehler: fehler.join(" · ") };
+    }
     const daten = {
       instanz: instanz.name || T("Zuhause"), stand: c.stand, fehler: c.fehler || "",
       z: m.z, gruppen: m.gruppen, raeume: m.raeume, ohneRaum: m.ohneRaum, lichter: m.lichter, lichterAn: m.lichterAn,
       schalter: m.schalter, schalterAn: m.schalterAn, heizungen: m.heizungen.map((r) => Object.assign({}, r, { k: Logik.raumKlima(r, m.z) })),
       watt: m.watt, leistung: m.leistung.slice(0, 8), verlauf: c.verlauf || [], tage: c.tage || {},
       personen: m.personen, zonen: m.zonen, zuhause: m.zuhause.length, instanzen: instanzenLaden().map((i) => ({ id: i.id, name: i.name || i.adresse })),
+      ...wo,
     };
     await wv.evaluateJavaScript("zeigen(" + JSON.stringify(daten) + ")", false);
   };
   // Aktionen aus der Seite kommen als Adresse "hatoolbox://…" an
   wv.shouldAllowRequest = (anfrage) => {
     const u = anfrage.url || "";
-    if (!u.startsWith("hatoolbox://")) return u.startsWith("about:") || u.startsWith("data:") || u.startsWith("https://unpkg.com/leaflet@1.9.4/") || /^https:\/\/tile\.openstreetmap\.de\//.test(u);
+    if (!u.startsWith("hatoolbox://")) return u.startsWith("about:") || u.startsWith("data:") || u.startsWith("https://unpkg.com/leaflet@1.9.4/") || /^https:\/\/tile\.openstreetmap\.de\//.test(u)
+      || /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/(World_Imagery|Reference\/World_Boundaries_and_Places)\/MapServer\/tile\//.test(u);
     const q = {};
     (u.split("?")[1] || "").split("&").forEach((t) => { const [k, v] = t.split("="); q[k] = decodeURIComponent(v || ""); });
     (async () => {
@@ -943,8 +1002,10 @@ async function dashboard(instanz, reiter) {
         else if (aktion === "alleaus") await dienst(instanz, "light", "turn_off", { entity_id: modell(instanz, c).lichter.filter((id) => Logik.istAn(c.zustaende[id])) });
         else if (aktion === "instanz") {
           const neu = instanzenLaden().find((i) => i.id === q.id);
-          if (neu) { instanz = neu; c = await datenLaden(instanz, { verlauf: true, tage: true }); }
+          if (neu) { instanz = neu; c = await datenLaden(instanz, { verlauf: true, tage: true }); for (const k of Object.keys(fremd)) delete fremd[k]; }
         }
+        else if (aktion === "route" && /^-?[\d.]+,-?[\d.]+$/.test(q.ll || "")) { Safari.open("https://maps.apple.com/?daddr=" + q.ll); return; }
+        else if (aktion === "ortweg" && woIst) { if (Date.now() - (wege._stand || 0) > 3 * 60e3) await ortWegeLaden(alleOrter(instanz, c, fremd), wege); await senden(); return; }
         await new Promise((r) => Timer.schedule(400, false, r));
         c = await datenLaden(instanz, {});
         await senden();
@@ -1005,6 +1066,31 @@ input[type=range] { width: 100%; margin-top: 10px; accent-color: var(--gelb, #ff
 .raster { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .balken { height: 6px; border-radius: 3px; background: rgba(120,120,128,.2); margin-top: 6px; overflow: hidden; } .balken > div { height: 100%; background: var(--akzent); border-radius: 3px; }
 #karte { height: 320px; border-radius: 16px; margin-bottom: 10px; }
+.segment { display: flex; background: rgba(120,120,128,.16); border-radius: 10px; padding: 2px; margin-bottom: 10px; }
+.segment button { flex: 1; border: 0; background: none; color: var(--text); font: 600 13px -apple-system; padding: 7px 4px; border-radius: 8px; }
+.segment button.an { background: var(--karte); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.segment button span { color: var(--leise); font-weight: 500; }
+.ortzeile.gewaehlt .name { color: var(--akzent); }
+.pille.aktiv { background: var(--akzent); color: #fff; }
+.aktionen { display: flex; gap: 8px; margin: 10px 0 2px 48px; }
+.aktionen button { flex: 1; border: 0; border-radius: 12px; padding: 8px 4px; background: rgba(120,120,128,.16); color: var(--akzent); font: 600 13px -apple-system; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.aktionen svg { width: 20px; height: 20px; }
+.rechts { text-align: right; color: var(--leise); font-size: 13px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
+.akku { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.akku i { position: relative; width: 20px; height: 10px; border: 1.5px solid currentColor; border-radius: 3px; opacity: .85; }
+.akku i::after { content: ""; position: absolute; right: -4px; top: 2px; width: 2px; height: 3px; background: currentColor; border-radius: 0 1px 1px 0; }
+.akku i b { position: absolute; left: 1px; top: 1px; bottom: 1px; border-radius: 1px; background: var(--gruen); }
+.akku.knapp { color: #ff453a; } .akku.knapp i b { background: #ff453a; }
+.strecke { color: var(--akzent); font-size: 13px; font-weight: 600; }
+.nadel { position: relative; width: 40px; height: 50px; }
+.nadel .k { position: absolute; left: 0; top: 0; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; display: grid; place-items: center; color: #fff; font: 700 14px -apple-system; box-shadow: 0 3px 8px rgba(0,0,0,.35); }
+.nadel .s { position: absolute; left: 15px; top: 36px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 10px solid #fff; }
+.nadel.an .k { border-color: var(--akzent); transform: scale(1.12); } .nadel.an .s { border-top-color: var(--akzent); }
+.nadel svg { width: 20px; height: 20px; }
+.kartenknopf { width: 36px; height: 36px; border-radius: 10px; border: 0; background: var(--karte); color: var(--akzent); box-shadow: 0 1px 6px rgba(0,0,0,.25); display: grid; place-items: center; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.kartenknopf svg { width: 20px; height: 20px; }
+.zeitmarke { background: var(--karte); color: var(--text); border: 0; border-radius: 8px; padding: 1px 6px; font: 600 11px -apple-system; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.zeitmarke::before { display: none; }
 .punkt { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .meldung { position: fixed; left: 16px; right: 16px; bottom: 90px; background: #ff453a; color: #fff; padding: 12px 14px; border-radius: 14px; display: none; z-index: 20; }
 .leiste { display: flex; justify-content: space-between; align-items: center; }
@@ -1033,7 +1119,7 @@ const fmtW = w => ISO(w == null ? "–" : w >= 1000 ? (w/1000).toFixed(2).replac
 const fmtT = x => ISO(x == null ? "–" : x.toFixed(1).replace(".", DEZ) + " °C");
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 // IDs landen in onclick-Handlern: nur erlaubte Zeichen durchlassen
-const jid = s => String(s).replace(/[^\\w.\\-]/g, "");
+const jid = s => String(s).replace(/[^\\w.@\\-]/g, "");
 function los(aktion, werte) { location.href = "hatoolbox://" + aktion + "?" + Object.entries(werte || {}).map(([k, v]) => k + "=" + encodeURIComponent(v)).join("&"); }
 function meldung(t) { const m = document.getElementById("meldung"); m.textContent = t; m.style.display = "block"; setTimeout(() => m.style.display = "none", 4000); }
 function name(id) { const e = D.z[id]; return e ? (e.attributes.friendly_name || id) : id; }
@@ -1092,6 +1178,91 @@ function seitePersonen() {
   return '<div id="karte"></div><div class="karte">' + D.personen.map(p => '<div class="zeile"><div class="punkt" style="background:' + p.farbe + '">' + esc(p.name.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase()) + '</div><div class="mitte"><div class="name">' + esc(p.name) + '</div><div class="info" style="color:' + (p.zustand === "home" ? "var(--gruen)" : "") + '">' + esc(p.zustand === "home" ? t("Zuhause") : p.zustand === "not_home" ? t("Unterwegs") : p.zustand) + (seit(p.seit) ? " · " + seit(p.seit) : "") + "</div></div>"
     + (p.zustand !== "home" && heim && entfernung(p.lat, p.lon, heim.lat, heim.lon) != null ? '<div class="info" style="font-weight:600">' + (e => e < 1 ? Math.round(e * 100) * 10 + " m" : ISO(e.toFixed(e < 10 ? 1 : 0).replace(".", DEZ) + " km"))(entfernung(p.lat, p.lon, heim.lat, heim.lon)) + "</div>" : "") + "</div>").join("") + "</div>";
 }
+// ---- Wo ist? ----
+let woArt = "personen", woAuswahl = "", woStufe = 0, satellit = false, ansicht = null, einpassen = true;
+const STUFEN = [0, 30, 180, 360];
+const WO_ICON = { geraete: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2", objekte: "M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zM12 6.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z",
+  route: "M4 11 20 4l-7 16-2-7-7-2z", weg: "M3.5 12a8.5 8.5 0 1 0 2.5-6M3 4v4h4M12 7.5V12l3 2", satellit: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18", strasse: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" };
+function woSvg(n, farbe) { return '<svg viewBox="0 0 24 24" fill="none" stroke="' + (farbe || "currentColor") + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + WO_ICON[n] + '"/></svg>'; }
+function stufeText(m) { return m < 60 ? t("%1 min", m) : t("%1 h", m / 60); }
+function wegText() { return woStufe ? t("Weg: %1", stufeText(STUFEN[woStufe])) : t("Weg zeigen"); }
+function fmtKm(e) { return e == null ? "" : e < 1 ? ISO(Math.round(e * 100) * 10 + " m") : ISO(e.toFixed(e < 10 ? 1 : 0).replace(".", DEZ) + " km"); }
+function initialen(n) { const w = String(n || "?").trim().split(/ +/).map(x => x.replace(/^[^A-Za-zÀ-ɏ0-9]+/, "")).filter(x => x); return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase(); }
+function wegVon(o) {
+  if (!woStufe || !D.wege) return [];
+  const ab = Date.now() - STUFEN[woStufe] * 60000;
+  const p = (D.wege[o.id] || []).filter(x => x.t >= ab);
+  const v = p[p.length - 1];
+  if (!v || v.lat !== o.lat || v.lon !== o.lon) p.push({ t: o.seit || Date.now(), lat: o.lat, lon: o.lon });
+  return p.length > 1 ? p : [];
+}
+function strecke(p) { let k = 0; for (let i = 1; i < p.length; i++) k += entfernung(p[i - 1].lat, p[i - 1].lon, p[i].lat, p[i].lon); return k; }
+function uhrzeit(ms) { return new Date(ms).toLocaleTimeString(document.documentElement.lang, { hour: "2-digit", minute: "2-digit" }); }
+function woAvatar(o, cls) { return '<div class="' + cls + '" style="background:' + o.farbe + '">' + (o.art === "personen" ? esc(initialen(o.name)) : woSvg(o.art, "#fff")) + "</div>"; }
+function waehleOrt(id) { woAuswahl = woAuswahl === id ? "" : id; const o = D.orter.find(x => x.id === id); if (o) woArt = o.art; einpassen = true; zeichnen(); }
+function stufeWeiter() {
+  woStufe = (woStufe + 1) % STUFEN.length; einpassen = true;
+  if (woStufe && !(D.wege && D.wege._stand && Date.now() - D.wege._stand < 180000)) los("ortweg", {});
+  zeichnen();
+}
+function seiteWoIst() {
+  const heim = D.zonen.find(z => z.heim);
+  const zahl = a => D.orter.filter(o => o.art === a).length;
+  let h = '<div id="karte"></div><div class="segment">' + [["personen", t("Personen")], ["geraete", t("Geräte")], ["objekte", t("Objekte")]].map(([a, n]) =>
+    '<button class="' + (a === woArt ? "an" : "") + '" onclick="woArt=\\'' + a + '\\'; woAuswahl=\\'\\'; einpassen=true; zeichnen()">' + esc(n) + (zahl(a) ? " <span>" + zahl(a) + "</span>" : "") + "</button>").join("") + "</div>";
+  h += '<div class="leiste" style="margin:0 2px 10px"><span class="info">' + (D.ortFehler ? "⚠️ " + esc(D.ortFehler) : "") + '</span><button class="pille' + (woStufe ? " aktiv" : "") + '" onclick="stufeWeiter()">' + esc(wegText()) + "</button></div>";
+  const liste = D.orter.filter(o => o.art === woArt);
+  if (!liste.length) return h + '<div class="karte info" style="text-align:center;padding:24px">' + esc(t("Nichts mit Standort in dieser Gruppe")) + "</div>";
+  h += '<div class="karte">';
+  for (const o of liste) {
+    const gew = o.id === woAuswahl, weg = gew ? wegVon(o) : [];
+    const km = o.zustand !== "home" && heim ? entfernung(o.lat, o.lon, heim.lat, heim.lon) : null;
+    h += '<div class="zeile ortzeile' + (gew ? " gewaehlt" : "") + '" onclick="waehleOrt(\\'' + jid(o.id) + '\\')">' + woAvatar(o, "punkt")
+      + '<div class="mitte"><div class="name">' + esc(o.name) + '</div><div class="info" style="color:' + (o.zustand === "home" ? "var(--gruen)" : "") + '">' + esc(o.ort) + (seit(o.seit) ? " · " + seit(o.seit) : "") + "</div>"
+      + (weg.length ? '<div class="strecke">' + esc(t("%1 unterwegs seit %2", fmtKm(strecke(weg)), uhrzeit(weg[0].t))) + "</div>" : "") + "</div>"
+      + '<div class="rechts"><div style="font-weight:600">' + fmtKm(km) + "</div>"
+      + (o.akku != null ? '<span class="akku' + (o.akku <= 20 ? " knapp" : "") + '"><i><b style="width:' + Math.max(2, Math.round(o.akku / 100 * 14)) + 'px"></b></i>' + ISO(o.akku + " %") + "</span>" : "") + "</div></div>";
+    if (gew) h += '<div class="aktionen"><button onclick="los(\\'route\\', {ll: \\'' + o.lat + "," + o.lon + '\\'})">' + woSvg("route") + esc(t("Route")) + '</button><button onclick="stufeWeiter()">' + woSvg("weg") + esc(wegText()) + "</button></div>";
+  }
+  return h + "</div>";
+}
+function karteWoIst() {
+  if (typeof L === "undefined" || !document.getElementById("karte")) return;
+  karte = L.map("karte", { zoomControl: false, attributionControl: true });
+  const E = d => "https://server.arcgisonline.com/ArcGIS/rest/services/" + d + "/MapServer/tile/{z}/{y}/{x}";
+  if (satellit) {
+    L.tileLayer(E("World_Imagery"), { maxZoom: 19, attribution: "© Esri, Maxar, Earthstar Geographics" }).addTo(karte);
+    L.tileLayer(E("Reference/World_Boundaries_and_Places"), { maxZoom: 19 }).addTo(karte);
+  } else L.tileLayer("https://tile.openstreetmap.de/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© " + t("OpenStreetMap-Mitwirkende") }).addTo(karte);
+  for (const z of D.zonen) L.circle([z.lat, z.lon], { radius: z.radius, color: z.heim ? "#30d158" : "#0a84ff", weight: 1, fillOpacity: .12, interactive: false }).addTo(karte);
+  const liste = D.orter.filter(o => o.art === woArt);
+  const mitWeg = woAuswahl ? liste.filter(o => o.id === woAuswahl) : liste;
+  const wegPunkte = [];
+  for (const o of mitWeg) {
+    const w = wegVon(o);
+    if (!w.length) continue;
+    const ll = w.map(p => [p.lat, p.lon]), f = mitWeg.length === 1 ? "#0a84ff" : o.farbe;
+    L.polyline(ll, { color: "#fff", weight: 7, opacity: .85, interactive: false }).addTo(karte);
+    for (let i = 1; i < ll.length; i++) L.polyline([ll[i - 1], ll[i]], { color: f, weight: 4, opacity: .35 + .65 * i / (ll.length - 1), interactive: false }).addTo(karte);
+    L.circleMarker(ll[0], { radius: 5, color: "#fff", weight: 2, fillColor: f, fillOpacity: 1 }).bindTooltip(uhrzeit(w[0].t), { permanent: true, direction: "top", className: "zeitmarke", offset: [0, -5] }).addTo(karte);
+    wegPunkte.push(...ll);
+  }
+  for (const o of liste) {
+    const n = '<div class="nadel' + (o.id === woAuswahl ? " an" : "") + '">' + woAvatar(o, "k") + '<div class="s"></div></div>';
+    L.marker([o.lat, o.lon], { icon: L.divIcon({ className: "", html: n, iconSize: [40, 50], iconAnchor: [20, 50] }), zIndexOffset: o.id === woAuswahl ? 1000 : 0 }).on("click", () => waehleOrt(o.id)).addTo(karte);
+  }
+  const Knopf = L.Control.extend({ onAdd() { const b = L.DomUtil.create("button", "kartenknopf"); b.innerHTML = woSvg(satellit ? "strasse" : "satellit"); b.onclick = (e) => { L.DomEvent.stop(e); satellit = !satellit; zeichnen(); }; return b; } });
+  new Knopf({ position: "topright" }).addTo(karte);
+  if (!einpassen && ansicht) karte.setView(ansicht.c, ansicht.z, { animate: false });
+  else {
+    const gew = liste.find(o => o.id === woAuswahl);
+    const p = wegPunkte.length ? wegPunkte : gew ? [[gew.lat, gew.lon]] : liste.map(o => [o.lat, o.lon]);
+    if (p.length === 1) karte.setView(p[0], 15); else if (p.length) karte.fitBounds(p, { padding: [40, 40], maxZoom: 16 }); else karte.setView([51, 10], 5);
+    einpassen = false;
+  }
+  karte.on("moveend", () => { ansicht = { c: karte.getCenter(), z: karte.getZoom() }; });
+  ansicht = { c: karte.getCenter(), z: karte.getZoom() };
+}
 function karteZeichnen() {
   if (typeof L === "undefined" || !document.getElementById("karte")) return;
   const punkte = D.personen.filter(p => p.lat != null).map(p => [p.lat, p.lon]);
@@ -1105,7 +1276,7 @@ function karteZeichnen() {
 }
 function zeichnen() {
   if (!D) return;
-  const titel = { lampen: t("Lampen"), steckdosen: t("Steckdosen"), heizung: t("Heizung"), energie: t("Energie"), personen: t("Personen") };
+  const titel = { lampen: t("Lampen"), steckdosen: t("Steckdosen"), heizung: t("Heizung"), energie: t("Energie"), personen: D.woIst ? t("Wo ist?") : t("Personen") };
   document.getElementById("titel").textContent = titel[reiter];
   const s = new Date(D.stand || Date.now());
   document.getElementById("unter").textContent = (D.fehler ? "⚠️ " + D.fehler + " · " : "") + t("Stand %1", s.toLocaleTimeString(document.documentElement.lang, { hour: "2-digit", minute: "2-digit" }));
@@ -1114,10 +1285,11 @@ function zeichnen() {
   sel.innerHTML = D.instanzen.map(i => '<option value="' + esc(i.id) + '"' + (i.name === D.instanz ? " selected" : "") + ">" + esc(i.name) + "</option>").join("");
   const y = window.scrollY;
   if (reiter === "personen" && karte && document.getElementById("karte")) { /* Karte behalten, nur Liste neu */ }
-  document.getElementById("inhalt").innerHTML = ({ lampen: seiteLampen, steckdosen: seiteSteckdosen, heizung: seiteHeizung, energie: seiteEnergie, personen: seitePersonen })[reiter]();
-  if (reiter === "personen") { karte = null; karteZeichnen(); }
+  if (karte) { try { karte.remove(); } catch (e) {} karte = null; }
+  document.getElementById("inhalt").innerHTML = ({ lampen: seiteLampen, steckdosen: seiteSteckdosen, heizung: seiteHeizung, energie: seiteEnergie, personen: D.woIst ? seiteWoIst : seitePersonen })[reiter]();
+  if (reiter === "personen") { if (D.woIst) karteWoIst(); else karteZeichnen(); }
   window.scrollTo(0, y);
-  document.getElementById("nav").innerHTML = REITER.map(([id, t, p]) => '<button class="' + (id === reiter ? "an" : "") + '" onclick="reiter=\\'' + jid(id) + '\\'; zeichnen(); window.scrollTo(0,0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + p + '"/></svg>' + t + "</button>").join("");
+  document.getElementById("nav").innerHTML = REITER.map(([id, tx, p]) => [id, id === "personen" && D.woIst ? t("Wo ist?") : tx, p]).map(([id, t, p]) => '<button class="' + (id === reiter ? "an" : "") + '" onclick="reiter=\\'' + jid(id) + '\\'; zeichnen(); window.scrollTo(0,0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + p + '"/></svg>' + t + "</button>").join("");
 }
 function zeigen(d) { D = d; zeichnen(); }
 </script></body></html>`;
@@ -1221,7 +1393,9 @@ Auf dem Sperrbildschirm zeigt das Widget Lampen, Heizung und Verbrauch kurz.`;
 async function einstellungen() {
   for (;;) {
     const liste = instanzenLaden();
-    const knoepfe = liste.map((i) => (i.favorit ? "★ " : "") + (i.name || i.adresse)).concat(["＋ " + T("Home Assistant hinzufügen"), T("Dashboard öffnen"), T("Widgets einrichten (Anleitung)"), T("Nach Updates suchen"), T("Zwischenspeicher leeren")]);
+    const opt = optionenLesen();
+    const knoepfe = liste.map((i) => (i.favorit ? "★ " : "") + (i.name || i.adresse)).concat(["＋ " + T("Home Assistant hinzufügen"), T("Dashboard öffnen"), T("Widgets einrichten (Anleitung)"), T("Nach Updates suchen"), T("Zwischenspeicher leeren"),
+      (opt.woIst ? "✓ " : "") + T("„Wo ist?“: auch Geräte und Objekte, Akku und Weg")]);
     const n = await frage("Home Assistant ToolBox " + VERSION, liste.length ? T("Tippe auf eine Instanz, um sie zu bearbeiten.") : T("Noch keine Instanz – füge Home Assistant hinzu."), knoepfe, T("Fertig"));
     if (n < 0) return;
     if (n < liste.length) await instanzBearbeiten(liste[n]);
@@ -1230,6 +1404,11 @@ async function einstellungen() {
     else if (n === liste.length + 2) { const a = new Alert(); a.title = T("Widgets einrichten (Anleitung)"); a.message = T(ANLEITUNG); a.addAction("OK"); await a.presentAlert(); }
     else if (n === liste.length + 3) await updatePruefen(true);
     else if (n === liste.length + 4) { if (fm.fileExists(cacheOrdner)) fm.remove(cacheOrdner); }
+    else if (n === liste.length + 5) {
+      opt.woIst = !opt.woIst;
+      optionenSpeichern(opt);
+      if (opt.woIst) { const a = new Alert(); a.title = T("Wo ist?"); a.message = T("Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte."); a.addAction("OK"); await a.presentAlert(); }
+    }
   }
 }
 

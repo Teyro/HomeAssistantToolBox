@@ -117,6 +117,11 @@ struct EinstellungenAnsicht: View {
             Section(T("Reiter")) {
                 Toggle(T("Heizung (Thermostate und Raumtemperaturen)"), isOn: $einstellungen.zeigeHeizung)
                 Toggle(T("Personen mit Karte"), isOn: $einstellungen.zeigePersonen)
+                Toggle(isOn: $einstellungen.woIst) {
+                    Text(T("… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg"))
+                    Text(T("Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte."))
+                }
+                .disabled(!einstellungen.zeigePersonen)
             }
 
             Section(T("Lampen")) {

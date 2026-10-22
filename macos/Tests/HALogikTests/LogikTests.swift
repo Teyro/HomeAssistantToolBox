@@ -203,4 +203,39 @@ final class UpdateVerlaufTests: XCTestCase {
         XCTAssertTrue(k.fensterOffen)
         XCTAssertTrue(Logik.relevant("binary_sensor.f", z["binary_sensor.f"], ""))
     }
+
+    func testWoIst() {
+        let z: [String: Entitaet] = Dictionary(uniqueKeysWithValues: [
+            e("zone.home", "1", ["latitude": 53.56, "longitude": 10.11, "radius": 100]),
+            e("person.anna", "home", ["friendly_name": "Anna", "latitude": 53.5602, "longitude": 10.1103, "source": "device_tracker.anna_handy"]),
+            e("device_tracker.anna_handy", "home", ["friendly_name": "iPhone von Anna", "latitude": 53.5602, "longitude": 10.1103]),
+            e("sensor.anna_handy_battery_level", "57"),
+            e("device_tracker.fahrrad", "not_home", ["friendly_name": "Fahrrad", "latitude": 53.57, "longitude": 10.09, "battery_level": 64]),
+            e("device_tracker.router", "home", ["friendly_name": "Router-Gerät"]),
+        ].map { ($0.id, $0) })
+        let o = Logik.orter(z, instanz: "i1")
+        XCTAssertEqual(o.map(\.entitaet), ["person.anna", "device_tracker.fahrrad", "device_tracker.anna_handy"])
+        XCTAssertEqual(o.map(\.art), [.personen, .objekte, .geraete])
+        XCTAssertEqual(o.first?.akku, 57)
+        XCTAssertEqual(o[1].akku, 64)
+        XCTAssertTrue(Logik.relevant("device_tracker.fahrrad", z["device_tracker.fahrrad"], ""))
+        XCTAssertFalse(Logik.relevant("device_tracker.router", z["device_tracker.router"], ""))
+        let w = Logik.orter(z, instanz: "i2", instanzName: "Ferienhaus", weitere: true)
+        XCTAssertEqual(w.first?.id, "person.anna@i2")
+        XCTAssertTrue(w.first?.ort.hasSuffix("Ferienhaus") ?? false)
+        XCTAssertEqual(Logik.initialen("Anna (Ferienhaus)"), "AF")
+
+        let jetzt = Date()
+        func punkt(_ min: Double, _ lat: Double, _ genau: Double = 10) -> JSON {
+            ["entity_id": "person.anna", "last_updated": .text(Logik.isoText(jetzt.addingTimeInterval(-min * 60))),
+             "attributes": ["latitude": .zahl(lat), "longitude": 10.1, "gps_accuracy": .zahl(genau)]]
+        }
+        let antwort: JSON = [[punkt(300, 53.50), punkt(150, 53.52), punkt(120, 53.53, 900), punkt(90, 53.54), punkt(80, 53.54), punkt(20, 53.55)]]
+        let spur = Logik.ortSpur(antwort, entitaet: "person.anna", ab: jetzt.addingTimeInterval(-6 * 3600))
+        XCTAssertEqual(spur.count, 4)   // ungenau und Stillstand weg
+        let drei = Logik.spurSeit(spur, minuten: 180, jetzt: jetzt, aktuell: o.first)
+        XCTAssertEqual(drei.count, 4)   // 150, 90, 20 min + jetzt
+        XCTAssertGreaterThan(Logik.streckeKm(drei), 4)
+        XCTAssertTrue(Logik.spurSeit(spur, minuten: 0, aktuell: o.first).isEmpty)
+    }
 }
