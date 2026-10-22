@@ -36,7 +36,7 @@ if (o.some((x) => x.entitaet === 'device_tracker.router_handy')) throw new Error
 if (o.some((x) => x.entitaet === 'device_tracker.macbook')) throw new Error('ausgeblendet');
 if (o.find((x) => x.entitaet === 'person.anna').akku !== 57) throw new Error('Akku über Sensor der Companion-App');
 if (o.find((x) => x.entitaet === 'device_tracker.fahrrad').art !== 'objekte') throw new Error('Fahrrad = Objekt');
-const z2 = {}; for (const e of await (await fetch('http://127.0.0.1:8124/api/states', { headers: { Authorization: 'Bearer ferien-token' } })).json().catch(() => [])) z2[e.entity_id] = e;
+const z2 = {}; for (const e of await fetch('http://127.0.0.1:8124/api/states', { headers: { Authorization: 'Bearer ferien-token' } }).then((r) => r.json()).catch(() => [])) z2[e.entity_id] = e;
 if (Object.keys(z2).length) {
   const o2 = ctx.orter(z2, [], { id: 'i2', name: 'Ferienhaus' }, true);
   console.log('Orter Ferienhaus:', o2.map((x) => `${x.id} ${x.ort}`).join(', '));

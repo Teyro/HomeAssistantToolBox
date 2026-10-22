@@ -1,11 +1,11 @@
 import XCTest
 @testable import HALogik
 
-final class LogikTests: XCTestCase {
+func e(_ id: String, _ state: String, _ a: [String: JSON] = [:]) -> Entitaet {
+    Entitaet(id: id, state: state, attribute: a)
+}
 
-    func e(_ id: String, _ state: String, _ a: [String: JSON] = [:]) -> Entitaet {
-        Entitaet(id: id, state: state, attribute: a)
-    }
+final class LogikTests: XCTestCase {
 
     func beispiel() -> [String: Entitaet] {
         let liste = [
