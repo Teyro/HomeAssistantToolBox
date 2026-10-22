@@ -56,6 +56,19 @@ enum Vorschau {
             await warte(5)
             print("personen:", kern.ha.personen.map { "\($0.name)=\($0.zustand)" })
             foto("6_personen")
+            // „Wo ist?“: Geräte und Objekte, zweite Instanz, Weg der letzten 3 Stunden
+            kern.einstellungen.woIst = true
+            kern.panel.woAuswahl = "person.ben"
+            kern.panel.woStufe = 2
+            await warte(7)
+            print("wo ist:", kern.ha.orter.map(\.id))
+            foto("6b_wo_ist")
+            kern.panel.woArt = .geraete
+            await warte(2.5)
+            foto("6c_wo_ist_geraete")
+            kern.einstellungen.woIst = false
+            kern.panel.woArt = .personen
+            kern.panel.woStufe = 0
 
             // Widgets wie auf dem Schreibtisch (gleiche Ansichten wie in der Widget-Erweiterung)
             kern.widgetsAktualisieren(sofort: true)

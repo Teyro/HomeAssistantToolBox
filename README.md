@@ -27,6 +27,8 @@ Lights, sockets, heating, energy and people from [Home Assistant](https://www.ho
 - **Heating** – every room with temperature and humidity, target temperature, mode, preset,
   **boost** for 30 minutes to 4 hours, **window open/closed** indicator and a **24‑hour chart**
 - **People** – map with zones, who is where, since when and how far from home
+- **“Where is?” (optional)** – the People tab like a find‑my app: people, devices and items (any `device_tracker` with GPS),
+  battery, directions and the **path of the last 30 minutes, 3 or 6 hours**; with several instances everybody appears on **one map**
 - **Several Home Assistant instances** – e.g. home and holiday house, one marked as favourite
 - **Desktop widgets / tiles** – overview, light, socket, room, heating, energy, people, any entity
 - **Live updates** over the Home Assistant WebSocket API; stops asking on a wrong token so your IP is not banned
@@ -61,7 +63,8 @@ You need your Home Assistant address and a **long‑lived access token**
 ## Privacy and security
 
 - The apps talk **only to your own Home Assistant** – no cloud, no tracking, no analytics.
-- Additional connections: GitHub (update check, can be switched off) and OpenStreetMap tiles for the people map.
+- Additional connections: GitHub (update check, can be switched off) and OpenStreetMap tiles for the people map
+  (satellite view: Esri tiles; on the Mac Apple Maps).
 - Tokens are stored in the **macOS Keychain** and the **iOS Keychain**. On KDE they are kept in the Plasma
   widget configuration and in `~/.config/homeassistanttoolbox/instanzen.json` (readable only by you).
 - Updates are only accepted from this project’s GitHub releases; the Mac app also checks bundle ID and signature.

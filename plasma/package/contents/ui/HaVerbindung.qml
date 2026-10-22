@@ -37,6 +37,8 @@ Item {
     property var heizungen: []
     property var personen: []
     property var zonen: []
+    // "Wo ist?": Personen und Ortungsgeräte mit Standort
+    property var orter: []
     // Name der Installation aus Home Assistant (Einstellungen → Allgemein), z. B. "Zuhause"
     property string standortName: ""
     property int lichterAn: 0
@@ -160,7 +162,8 @@ Item {
         m.heizungen = Logik.heizungen(zustaende, bereiche, versteckt);
         m.personen = Logik.personen(zustaende, versteckt);
         m.zonen = Logik.zonen(zustaende);
-        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie", "heizungen", "personen", "zonen"]) {
+        m.orter = Logik.orter(zustaende, versteckt, null, false);
+        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie", "heizungen", "personen", "zonen", "orter"]) {
             const j = JSON.stringify(m[schluessel]);
             if (_json[schluessel] !== j) {
                 _json[schluessel] = j;
@@ -197,7 +200,7 @@ Item {
             if (neu) z[id] = neu; else delete z[id];
             // Neu aufbauen nur, wenn sich die Struktur ändern kann: neue/entfernte Entität,
             // geänderte Gruppenmitglieder oder Namen, Messwerte (Energie-Reiter)
-            if (!alt || !neu || id.startsWith("sensor.") || id.startsWith("person.")
+            if (!alt || !neu || id.startsWith("sensor.") || id.startsWith("person.") || id.startsWith("device_tracker.")
                     || String(alt.attributes && alt.attributes.entity_id) !== String(neu.attributes && neu.attributes.entity_id)
                     || (alt.attributes && alt.attributes.friendly_name) !== (neu.attributes && neu.attributes.friendly_name)) {
                 struktur = true;
@@ -347,6 +350,16 @@ Item {
     }
 
     /** Name der Installation holen (für die Instanzliste) */
+    /** "Wo ist?": Weg der letzten 6 Stunden (mit Attributen, denn darin stehen die Koordinaten) */
+    function ortVerlaufLaden(entitaeten, fertig) {
+        if (!entitaeten.length) return;
+        const start = new Date(Date.now() - 6 * 3600000).toISOString();
+        anfrage("GET", "/api/history/period/" + encodeURIComponent(start) + "?filter_entity_id=" + encodeURIComponent(entitaeten.join(","))
+                + "&significant_changes_only=0", null, function (antwort, meldung) {
+            if (!meldung) fertig(antwort, Date.parse(start));
+        });
+    }
+
     function standortLaden() {
         anfrage("GET", "/api/config", null, function (antwort, meldung) {
             if (!meldung && antwort && antwort.location_name) standortName = antwort.location_name;

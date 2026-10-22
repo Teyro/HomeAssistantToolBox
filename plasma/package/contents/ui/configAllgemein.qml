@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property string cfg_instanzen
     property alias cfg_zeigeHeizung: zeigeHeizung.checked
     property alias cfg_zeigePersonen: zeigePersonen.checked
+    property alias cfg_woIst: woIst.checked
     property alias cfg_updatesSuchen: updatesSuchen.checked
     property alias cfg_abfrageSekunden: abfrage.value
     property alias cfg_zeigeGruppen: zeigeGruppen.checked
@@ -295,6 +296,19 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: zeigePersonen
             text: i18n("Personen mit Karte")
+        }
+        QQC2.CheckBox {
+            id: woIst
+            enabled: zeigePersonen.checked
+            text: i18n("… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg")
+        }
+        QQC2.Label {
+            visible: woIst.checked
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte.")
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {

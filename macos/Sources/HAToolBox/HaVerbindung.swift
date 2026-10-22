@@ -45,6 +45,8 @@ final class HaVerbindung {
     private(set) var heizungen: [HeizRaum] = []
     private(set) var personen: [Person] = []
     private(set) var zonen: [Zone] = []
+    /// "Wo ist?": Personen und Ortungsgeräte mit Standort
+    private(set) var orter: [Ort] = []
     /// Name der Installation aus Home Assistant (Einstellungen → Allgemein)
     private(set) var standortName = "" { didSet { if !standortName.isEmpty { standortGeladen(standortName) } } }
     @ObservationIgnored var standortGeladen: (String) -> Void = { _ in }
@@ -268,6 +270,8 @@ final class HaVerbindung {
         if personen != p { personen = p }
         let zo = Logik.zonen(zustaende)
         if zonen != zo { zonen = zo }
+        let o = Logik.orter(zustaende, versteckt: versteckt)
+        if orter != o { orter = o }
     }
 
     /// Anzeigemodell als Ganzes (für die Widgets)
@@ -307,7 +311,7 @@ final class HaVerbindung {
             if let neu { z[id] = neu } else { z.removeValue(forKey: id) }
             // Neu aufbauen nur, wenn sich die Struktur ändern kann: neue/entfernte Entität,
             // geänderte Gruppenmitglieder oder Namen, Messwerte (Energie-Reiter)
-            if alt == nil || neu == nil || id.hasPrefix("sensor.") || id.hasPrefix("person.") || alt?.mitglieder != neu?.mitglieder || alt?.name != neu?.name {
+            if alt == nil || neu == nil || id.hasPrefix("sensor.") || id.hasPrefix("person.") || id.hasPrefix("device_tracker.") || alt?.mitglieder != neu?.mitglieder || alt?.name != neu?.name {
                 struktur = true
             }
         }
@@ -499,6 +503,33 @@ final class HaVerbindung {
             + "&significant_changes_only=0"
         guard case .ok(let antwort) = await anfrage("GET", pfad) else { return nil }
         return Logik.klimaVerlauf(antwort, klimaId: klimaId, sensorId: raum.temperatur)
+    }
+
+    /// "Wo ist?": Weg seit ab (mit Attributen, denn darin stehen die Koordinaten)
+    func ortVerlauf(_ ids: [String], ab: Date) async -> JSON? {
+        guard !ids.isEmpty else { return nil }
+        let pfad = "/api/history/period/" + kodiert(Logik.isoText(ab)) + "?filter_entity_id=" + kodiert(ids.joined(separator: ","))
+            + "&significant_changes_only=0"
+        guard case .ok(let antwort) = await anfrage("GET", pfad) else { return nil }
+        return antwort
+    }
+
+    /// Nur lesend bei einer anderen Instanz anfragen ("Wo ist?" mit mehreren Installationen)
+    static func holen(_ adresse: String, _ token: String, _ pfad: String) async -> JSON? {
+        var basis = adresse.trimmingCharacters(in: .whitespaces)
+        while basis.hasSuffix("/") { basis.removeLast() }
+        guard let url = URL(string: basis + pfad) else { return nil }
+        var r = URLRequest(url: url)
+        r.timeoutInterval = 15
+        r.setValue("Bearer " + token, forHTTPHeaderField: "Authorization")
+        guard let (d, a) = try? await URLSession.shared.data(for: r), (a as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return JSON.lesen(d)
+    }
+
+    static func kodiert(_ s: String) -> String {
+        var erlaubt = CharacterSet.urlQueryAllowed
+        erlaubt.remove(charactersIn: "+&=:,/")
+        return s.addingPercentEncoding(withAllowedCharacters: erlaubt) ?? s
     }
 
     private func kodiert(_ s: String) -> String {

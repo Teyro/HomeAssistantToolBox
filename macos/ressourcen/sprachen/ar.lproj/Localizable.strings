@@ -1,6 +1,10 @@
+"… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "… كـ «أين هو؟»: مع الأجهزة والأغراض والبطارية والمسار";
 "„%1“ gibt es in Home Assistant nicht." = "«%1» غير موجود في Home Assistant.";
 "„%1“ gibt es nicht." = "«%1» غير موجود.";
+"„%1“ nicht erreichbar" = "«%1» غير متاح";
+"„%1“: Zugriff verweigert" = "«%1»: تم رفض الوصول";
 "„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“." = "«تلقائي» يستخدم العدادات من لوحة الطاقة في Home Assistant ويحسب بنفس طريقتها تمامًا. تظهر عداداتك الخاصة بعد «اختبار الاتصال».";
+"„Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "«أين هو؟»: مع الأجهزة والأغراض والبطارية والمسار";
 "(Gruppe)" = "(مجموعة)";
 "(keine Beschreibung)" = "(بدون وصف)";
 "%1 %" = "%1 %";
@@ -19,6 +23,7 @@
 "%1 Räume heizen" = "%1 غرف قيد التدفئة";
 "%1 schalten" = "تبديل %1";
 "%1 Steckdosen" = "%1 مقابس";
+"%1 unterwegs seit %2" = "قطع %1 منذ %2";
 "%1 von %2 an" = "%1 من %2 قيد التشغيل";
 "%1 von %2 Lampen an" = "%1 من %2 مصابيح مضاءة";
 "%1 von %2 Steckdosen an" = "%1 من %2 مقابس قيد التشغيل";
@@ -84,6 +89,7 @@
 "Dashboard" = "لوحة التحكم";
 "Dashboard öffnen" = "فتح لوحة التحكم";
 "Dauer" = "المدة";
+"Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "يعرض تبويب «الأشخاص» الآن أيضًا الأجهزة والأغراض ذات الموقع والبطارية، والمسار عند الطلب. مع عدة نسخ من Home Assistant يظهر الأشخاص والأجهزة من جميع النسخ على خريطة واحدة.";
 "Der Stern markiert den Favoriten – er wird beim Start gezeigt. Wechseln geht im Panel über ⋯ → Instanz wechseln." = "النجمة تميز المفضلة – تظهر عند البدء. للتبديل في اللوحة: ⋯ ← تبديل النسخة.";
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "الملف الذي تم تنزيله ليس Home Assistant ToolBox.";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "تأتي العدادات تلقائيًا من لوحة الطاقة في Home Assistant أو تُختار أعلاه لكل نسخة.";
@@ -130,11 +136,13 @@
 "geändert %1" = "تغيّر %1";
 "gerade eben" = "الآن";
 "Gerade heizt kein Raum" = "لا توجد غرفة قيد التدفئة الآن";
+"Geräte" = "الأجهزة";
 "gestern " = "أمس ";
 "gestern %1" = "أمس %1";
 "Grad" = "درجات";
 "Größte Verbraucher" = "أكبر المستهلكين";
 "Größte Verbraucher gerade" = "أكبر المستهلكين الآن";
+"Gruppe" = "المجموعة";
 "Gruppen" = "المجموعات";
 "Gruppen & Steckdosenleisten" = "المجموعات ومشترك الكهرباء";
 "Hauptzähler" = "العداد الرئيسي";
@@ -198,6 +206,7 @@
 "Kälter" = "أبرد";
 "Kein Profil" = "بدون إعداد مسبق";
 "Kein Verlauf vorhanden" = "لا يوجد سجل";
+"Kein Weg" = "بلا مسار";
 "Keine Änderungen gefunden." = "لم يُعثر على تغييرات.";
 "Keine Heizung gefunden" = "لم يُعثر على تدفئة";
 "Keine Lampen" = "لا توجد مصابيح";
@@ -239,6 +248,7 @@
 "Luftfeuchte" = "الرطوبة";
 "Mehr" = "المزيد";
 "Mit Home Assistant verbinden" = "الاتصال بـ Home Assistant";
+"Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "مع عدة نسخ من Home Assistant يظهر الأشخاص والأجهزة من جميع النسخ على خريطة واحدة.";
 "Modus" = "الوضع";
 "Modus:" = "الوضع:";
 "Nach Updates suchen" = "البحث عن تحديثات";
@@ -253,6 +263,7 @@
 "nicht gefunden" = "غير موجود";
 "Nicht gefunden" = "غير موجود";
 "Nicht verbunden" = "غير متصل";
+"Nichts mit Standort in dieser Gruppe" = "لا يوجد شيء بموقع في هذه المجموعة";
 "niemand" = "لا أحد";
 "Niemand zu Hause" = "لا أحد في المنزل";
 "noch keine Adresse" = "لا يوجد عنوان بعد";
@@ -262,9 +273,11 @@
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "عرض المفاتيح من نوع «مقبس» فقط";
 "Ø %1" = "م %1";
 "Ø %1 in %2 Räumen" = "م %1 في %2 غرف";
+"Objekte" = "الأغراض";
 "offline" = "غير متصل";
 "Ohne Raum" = "بدون غرفة";
 "OpenStreetMap-Mitwirkende" = "المساهمون في OpenStreetMap";
+"Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "تظهر هنا أجهزة التتبع (device_tracker) المزودة بـ GPS، مثل تطبيق Companion أو أجهزة التتبع.";
 "Panel:" = "اللوحة:";
 "Personen" = "الأشخاص";
 "Personen mit Karte" = "الأشخاص مع الخريطة";
@@ -281,7 +294,11 @@
 "Räume (Bereiche aus Home Assistant) zeigen" = "عرض الغرف (مناطق Home Assistant)";
 "Raumtemperatur und Zieltemperatur zum Verstellen." = "درجة حرارة الغرفة ودرجة الحرارة المستهدفة القابلة للضبط.";
 "Reiter" = "علامات التبويب";
+"Route" = "الاتجاهات";
+"Route im Browser planen (OpenStreetMap)" = "خطّط المسار في المتصفح (OpenStreetMap)";
+"Route in Apple Karten" = "الاتجاهات في خرائط Apple";
 "ruht" = "في وضع الراحة";
+"Satellitenbild" = "صورة القمر الصناعي";
 "Schalten" = "تبديل";
 "Schalten fehlgeschlagen: " = "فشل التبديل: ";
 "Schalten fehlgeschlagen: %1" = "فشل التبديل: %1";
@@ -305,6 +322,7 @@
 "Steckdosen" = "المقابس";
 "Steckdosen & Energie" = "المقابس والطاقة";
 "Steckdosen:" = "المقابس:";
+"Straßenkarte" = "خريطة الشوارع";
 "Strom" = "الكهرباء";
 "Stromzähler" = "عداد الكهرباء";
 "Stromzähler:" = "عداد الكهرباء:";
@@ -366,6 +384,8 @@
 "Wasser" = "الماء";
 "Wasserzähler" = "عداد الماء";
 "Wasserzähler:" = "عداد الماء:";
+"Weg zeigen" = "إظهار المسار";
+"Weg: %1" = "المسار: %1";
 "Welche Heizung bzw. welcher Raum." = "أي تدفئة أو أي غرفة.";
 "Welche Lampe oder Lichtgruppe das Widget zeigt." = "أي مصباح أو مجموعة مصابيح تعرضها الأداة.";
 "Welche Steckdose das Widget zeigt." = "أي مقبس تعرضه الأداة.";
@@ -380,6 +400,8 @@
 "Wird geladen und geprüft …" = "جارٍ التنزيل والفحص …";
 "Wird geladen und installiert …" = "جارٍ التنزيل والتثبيت …";
 "Wirklich entfernen?" = "هل تريد الإزالة فعلًا؟";
+"Wo ist?" = "أين هو؟";
+"Wo war jemand in den letzten 30 Minuten, 3 oder 6 Stunden?" = "أين كان شخص ما خلال آخر 30 دقيقة أو 3 أو 6 ساعات؟";
 "z. B. Zuhause, Ferienhaus (leer = aus Home Assistant)" = "مثل المنزل، منزل العطلات (فارغ = من Home Assistant)";
 "Zahl der eingeschalteten Lampen am Symbol" = "عدد المصابيح المضاءة على الأيقونة";
 "Zahl der eingeschalteten Lampen in der Menüleiste" = "عدد المصابيح المضاءة في شريط القوائم";

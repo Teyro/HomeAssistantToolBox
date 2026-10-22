@@ -28,3 +28,24 @@ console.log('Heizung:', hz.map(h => { const k = ctx.raumKlima(h, z); return h.na
 console.log('Personen:', ctx.personen(z).map(p => p.name + '=' + ctx.ortText(p.zustand) + ' ' + p.farbe).join(', '));
 console.log('Instanzen:', JSON.stringify(ctx.instanzenLesen('', 'http://x', 'tok')), ctx.neueInstanzId([{ id: 'i1' }]));
 console.log('Zoom', ctx.passenderZoom([{ lat: 53.5656, lon: 10.1172 }, { lat: 53.5503, lon: 9.9925 }], 500, 300));
+
+// 1.1: Wo ist? – Personen und Ortungsgeräte, auch aus einer zweiten Installation
+const o = ctx.orter(z, ['device_tracker.macbook'], { id: 'i1', name: 'Zuhause' }, false);
+console.log('Orter:', o.map((x) => `${x.name}[${x.art}]${x.akku !== null ? ' ' + x.akku + '%' : ''} ${x.ort}`).join(', '));
+if (o.some((x) => x.entitaet === 'device_tracker.router_handy')) throw new Error('Tracker ohne GPS darf nicht erscheinen');
+if (o.some((x) => x.entitaet === 'device_tracker.macbook')) throw new Error('ausgeblendet');
+if (o.find((x) => x.entitaet === 'person.anna').akku !== 57) throw new Error('Akku über Sensor der Companion-App');
+if (o.find((x) => x.entitaet === 'device_tracker.fahrrad').art !== 'objekte') throw new Error('Fahrrad = Objekt');
+const z2 = {}; for (const e of await fetch('http://127.0.0.1:8124/api/states', { headers: { Authorization: 'Bearer ferien-token' } }).then((r) => r.json()).catch(() => [])) z2[e.entity_id] = e;
+if (Object.keys(z2).length) {
+  const o2 = ctx.orter(z2, [], { id: 'i2', name: 'Ferienhaus' }, true);
+  console.log('Orter Ferienhaus:', o2.map((x) => `${x.id} ${x.ort}`).join(', '));
+  if (!o2.every((x) => x.id.endsWith('@i2'))) throw new Error('Schlüssel weiterer Installation');
+}
+const vb = await (await fetch('http://127.0.0.1:8123/api/history/period/' + encodeURIComponent(new Date(Date.now() - 6 * 3600e3).toISOString()) + '?filter_entity_id=person.ben,device_tracker.fahrrad', { headers: { Authorization: 'Bearer test-token' } })).json();
+const spur = ctx.ortSpur(vb, 'person.ben', Date.now() - 6 * 3600e3);
+const ben = o.find((x) => x.entitaet === 'person.ben');
+const s3 = ctx.spurSeit(spur, 180, Date.now(), ben);
+console.log('Spur Ben:', spur.length, 'Punkte (ohne ungenaue), 3 h:', s3.length, 'Punkte,', ctx.formatEntfernung(ctx.streckeKm(s3)), '| Stufen', ctx.VERLAUF_STUFEN.map(ctx.verlaufStufeText).join('/'), '| Akku', ctx.akkuSymbol(23), ctx.akkuSymbol(100));
+if (spur.length !== 12) throw new Error('Spur: ' + spur.length);
+if (ctx.spurSeit(spur, 0, Date.now(), ben).length) throw new Error('Stufe aus');

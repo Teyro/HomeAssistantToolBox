@@ -288,7 +288,8 @@ public extension Logik {
     }
 
     static func initialen(_ name: String) -> String {
-        let teile = name.split(separator: " ")
+        // nur Wörter mit Buchstaben am Anfang ("Anna (Ferienhaus)" → "AF")
+        let teile = name.split(separator: " ").map { $0.drop(while: { !$0.isLetter && !$0.isNumber }) }.filter { !$0.isEmpty }
         let a = teile.first?.first.map(String.init) ?? "?"
         let b = teile.count > 1 ? (teile.last?.first.map(String.init) ?? "") : ""
         return (a + b).uppercased()

@@ -1,6 +1,10 @@
+"… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "… “कहाँ है?” के रूप में: डिवाइस और वस्तुएँ, बैटरी और रास्ता भी";
 "„%1“ gibt es in Home Assistant nicht." = "“%1” Home Assistant में मौजूद नहीं है।";
 "„%1“ gibt es nicht." = "“%1” मौजूद नहीं है।";
+"„%1“ nicht erreichbar" = "“%1” तक पहुँच नहीं";
+"„%1“: Zugriff verweigert" = "“%1”: पहुँच अस्वीकृत";
 "„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“." = "“स्वचालित” Home Assistant के ऊर्जा डैशबोर्ड के मीटर इस्तेमाल करता है और बिल्कुल उसी तरह गणना करता है। आपके अपने मीटर “कनेक्शन जाँचें” के बाद दिखते हैं।";
+"„Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "“कहाँ है?”: डिवाइस और वस्तुएँ, बैटरी और रास्ता भी";
 "(Gruppe)" = "(समूह)";
 "(keine Beschreibung)" = "(कोई विवरण नहीं)";
 "%1 %" = "%1 %";
@@ -19,6 +23,7 @@
 "%1 Räume heizen" = "%1 कमरे गर्म हो रहे हैं";
 "%1 schalten" = "%1 चालू/बंद करें";
 "%1 Steckdosen" = "%1 सॉकेट";
+"%1 unterwegs seit %2" = "%2 से %1 का सफ़र";
 "%1 von %2 an" = "%2 में से %1 चालू";
 "%1 von %2 Lampen an" = "%2 में से %1 लाइटें चालू";
 "%1 von %2 Steckdosen an" = "%2 में से %1 सॉकेट चालू";
@@ -84,6 +89,7 @@
 "Dashboard" = "डैशबोर्ड";
 "Dashboard öffnen" = "डैशबोर्ड खोलें";
 "Dauer" = "अवधि";
+"Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "“लोग” टैब अब स्थान वाले डिवाइस और वस्तुएँ, बैटरी और चाहें तो रास्ता भी दिखाता है। कई Home Assistant इंस्टेंस होने पर सभी इंस्टेंस के लोग और डिवाइस एक ही मानचित्र पर दिखते हैं।";
 "Der Stern markiert den Favoriten – er wird beim Start gezeigt. Wechseln geht im Panel über ⋯ → Instanz wechseln." = "तारा पसंदीदा को दर्शाता है – यह शुरू में दिखता है। पैनल में ⋯ → इंस्टेंस बदलें से बदलें।";
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "डाउनलोड की गई फ़ाइल Home Assistant ToolBox नहीं है।";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "मीटर अपने आप Home Assistant के ऊर्जा डैशबोर्ड से आते हैं या ऊपर हर इंस्टेंस के लिए चुने जाते हैं।";
@@ -130,11 +136,13 @@
 "geändert %1" = "बदला गया %1";
 "gerade eben" = "अभी-अभी";
 "Gerade heizt kein Raum" = "अभी कोई कमरा गर्म नहीं हो रहा";
+"Geräte" = "डिवाइस";
 "gestern " = "कल ";
 "gestern %1" = "कल %1";
 "Grad" = "डिग्री";
 "Größte Verbraucher" = "सबसे बड़े उपभोक्ता";
 "Größte Verbraucher gerade" = "अभी सबसे बड़े उपभोक्ता";
+"Gruppe" = "समूह";
 "Gruppen" = "समूह";
 "Gruppen & Steckdosenleisten" = "समूह और पावर स्ट्रिप";
 "Hauptzähler" = "मुख्य मीटर";
@@ -198,6 +206,7 @@
 "Kälter" = "ठंडा करें";
 "Kein Profil" = "कोई प्रीसेट नहीं";
 "Kein Verlauf vorhanden" = "कोई इतिहास नहीं";
+"Kein Weg" = "रास्ता नहीं";
 "Keine Änderungen gefunden." = "कोई बदलाव नहीं मिला।";
 "Keine Heizung gefunden" = "कोई हीटिंग नहीं मिली";
 "Keine Lampen" = "कोई लाइट नहीं";
@@ -239,6 +248,7 @@
 "Luftfeuchte" = "नमी";
 "Mehr" = "और";
 "Mit Home Assistant verbinden" = "Home Assistant से जुड़ें";
+"Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "कई Home Assistant इंस्टेंस होने पर सभी इंस्टेंस के लोग और डिवाइस एक ही मानचित्र पर दिखते हैं।";
 "Modus" = "मोड";
 "Modus:" = "मोड:";
 "Nach Updates suchen" = "अपडेट खोजें";
@@ -253,6 +263,7 @@
 "nicht gefunden" = "नहीं मिला";
 "Nicht gefunden" = "नहीं मिला";
 "Nicht verbunden" = "जुड़ा नहीं";
+"Nichts mit Standort in dieser Gruppe" = "इस समूह में स्थान वाला कुछ नहीं";
 "niemand" = "कोई नहीं";
 "Niemand zu Hause" = "घर पर कोई नहीं";
 "noch keine Adresse" = "अभी कोई पता नहीं";
@@ -262,9 +273,11 @@
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "केवल “सॉकेट” प्रकार के स्विच दिखाएँ";
 "Ø %1" = "औसत %1";
 "Ø %1 in %2 Räumen" = "%2 कमरों में औसत %1";
+"Objekte" = "वस्तुएँ";
 "offline" = "ऑफ़लाइन";
 "Ohne Raum" = "बिना कमरे के";
 "OpenStreetMap-Mitwirkende" = "OpenStreetMap योगदानकर्ता";
+"Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "GPS वाले ट्रैकर (device_tracker), जैसे Companion ऐप या ट्रैकर से, यहाँ दिखते हैं।";
 "Panel:" = "पैनल:";
 "Personen" = "लोग";
 "Personen mit Karte" = "मानचित्र के साथ लोग";
@@ -281,7 +294,11 @@
 "Räume (Bereiche aus Home Assistant) zeigen" = "कमरे दिखाएँ (Home Assistant के क्षेत्र)";
 "Raumtemperatur und Zieltemperatur zum Verstellen." = "कमरे का तापमान और समायोज्य लक्ष्य तापमान।";
 "Reiter" = "टैब";
+"Route" = "रास्ता बताएँ";
+"Route im Browser planen (OpenStreetMap)" = "ब्राउज़र में रास्ता बनाएँ (OpenStreetMap)";
+"Route in Apple Karten" = "Apple Maps में रास्ता";
 "ruht" = "विश्राम में";
+"Satellitenbild" = "उपग्रह चित्र";
 "Schalten" = "चालू/बंद करें";
 "Schalten fehlgeschlagen: " = "चालू/बंद करना विफल: ";
 "Schalten fehlgeschlagen: %1" = "चालू/बंद करना विफल: %1";
@@ -305,6 +322,7 @@
 "Steckdosen" = "सॉकेट";
 "Steckdosen & Energie" = "सॉकेट और ऊर्जा";
 "Steckdosen:" = "सॉकेट:";
+"Straßenkarte" = "सड़क मानचित्र";
 "Strom" = "बिजली";
 "Stromzähler" = "बिजली मीटर";
 "Stromzähler:" = "बिजली मीटर:";
@@ -366,6 +384,8 @@
 "Wasser" = "पानी";
 "Wasserzähler" = "पानी मीटर";
 "Wasserzähler:" = "पानी मीटर:";
+"Weg zeigen" = "रास्ता दिखाएँ";
+"Weg: %1" = "रास्ता: %1";
 "Welche Heizung bzw. welcher Raum." = "कौन सा हीटर या कौन सा कमरा।";
 "Welche Lampe oder Lichtgruppe das Widget zeigt." = "विजेट कौन सी लाइट या लाइट समूह दिखाए।";
 "Welche Steckdose das Widget zeigt." = "विजेट कौन सा सॉकेट दिखाए।";
@@ -380,6 +400,8 @@
 "Wird geladen und geprüft …" = "डाउनलोड और जाँच हो रही है …";
 "Wird geladen und installiert …" = "डाउनलोड और इंस्टॉल हो रहा है …";
 "Wirklich entfernen?" = "सच में हटाएँ?";
+"Wo ist?" = "कहाँ है?";
+"Wo war jemand in den letzten 30 Minuten, 3 oder 6 Stunden?" = "पिछले 30 मिनट, 3 या 6 घंटों में कोई कहाँ था?";
 "z. B. Zuhause, Ferienhaus (leer = aus Home Assistant)" = "जैसे घर, छुट्टियों का घर (खाली = Home Assistant से)";
 "Zahl der eingeschalteten Lampen am Symbol" = "आइकन पर चालू लाइटों की संख्या";
 "Zahl der eingeschalteten Lampen in der Menüleiste" = "मेनू बार में चालू लाइटों की संख्या";

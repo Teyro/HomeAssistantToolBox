@@ -27,6 +27,8 @@ Dazu gibt es **Widgets für den Schreibtisch** – und für **iPhone/iPad** eine
 - **Heizung**: alle Räume mit Temperatur und Luftfeuchte, Zieltemperatur per Regler, Modus, Profil,
   **Extra heizen** für 30 Minuten bis 4 Stunden
 - **Personen**: Karte wie bei „Wo ist?“, wer ist wo und wie weit weg, heizt es gerade?
+- **„Wo ist?“ (optional)**: der Personen-Reiter wie Apples App – Personen, Geräte und Objekte (jeder `device_tracker` mit GPS),
+  Akku, Route und der **Weg der letzten 30 Minuten, 3 oder 6 Stunden**; mit mehreren Instanzen alle auf **einer Karte**
 - **Fenster offen/zu** bei jeder Heizung und **24-Stunden-Verlauf** (Ist, Ziel, Heizphasen) zum Aufklappen
 - **Updates mit einem Klick**: neue Version wird gemeldet, „Was ist neu?“ zeigt die Änderungen
 - **Mehrere Home-Assistant-Instanzen** mit Favorit, Wechsel über das Menü
@@ -75,7 +77,8 @@ einem Tag `v*` alle Dateien an das Release.
 ## Datenschutz und Sicherheit
 
 - Die Programme sprechen **nur mit deinem eigenen Home Assistant** – keine Cloud, kein Tracking.
-- Außerdem: GitHub (Update-Prüfung, abschaltbar) und Kartenkacheln von OpenStreetMap für die Personenkarte.
+- Außerdem: GitHub (Update-Prüfung, abschaltbar) und Kartenkacheln von OpenStreetMap für die Personenkarte
+  (Satellitenbild: Esri; auf dem Mac Apple Karten).
 - Token liegen auf dem Mac und auf iOS im **Schlüsselbund**, unter KDE in der Widget-Konfiguration und in
   `~/.config/homeassistanttoolbox/instanzen.json` (nur für dich lesbar).
 - Updates werden nur aus den GitHub-Releases dieses Projekts angenommen.

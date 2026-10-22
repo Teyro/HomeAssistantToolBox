@@ -96,11 +96,26 @@ function person(id, name, zustand, lat, lon) { z[id] = { entity_id: id, state: z
 person('person.anna', 'Anna', 'home', HEIM[0] + 0.0002, HEIM[1] - 0.0003);
 person('person.ben', 'Ben', 'not_home', 53.5585, 10.0601);
 person('person.carla', 'Carla', 'Arbeit', 53.5506, 9.9931);
+// Ortungsgeräte für „Wo ist?“ (Companion-App, GPS-Tracker)
+function tracker(id, name, zustand, lat, lon, attr = {}) { z[id] = { entity_id: id, state: zustand, last_changed: new Date(Date.now() - 600e3 * (1 + Object.keys(z).length % 7)).toISOString(), attributes: { friendly_name: name, source_type: 'gps', latitude: lat, longitude: lon, gps_accuracy: 10, ...attr } }; }
+tracker('device_tracker.anna_handy', 'iPhone von Anna', 'home', HEIM[0] + 0.0002, HEIM[1] - 0.0003);
+tracker('device_tracker.ben_handy', 'Pixel von Ben', 'not_home', 53.5585, 10.0601, { battery_level: 23 });
+tracker('device_tracker.macbook', 'MacBook Air', 'home', HEIM[0] - 0.0001, HEIM[1] + 0.0001, { battery_level: 81 });
+tracker('device_tracker.fahrrad', 'Fahrrad', 'not_home', 53.5611, 10.0874, { battery_level: 64, gps_accuracy: 25 });
+tracker('device_tracker.router_handy', 'Handy (Router)', 'home', undefined, undefined);
+delete z['device_tracker.router_handy'].attributes.latitude; delete z['device_tracker.router_handy'].attributes.longitude;
+z['sensor.anna_handy_battery_level'] = { entity_id: 'sensor.anna_handy_battery_level', state: '57', last_changed: jetzt(), attributes: { friendly_name: 'Anna Akku', unit_of_measurement: '%', device_class: 'battery' } };
 
 if (NAME !== 'Zuhause') {
   // Zweite Instanz (z. B. "Ferienhaus"): nur ein paar Geräte, damit der Wechsel sichtbar ist
   for (const id of Object.keys(z)) if (!/^(light\.(terrasse|einfahrt|kueche_decke)|switch\.(kaffeemaschine|waschmaschine)|sensor\.(kaffeemaschine_leistung|stromzaehler_leistung|temperatur)|climate\.(wohnzimmer|schlafzimmer)|zone\.home|person\.anna)$/.test(id)) delete z[id];
   z['light.kueche_decke'].attributes.friendly_name = 'Ferienhaus Küche';
+  // Ferienhaus an der Ostsee mit Oma
+  const FH = [53.9946, 10.7817];
+  Object.assign(z['zone.home'].attributes, { friendly_name: NAME, latitude: FH[0], longitude: FH[1] });
+  person('person.oma', 'Oma Inge', 'home', FH[0] + 0.0001, FH[1] - 0.0002);
+  z['person.oma'].attributes.battery_level = 88;
+  z['person.anna'].attributes.friendly_name = 'Anna (Ferienhaus)';
 }
 const BEREICHE = [
   ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte'], ['binary_sensor.wz_fenster']],
@@ -149,8 +164,22 @@ function klimaVerlauf(id) {
 function tempVerlauf(id) {
   return klimaVerlauf('climate.wohnzimmer').map((p, i) => ({ ...(i === 0 ? { entity_id: id } : {}), state: String(Math.round((p.attributes.current_temperature + 0.3) * 10) / 10), last_changed: p.last_changed }));
 }
+/** Weg eines Ortungsgeräts in den letzten 6 Stunden (mit Attributen wie die echte History-API) */
+function ortVerlauf(id) {
+  const e = z[id];
+  if (!e) return [];
+  const a = e.attributes, punkte = [];
+  const start = [a.latitude - 0.03, a.longitude - 0.05];
+  for (let i = 0; i <= 12; i++) {
+    const f = i / 12, t = Date.now() - (12 - i) * 30 * 60e3;
+    punkte.push({ entity_id: id, state: i === 0 ? 'home' : e.state, last_changed: new Date(t).toISOString(), last_updated: new Date(t).toISOString(),
+      attributes: { ...a, latitude: start[0] + (a.latitude - start[0]) * f + Math.sin(f * 6) * 0.004, longitude: start[1] + (a.longitude - start[1]) * f, gps_accuracy: i === 5 ? 900 : 10 } });
+  }
+  return punkte;
+}
 function verlauf(id) {
   const ids = (id || '').split(',');
+  if (ids.every((x) => x.startsWith('person.') || x.startsWith('device_tracker.'))) return ids.filter((x) => z[x]).map(ortVerlauf);
   if (ids.some((x) => x.startsWith('climate.') || (z[x] && z[x].attributes.device_class === 'temperature')))
     return ids.map((x) => x.startsWith('climate.') ? klimaVerlauf(x) : tempVerlauf(x));
   if (ids.some((x) => ZUWACHS[x])) return ids.filter((x) => ZUWACHS[x]).map(zaehlerVerlauf);

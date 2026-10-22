@@ -1,6 +1,10 @@
+"… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "… als „Wo ist?“: auch Geräte und Objekte, Akku und Weg";
 "„%1“ gibt es in Home Assistant nicht." = "„%1“ gibt es in Home Assistant nicht.";
 "„%1“ gibt es nicht." = "„%1“ gibt es nicht.";
+"„%1“ nicht erreichbar" = "„%1“ nicht erreichbar";
+"„%1“: Zugriff verweigert" = "„%1“: Zugriff verweigert";
 "„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“." = "„Automatisch“ nimmt die Zähler aus dem Energie-Dashboard von Home Assistant und rechnet genau wie dort. Eigene Zähler erscheinen nach „Verbindung testen“.";
+"„Wo ist?“: auch Geräte und Objekte, Akku und Weg" = "„Wo ist?“: auch Geräte und Objekte, Akku und Weg";
 "(Gruppe)" = "(Gruppe)";
 "(keine Beschreibung)" = "(keine Beschreibung)";
 "%1 %" = "%1 %";
@@ -19,6 +23,7 @@
 "%1 Räume heizen" = "%1 Räume heizen";
 "%1 schalten" = "%1 schalten";
 "%1 Steckdosen" = "%1 Steckdosen";
+"%1 unterwegs seit %2" = "%1 unterwegs seit %2";
 "%1 von %2 an" = "%1 von %2 an";
 "%1 von %2 Lampen an" = "%1 von %2 Lampen an";
 "%1 von %2 Steckdosen an" = "%1 von %2 Steckdosen an";
@@ -84,6 +89,7 @@
 "Dashboard" = "Dashboard";
 "Dashboard öffnen" = "Dashboard öffnen";
 "Dauer" = "Dauer";
+"Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "Der Reiter „Personen“ zeigt jetzt auch Geräte und Objekte mit Standort, den Akku und auf Wunsch den Weg. Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte.";
 "Der Stern markiert den Favoriten – er wird beim Start gezeigt. Wechseln geht im Panel über ⋯ → Instanz wechseln." = "Der Stern markiert den Favoriten – er wird beim Start gezeigt. Wechseln geht im Panel über ⋯ → Instanz wechseln.";
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "Die geladene Datei ist nicht Home Assistant ToolBox.";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt.";
@@ -130,11 +136,13 @@
 "geändert %1" = "geändert %1";
 "gerade eben" = "gerade eben";
 "Gerade heizt kein Raum" = "Gerade heizt kein Raum";
+"Geräte" = "Geräte";
 "gestern " = "gestern ";
 "gestern %1" = "gestern %1";
 "Grad" = "Grad";
 "Größte Verbraucher" = "Größte Verbraucher";
 "Größte Verbraucher gerade" = "Größte Verbraucher gerade";
+"Gruppe" = "Gruppe";
 "Gruppen" = "Gruppen";
 "Gruppen & Steckdosenleisten" = "Gruppen & Steckdosenleisten";
 "Hauptzähler" = "Hauptzähler";
@@ -198,6 +206,7 @@
 "Kälter" = "Kälter";
 "Kein Profil" = "Kein Profil";
 "Kein Verlauf vorhanden" = "Kein Verlauf vorhanden";
+"Kein Weg" = "Kein Weg";
 "Keine Änderungen gefunden." = "Keine Änderungen gefunden.";
 "Keine Heizung gefunden" = "Keine Heizung gefunden";
 "Keine Lampen" = "Keine Lampen";
@@ -239,6 +248,7 @@
 "Luftfeuchte" = "Luftfeuchte";
 "Mehr" = "Mehr";
 "Mit Home Assistant verbinden" = "Mit Home Assistant verbinden";
+"Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte." = "Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte.";
 "Modus" = "Modus";
 "Modus:" = "Modus:";
 "Nach Updates suchen" = "Nach Updates suchen";
@@ -253,6 +263,7 @@
 "nicht gefunden" = "nicht gefunden";
 "Nicht gefunden" = "Nicht gefunden";
 "Nicht verbunden" = "Nicht verbunden";
+"Nichts mit Standort in dieser Gruppe" = "Nichts mit Standort in dieser Gruppe";
 "niemand" = "niemand";
 "Niemand zu Hause" = "Niemand zu Hause";
 "noch keine Adresse" = "noch keine Adresse";
@@ -262,9 +273,11 @@
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "Nur Schalter vom Typ „Steckdose“ zeigen";
 "Ø %1" = "Ø %1";
 "Ø %1 in %2 Räumen" = "Ø %1 in %2 Räumen";
+"Objekte" = "Objekte";
 "offline" = "offline";
 "Ohne Raum" = "Ohne Raum";
 "OpenStreetMap-Mitwirkende" = "OpenStreetMap-Mitwirkende";
+"Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier.";
 "Panel:" = "Panel:";
 "Personen" = "Personen";
 "Personen mit Karte" = "Personen mit Karte";
@@ -281,7 +294,11 @@
 "Räume (Bereiche aus Home Assistant) zeigen" = "Räume (Bereiche aus Home Assistant) zeigen";
 "Raumtemperatur und Zieltemperatur zum Verstellen." = "Raumtemperatur und Zieltemperatur zum Verstellen.";
 "Reiter" = "Reiter";
+"Route" = "Route";
+"Route im Browser planen (OpenStreetMap)" = "Route im Browser planen (OpenStreetMap)";
+"Route in Apple Karten" = "Route in Apple Karten";
 "ruht" = "ruht";
+"Satellitenbild" = "Satellitenbild";
 "Schalten" = "Schalten";
 "Schalten fehlgeschlagen: " = "Schalten fehlgeschlagen: ";
 "Schalten fehlgeschlagen: %1" = "Schalten fehlgeschlagen: %1";
@@ -305,6 +322,7 @@
 "Steckdosen" = "Steckdosen";
 "Steckdosen & Energie" = "Steckdosen & Energie";
 "Steckdosen:" = "Steckdosen:";
+"Straßenkarte" = "Straßenkarte";
 "Strom" = "Strom";
 "Stromzähler" = "Stromzähler";
 "Stromzähler:" = "Stromzähler:";
@@ -366,6 +384,8 @@
 "Wasser" = "Wasser";
 "Wasserzähler" = "Wasserzähler";
 "Wasserzähler:" = "Wasserzähler:";
+"Weg zeigen" = "Weg zeigen";
+"Weg: %1" = "Weg: %1";
 "Welche Heizung bzw. welcher Raum." = "Welche Heizung bzw. welcher Raum.";
 "Welche Lampe oder Lichtgruppe das Widget zeigt." = "Welche Lampe oder Lichtgruppe das Widget zeigt.";
 "Welche Steckdose das Widget zeigt." = "Welche Steckdose das Widget zeigt.";
@@ -380,6 +400,8 @@
 "Wird geladen und geprüft …" = "Wird geladen und geprüft …";
 "Wird geladen und installiert …" = "Wird geladen und installiert …";
 "Wirklich entfernen?" = "Wirklich entfernen?";
+"Wo ist?" = "Wo ist?";
+"Wo war jemand in den letzten 30 Minuten, 3 oder 6 Stunden?" = "Wo war jemand in den letzten 30 Minuten, 3 oder 6 Stunden?";
 "z. B. Zuhause, Ferienhaus (leer = aus Home Assistant)" = "z. B. Zuhause, Ferienhaus (leer = aus Home Assistant)";
 "Zahl der eingeschalteten Lampen am Symbol" = "Zahl der eingeschalteten Lampen am Symbol";
 "Zahl der eingeschalteten Lampen in der Menüleiste" = "Zahl der eingeschalteten Lampen in der Menüleiste";
