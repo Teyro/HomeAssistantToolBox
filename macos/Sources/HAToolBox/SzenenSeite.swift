@@ -14,10 +14,6 @@ struct SzenenSeite: View {
             // Uhrzeit für „zuletzt vor 3 h“ – jede Minute neu
             TimelineView(.everyMinute) { kontext in
                 LazyVStack(spacing: 8) {
-                    UebersichtKarte(symbol: "wand.and.stars",
-                                    titel: T("%1 Szenen · %2 Skripte", "\(ha.szenen.count)", "\(ha.skripte.count)"),
-                                    untertitel: T("Ein Klick startet sie"),
-                                    anteil: 0, farbe: .accentColor) { EmptyView() }
                     if !ha.szenen.isEmpty {
                         Abschnitt(titel: T("Szenen"), symbol: "wand.and.stars", anzahl: ha.szenen.count)
                         LazyVGrid(columns: spalten, spacing: 8) {

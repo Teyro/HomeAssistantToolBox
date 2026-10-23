@@ -125,7 +125,7 @@ struct PositionsRegler: View {
                 HStack {
                     Image(systemName: "blinds.horizontal.closed")
                     Spacer()
-                    Text(T("%1 % offen", "\(Int(lokal.rounded()))")).monospacedDigit()
+                    Text("\(Int(lokal.rounded())) %").monospacedDigit()
                 }
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.secondary)
