@@ -29,6 +29,8 @@ final class Einstellungen {
     var zeigeGasHeute: Bool { didSet { d.set(zeigeGasHeute, forKey: "zeigeGasHeute") } }
     var zeigeHeizung: Bool { didSet { d.set(zeigeHeizung, forKey: "zeigeHeizung") } }
     var zeigePersonen: Bool { didSet { d.set(zeigePersonen, forKey: "zeigePersonen") } }
+    var zeigeSzenen: Bool { didSet { d.set(zeigeSzenen, forKey: "zeigeSzenen") } }
+    var zeigeRolllaeden: Bool { didSet { d.set(zeigeRolllaeden, forKey: "zeigeRolllaeden") } }
     /// Reiter Personen als „Wo ist?“: auch Geräte und Objekte, Akku, Weg, weitere Installationen
     var woIst: Bool { didSet { d.set(woIst, forKey: "woIst") } }
     var updatesSuchen: Bool { didSet { d.set(updatesSuchen, forKey: "updatesSuchen") } }
@@ -40,7 +42,7 @@ final class Einstellungen {
         d.register(defaults: [
             "abfrageSekunden": 10, "zeigeGruppen": true, "zeigeRaeume": true, "alteGruppen": true, "nurSteckdosen": false,
             "zeigeAnzahl": true, "zeigeStromHeute": true, "zeigeWasserHeute": true, "zeigeGasHeute": true,
-            "zeigeHeizung": true, "zeigePersonen": true, "woIst": false, "updatesSuchen": true,
+            "zeigeHeizung": true, "zeigePersonen": true, "zeigeSzenen": true, "zeigeRolllaeden": true, "woIst": false, "updatesSuchen": true,
         ])
         abfrageSekunden = d.integer(forKey: "abfrageSekunden")
         zeigeGruppen = d.bool(forKey: "zeigeGruppen")
@@ -54,6 +56,8 @@ final class Einstellungen {
         zeigeGasHeute = d.bool(forKey: "zeigeGasHeute")
         zeigeHeizung = d.bool(forKey: "zeigeHeizung")
         zeigePersonen = d.bool(forKey: "zeigePersonen")
+        zeigeSzenen = d.bool(forKey: "zeigeSzenen")
+        zeigeRolllaeden = d.bool(forKey: "zeigeRolllaeden")
         woIst = d.bool(forKey: "woIst")
         updatesSuchen = d.bool(forKey: "updatesSuchen")
         boosts = (d.data(forKey: "boosts")).flatMap { try? JSONDecoder().decode([Boost].self, from: $0) } ?? []

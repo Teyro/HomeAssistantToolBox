@@ -2,7 +2,7 @@ import SwiftUI
 import HALogik
 
 enum Reiter: Int, CaseIterable, Identifiable {
-    case lampen, steckdosen, heizung, energie, personen
+    case lampen, steckdosen, heizung, energie, personen, szenen, rolllaeden
     var id: Int { rawValue }
     var titel: String {
         switch self {
@@ -11,6 +11,8 @@ enum Reiter: Int, CaseIterable, Identifiable {
         case .heizung: T("Heizung")
         case .energie: T("Energie")
         case .personen: T("Personen")
+        case .szenen: T("Szenen")
+        case .rolllaeden: T("Rollläden")
         }
     }
     var symbol: String {
@@ -20,6 +22,8 @@ enum Reiter: Int, CaseIterable, Identifiable {
         case .heizung: "heater.vertical.fill"
         case .energie: "bolt.fill"
         case .personen: "person.2.fill"
+        case .szenen: "wand.and.stars"
+        case .rolllaeden: "blinds.horizontal.open"
         }
     }
 }
@@ -59,6 +63,10 @@ struct PanelAnsicht: View {
             case .heizung: einstellungen.zeigeHeizung && !ha.heizungen.isEmpty
             case .personen: einstellungen.zeigePersonen
                 && (einstellungen.woIst ? !ha.orter.isEmpty || einstellungen.instanzen.count > 1 : !ha.personen.isEmpty)
+            case .szenen: einstellungen.zeigeSzenen && !(ha.szenen.isEmpty && ha.skripte.isEmpty)
+            case .rolllaeden: einstellungen.zeigeRolllaeden && !ha.rolllaeden.isEmpty
+            case .steckdosen: !ha.schalter.isEmpty
+            case .energie: !ha.leistung.isEmpty || !ha.energie.isEmpty || ha.hauptWatt != nil
             default: true
             }
         }
@@ -119,6 +127,8 @@ struct PanelAnsicht: View {
                     case .energie: EnergieSeite(ha: ha, einstellungen: einstellungen, instanz: kern.aktiv)
                     case .personen:
                         if einstellungen.woIst { WoIstSeite(kern: kern) } else { PersonenSeite(ha: ha) }
+                    case .szenen: SzenenSeite(ha: ha)
+                    case .rolllaeden: RolllaedenSeite(ha: ha)
                     }
                 }
             }
@@ -209,6 +219,8 @@ struct PanelAnsicht: View {
         case .heizung: ha.heizungen.filter { Logik.raumKlima($0, ha.zustaende).heizt }.count
         case .energie: nil
         case .personen: ha.personen.filter { $0.zustand == "home" }.count
+        case .szenen: nil
+        case .rolllaeden: ha.rolllaeden.filter { let s = Logik.rollladenStatus(ha.zustaende[$0.id]); return s.verfuegbar && s.position != 0 }.count
         }
         return Button {
             withAnimation(.snappy(duration: 0.3)) { zustand.reiter = r }

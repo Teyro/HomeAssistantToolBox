@@ -49,3 +49,18 @@ const s3 = ctx.spurSeit(spur, 180, Date.now(), ben);
 console.log('Spur Ben:', spur.length, 'Punkte (ohne ungenaue), 3 h:', s3.length, 'Punkte,', ctx.formatEntfernung(ctx.streckeKm(s3)), '| Stufen', ctx.VERLAUF_STUFEN.map(ctx.verlaufStufeText).join('/'), '| Akku', ctx.akkuSymbol(23), ctx.akkuSymbol(100));
 if (spur.length !== 12) throw new Error('Spur: ' + spur.length);
 if (ctx.spurSeit(spur, 0, Date.now(), ben).length) throw new Error('Stufe aus');
+
+// 1.2: Szenen, Skripte, Rollläden
+const sz = ctx.szenen(z, [], {});
+console.log('Szenen:', sz.szenen.map((x) => x.name).join(', '), '| Skripte:', sz.skripte.map((x) => x.name).join(', '));
+if (sz.szenen.length !== 3 || sz.skripte.length !== 2) throw new Error('Szenen/Skripte');
+if (ctx.szenen(z, ['scene.kinoabend'], {}).szenen.length !== 2) throw new Error('ausgeblendete Szene');
+const rl = ctx.rolllaeden(z, JSON.parse(t), [], {});
+console.log('Rollläden:', rl.map((r) => `${r.name}@${r.raum || '–'} ${ctx.rollladenText(z[r.id])}`).join(', '));
+if (rl[rl.length - 1].id !== 'cover.garage' || rl[0].raum !== 'Küche') throw new Error('Rollläden sortiert nach Raum, ohne Raum zuletzt');
+const gs = ctx.rollladenStatus(z['cover.garage']);
+if (gs.kannPosition || gs.kannStopp || !ctx.istTor(z['cover.garage']) || ctx.istTor(z['cover.kueche'])) throw new Error('Garagentor');
+if (ctx.rollladenText({ state: 'opening', attributes: { current_position: 30, supported_features: 15 } }) !== 'öffnet …') throw new Error('öffnet');
+if (ctx.rollladenText(undefined) !== 'nicht erreichbar') throw new Error('nicht erreichbar');
+if (ctx.formatVor(Date.now() - 3 * 3600e3 - 60000, Date.now()) !== 'vor 3 h') throw new Error('formatVor');
+if (!ctx.relevant('cover.kueche', z['cover.kueche'], '') || !ctx.relevant('scene.kinoabend', z['scene.kinoabend'], '')) throw new Error('relevant');

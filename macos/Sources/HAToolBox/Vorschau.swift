@@ -70,6 +70,20 @@ enum Vorschau {
             kern.panel.woArt = .personen
             kern.panel.woStufe = 0
 
+            // 1.2: Szenen und Rollläden
+            kern.panel.reiter = .szenen
+            await warte(1.5)
+            print("szenen:", kern.ha.szenen.map(\.name), "skripte:", kern.ha.skripte.map(\.name))
+            foto("6d_szenen")
+            kern.ha.starte("scene.kinoabend")
+            kern.panel.reiter = .rolllaeden
+            await warte(1)
+            kern.ha.rollladen("cover.kueche", position: 70)
+            kern.ha.rollladen("cover.schlafzimmer", .auf)
+            await warte(2)
+            print("rollläden:", kern.ha.rolllaeden.map { "\($0.name)@\($0.raum)=\(Logik.rollladenText(kern.ha.zustaende[$0.id]))" })
+            foto("6e_rolllaeden")
+
             // Widgets wie auf dem Schreibtisch (gleiche Ansichten wie in der Widget-Erweiterung)
             kern.widgetsAktualisieren(sofort: true)
             await warte(1)

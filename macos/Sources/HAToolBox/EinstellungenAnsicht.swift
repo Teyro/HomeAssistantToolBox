@@ -122,6 +122,8 @@ struct EinstellungenAnsicht: View {
                     Text(T("Mit mehreren Home-Assistant-Instanzen erscheinen die Personen und Geräte aller Instanzen auf einer Karte."))
                 }
                 .disabled(!einstellungen.zeigePersonen)
+                Toggle(T("Szenen und Skripte"), isOn: $einstellungen.zeigeSzenen)
+                Toggle(T("Rollläden, Markisen und Tore"), isOn: $einstellungen.zeigeRolllaeden)
             }
 
             Section(T("Lampen")) {

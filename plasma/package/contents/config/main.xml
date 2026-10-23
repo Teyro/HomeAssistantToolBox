@@ -38,6 +38,8 @@
     <entry name="boosts" type="String"><default></default></entry>
     <entry name="zeigeHeizung" type="Bool"><default>true</default></entry>
     <entry name="zeigePersonen" type="Bool"><default>true</default></entry>
+    <entry name="zeigeSzenen" type="Bool"><default>true</default></entry>
+    <entry name="zeigeRolllaeden" type="Bool"><default>true</default></entry>
     <!-- Reiter Personen als „Wo ist?“: auch Geräte und Objekte, Akku, Weg, weitere Installationen -->
     <entry name="woIst" type="Bool"><default>false</default></entry>
     <!-- Auf dem Schreibtisch: komplett | uebersicht | lampe | steckdose | raum | heizung | energie | personen | entitaet -->

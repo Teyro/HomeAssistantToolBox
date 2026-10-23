@@ -47,6 +47,9 @@ final class HaVerbindung {
     private(set) var zonen: [Zone] = []
     /// "Wo ist?": Personen und Ortungsgeräte mit Standort
     private(set) var orter: [Ort] = []
+    private(set) var szenen: [Startbar] = []
+    private(set) var skripte: [Startbar] = []
+    private(set) var rolllaeden: [Rollladen] = []
     /// Name der Installation aus Home Assistant (Einstellungen → Allgemein)
     private(set) var standortName = "" { didSet { if !standortName.isEmpty { standortGeladen(standortName) } } }
     @ObservationIgnored var standortGeladen: (String) -> Void = { _ in }
@@ -179,8 +182,12 @@ final class HaVerbindung {
                 return .ok(d.isEmpty ? nil : (JSON.lesen(d) ?? .text(String(decoding: d, as: UTF8.self))))
             }
             if status == 401 || status == 403 {
-                abgelehnt = true
-                liveVerbindung.stop()
+                // Nur sperren, wenn die Grundabfrage abgelehnt wird: die Räume-Abfrage (/api/template)
+                // verlangt Admin-Rechte – mit einem normalen Benutzer fehlen dann nur die Räume.
+                if pfad == "/api/states" || pfad == "/api/" {
+                    abgelehnt = true
+                    liveVerbindung.stop()
+                }
                 return .fehler(T("Zugriff verweigert – bitte den Token prüfen."))
             }
             return .fehler(T("Fehler %1 von Home Assistant.", "\(status)"))
@@ -212,6 +219,12 @@ final class HaVerbindung {
             fehler = text
             verbunden = false
         case .ok(let liste):
+            // Keine Liste (z. B. Anmeldeseite eines Proxys): nicht als „verbunden“ zeigen
+            guard liste?.liste != nil else {
+                fehler = T("Unerwartete Antwort – stimmt die Adresse?")
+                verbunden = false
+                return
+            }
             // Nur behalten, was die App braucht (Lampen, Schalter, Gruppen, Leistung/Energie)
             var neu: [String: Entitaet] = [:]
             for j in liste?.liste ?? [] {
@@ -272,6 +285,11 @@ final class HaVerbindung {
         if zonen != zo { zonen = zo }
         let o = Logik.orter(zustaende, versteckt: versteckt)
         if orter != o { orter = o }
+        let sz = Logik.szenen(zustaende, versteckt: versteckt, register: register)
+        if szenen != sz.szenen { szenen = sz.szenen }
+        if skripte != sz.skripte { skripte = sz.skripte }
+        let rl = Logik.rolllaeden(zustaende, bereiche, versteckt: versteckt, register: register)
+        if rolllaeden != rl { rolllaeden = rl }
     }
 
     /// Anzeigemodell als Ganzes (für die Widgets)
@@ -414,6 +432,28 @@ final class HaVerbindung {
         } else {
             dienst("light", "turn_on", ["entity_id": .text(id), "brightness_pct": .zahl(Double(p))])
         }
+    }
+
+    /// Szene aktivieren bzw. Skript starten.
+    func starte(_ id: String) {
+        dienst(Logik.domain(id) == "script" ? "script" : "scene", "turn_on", ["entity_id": .text(id)])
+    }
+
+    enum RollladenAktion { case auf, zu, stopp }
+
+    func rollladen(_ id: String, _ aktion: RollladenAktion) {
+        let dienstName = switch aktion { case .auf: "open_cover"; case .zu: "close_cover"; case .stopp: "stop_cover" }
+        dienst("cover", dienstName, ["entity_id": .text(id)])
+    }
+
+    /// Position 0–100 (100 = ganz offen); sofort sichtbar, die Rückmeldung kommt danach.
+    func rollladen(_ id: String, position: Int) {
+        let p = Swift.max(0, Swift.min(100, position))
+        if var e = zustaende[id] {
+            e.attribute["current_position"] = .zahl(Double(p))
+            setzeZustand(id, e, sofort: true)
+        }
+        dienst("cover", "set_cover_position", ["entity_id": .text(id), "position": .zahl(Double(p))])
     }
 
     /// Mehrere Schalter/Steckdosen gemeinsam (Steckdosenleiste ohne eigene Gruppen-Entität).

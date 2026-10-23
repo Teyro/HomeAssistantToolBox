@@ -39,6 +39,9 @@ Item {
     property var zonen: []
     // "Wo ist?": Personen und Ortungsgeräte mit Standort
     property var orter: []
+    property var szenen: []      // [{ id, name }] Szenen
+    property var skripte: []     // [{ id, name }] Skripte
+    property var rolllaeden: []  // [{ id, name, raum }] cover.*
     // Name der Installation aus Home Assistant (Einstellungen → Allgemein), z. B. "Zuhause"
     property string standortName: ""
     property int lichterAn: 0
@@ -92,7 +95,9 @@ Item {
                 let meldung;
                 if (xhr.status === 401 || xhr.status === 403) {
                     meldung = i18n("Zugriff verweigert – bitte den Token prüfen.");
-                    abgelehnt = true;
+                    // Nur sperren, wenn die Grundabfrage abgelehnt wird: die Räume-Abfrage (/api/template)
+                    // verlangt Admin-Rechte – mit einem normalen Benutzer fehlen dann nur die Räume.
+                    if (pfad === "/api/states" || pfad === "/api/") abgelehnt = true;
                 }
                 else if (xhr.status === 0) meldung = i18n("Home Assistant ist nicht erreichbar (%1).", basis);
                 else meldung = i18n("Fehler %1 von Home Assistant.", xhr.status);
@@ -120,6 +125,12 @@ Item {
             laedt = false;
             if (meldung) {
                 fehler = meldung;
+                verbunden = false;
+                return;
+            }
+            // Keine Liste (z. B. Anmeldeseite eines Proxys): nicht als „verbunden“ zeigen
+            if (!Array.isArray(liste)) {
+                fehler = i18n("Unerwartete Antwort – stimmt die Adresse?");
                 verbunden = false;
                 return;
             }
@@ -163,7 +174,11 @@ Item {
         m.personen = Logik.personen(zustaende, versteckt);
         m.zonen = Logik.zonen(zustaende);
         m.orter = Logik.orter(zustaende, versteckt, null, false);
-        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie", "heizungen", "personen", "zonen", "orter"]) {
+        const sz = Logik.szenen(zustaende, versteckt, register);
+        m.szenen = sz.szenen;
+        m.skripte = sz.skripte;
+        m.rolllaeden = Logik.rolllaeden(zustaende, bereiche, versteckt, register);
+        for (const schluessel of ["gruppen", "raeume", "ohneRaum", "lichter", "schalter", "schalterGruppen", "einzelneSchalter", "leistung", "energie", "heizungen", "personen", "zonen", "orter", "szenen", "skripte", "rolllaeden"]) {
             const j = JSON.stringify(m[schluessel]);
             if (_json[schluessel] !== j) {
                 _json[schluessel] = j;
@@ -275,6 +290,24 @@ Item {
         } else {
             dienst("light", "turn_on", { entity_id: entityId, brightness_pct: p });
         }
+    }
+
+    /** Szene aktivieren bzw. Skript starten. */
+    function starte(entityId) {
+        const d = Logik.domain(entityId);
+        dienst(d === "script" ? "script" : "scene", "turn_on", { entity_id: entityId });
+    }
+
+    /** Rollladen: "auf", "zu", "stopp" oder eine Position 0–100 (100 = ganz offen). */
+    function rollladen(entityId, aktion) {
+        const e = zustaende[entityId];
+        if (typeof aktion === "number") {
+            const p = Math.max(0, Math.min(100, Math.round(aktion)));
+            if (e) setzeZustand(entityId, Object.assign({}, e, { attributes: Object.assign({}, e.attributes, { current_position: p }) }), true);
+            dienst("cover", "set_cover_position", { entity_id: entityId, position: p });
+            return;
+        }
+        dienst("cover", aktion === "auf" ? "open_cover" : aktion === "zu" ? "close_cover" : "stop_cover", { entity_id: entityId });
     }
 
     /** Mehrere Schalter/Steckdosen gemeinsam (Steckdosenleiste ohne eigene Gruppen-Entität). */

@@ -20,6 +20,8 @@ KCM.SimpleKCM {
     property string cfg_instanzen
     property alias cfg_zeigeHeizung: zeigeHeizung.checked
     property alias cfg_zeigePersonen: zeigePersonen.checked
+    property alias cfg_zeigeSzenen: zeigeSzenen.checked
+    property alias cfg_zeigeRolllaeden: zeigeRolllaeden.checked
     property alias cfg_woIst: woIst.checked
     property alias cfg_updatesSuchen: updatesSuchen.checked
     property alias cfg_abfrageSekunden: abfrage.value
@@ -292,6 +294,14 @@ KCM.SimpleKCM {
             id: zeigeHeizung
             Kirigami.FormData.label: i18n("Anzeigen:")
             text: i18n("Heizung (Thermostate und Raumtemperaturen)")
+        }
+        QQC2.CheckBox {
+            id: zeigeSzenen
+            text: i18n("Szenen und Skripte")
+        }
+        QQC2.CheckBox {
+            id: zeigeRolllaeden
+            text: i18n("Rollläden, Markisen und Tore")
         }
         QQC2.CheckBox {
             id: zeigePersonen
