@@ -106,6 +106,14 @@ tracker('device_tracker.router_handy', 'Handy (Router)', 'home', undefined, unde
 delete z['device_tracker.router_handy'].attributes.latitude; delete z['device_tracker.router_handy'].attributes.longitude;
 z['sensor.anna_handy_battery_level'] = { entity_id: 'sensor.anna_handy_battery_level', state: '57', last_changed: jetzt(), attributes: { friendly_name: 'Anna Akku', unit_of_measurement: '%', device_class: 'battery' } };
 
+// Szenen, Skripte, Rollläden (1.2)
+for (const [id, name, alt] of [['scene.abendessen', 'Abendessen', 26], ['scene.kinoabend', 'Kinoabend', 50], ['scene.gute_nacht', 'Gute Nacht', 14]])
+  z[id] = { entity_id: id, state: new Date(Date.now() - alt * 3600e3).toISOString(), last_changed: jetzt(), attributes: { friendly_name: name } };
+for (const [id, name] of [['script.kaffee', 'Kaffee vorbereiten'], ['script.alle_rolllaeden', 'Alle Rollläden runter']])
+  z[id] = { entity_id: id, state: 'off', last_changed: jetzt(), attributes: { friendly_name: name, mode: 'single' } };
+for (const [id, name, pos, f] of [['cover.wohnzimmer', 'Rollladen Wohnzimmer', 100, 15], ['cover.kueche', 'Rollladen Küche', 40, 15], ['cover.schlafzimmer', 'Rollladen Schlafzimmer', 0, 15], ['cover.garage', 'Garagentor', 0, 3]])
+  z[id] = { entity_id: id, state: pos > 0 ? 'open' : 'closed', last_changed: jetzt(), attributes: { friendly_name: name, supported_features: f, ...(f & 4 ? { current_position: pos } : {}), device_class: id === 'cover.garage' ? 'garage' : 'shutter' } };
+
 if (NAME !== 'Zuhause') {
   // Zweite Instanz (z. B. "Ferienhaus"): nur ein paar Geräte, damit der Wechsel sichtbar ist
   for (const id of Object.keys(z)) if (!/^(light\.(terrasse|einfahrt|kueche_decke)|switch\.(kaffeemaschine|waschmaschine)|sensor\.(kaffeemaschine_leistung|stromzaehler_leistung|temperatur)|climate\.(wohnzimmer|schlafzimmer)|zone\.home|person\.anna)$/.test(id)) delete z[id];
@@ -118,9 +126,9 @@ if (NAME !== 'Zuhause') {
   z['person.anna'].attributes.friendly_name = 'Anna (Ferienhaus)';
 }
 const BEREICHE = [
-  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte'], ['binary_sensor.wz_fenster']],
-  ['kueche', 'Küche', ['light.kueche_decke', 'light.kueche_spots', 'switch.kaffeemaschine'], ['sensor.kueche_temperatur']],
-  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch', 'climate.schlafzimmer'], [], [], ['binary_sensor.schlafzimmer_fenster']],
+  ['wohnzimmer', 'Wohnzimmer', ['light.wz_decke', 'light.wz_stehlampe', 'light.wz_led_strip', 'switch.tv', 'climate.wohnzimmer', 'cover.wohnzimmer'], ['sensor.temperatur'], ['sensor.wz_feuchte'], ['binary_sensor.wz_fenster']],
+  ['kueche', 'Küche', ['light.kueche_decke', 'light.kueche_spots', 'switch.kaffeemaschine', 'cover.kueche'], ['sensor.kueche_temperatur']],
+  ['schlafzimmer', 'Schlafzimmer', ['light.schlafzimmer_nachttisch', 'climate.schlafzimmer', 'cover.schlafzimmer'], [], [], ['binary_sensor.schlafzimmer_fenster']],
   ['bad', 'Bad', ['light.bad_spiegel', 'switch.heizluefter', 'climate.bad'], [], ['sensor.bad_feuchte'], ['binary_sensor.bad_fenster']],
   ['kinderzimmer', 'Kinderzimmer', ['light.kinderzimmer', 'climate.kinderzimmer']],
   ['buero', 'Büro', ['light.buero_schreibtisch', 'switch.pc', 'switch.leiste_dose_1', 'switch.leiste_dose_2', 'switch.leiste_dose_3', 'climate.buero']],
@@ -292,6 +300,22 @@ const server = http.createServer((req, res) => {
           const ist = z[id].attributes.current_temperature, zielT = a.temperature ?? z[id].attributes.temperature;
           a.hvac_action = st === 'off' ? 'off' : ist < zielT - 0.2 ? 'heating' : 'idle';
           geaendert.push(aendern(id, { state: st, attributes: a }));
+        }
+        return json(geaendert.filter(Boolean));
+      }
+      if (m[1] === 'scene' || m[1] === 'script') {
+        for (const id of ids) if (z[id]) geaendert.push(aendern(id, { state: m[1] === 'scene' ? new Date().toISOString() : 'off' }));
+        return json(geaendert.filter(Boolean));
+      }
+      if (m[1] === 'cover') {
+        for (const id of ids) {
+          if (!z[id]) continue;
+          const kann = (z[id].attributes.supported_features & 4) !== 0;
+          let pos = z[id].attributes.current_position ?? (z[id].state === 'open' ? 100 : 0);
+          if (m[2] === 'open_cover') pos = 100;
+          if (m[2] === 'close_cover') pos = 0;
+          if (m[2] === 'set_cover_position') pos = Math.max(0, Math.min(100, d.position));
+          geaendert.push(aendern(id, { state: pos > 0 ? 'open' : 'closed', attributes: kann ? { current_position: pos } : {} }));
         }
         return json(geaendert.filter(Boolean));
       }

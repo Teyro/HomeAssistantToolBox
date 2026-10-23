@@ -239,3 +239,43 @@ final class UpdateVerlaufTests: XCTestCase {
         XCTAssertTrue(Logik.spurSeit(spur, minuten: 0, aktuell: o.first).isEmpty)
     }
 }
+
+final class SzenenRolllaedenTests: XCTestCase {
+    func testSzenenUndSkripte() {
+        let z: [String: Entitaet] = Dictionary(uniqueKeysWithValues: [
+            e("scene.kino", "2026-10-23T10:00:00Z", ["friendly_name": "Kinoabend"]),
+            e("scene.abend", "2026-10-22T10:00:00Z", ["friendly_name": "Abendessen"]),
+            e("scene.versteckt", "x", ["friendly_name": "Versteckt"]),
+            e("script.kaffee", "off", ["friendly_name": "Kaffee"]),
+            e("light.a", "on"),
+        ].map { ($0.id, $0) })
+        let s = Logik.szenen(z, versteckt: ["scene.versteckt"])
+        XCTAssertEqual(s.szenen.map(\.name), ["Abendessen", "Kinoabend"])
+        XCTAssertEqual(s.skripte.map(\.id), ["script.kaffee"])
+        XCTAssertTrue(Logik.relevant("scene.kino", z["scene.kino"], ""))
+        let jetzt = Logik.datum("2026-10-23T13:00:00Z")!
+        XCTAssertEqual(Logik.formatVor(Logik.datum(z["scene.kino"]!.state), jetzt: jetzt), T("vor %1 h", "3"))
+    }
+
+    func testRolllaeden() {
+        let z: [String: Entitaet] = Dictionary(uniqueKeysWithValues: [
+            e("cover.kueche", "open", ["friendly_name": "Rollladen Küche", "current_position": 40, "supported_features": 15]),
+            e("cover.wz", "closed", ["friendly_name": "Rollladen Wohnzimmer", "current_position": 0, "supported_features": 15]),
+            e("cover.garage", "closed", ["friendly_name": "Garagentor", "supported_features": 3, "device_class": "garage"]),
+            e("cover.weg", "unavailable", ["friendly_name": "Weg"]),
+        ].map { ($0.id, $0) })
+        var b = Bereiche()
+        b.bereiche = [Bereiche.Bereich(id: "kueche", name: "Küche", entitaeten: ["cover.kueche"]),
+                      Bereiche.Bereich(id: "wz", name: "Wohnzimmer", entitaeten: ["cover.wz"])]
+        let r = Logik.rolllaeden(z, b)
+        XCTAssertEqual(r.map(\.id), ["cover.kueche", "cover.wz", "cover.garage", "cover.weg"])   // ohne Raum zuletzt
+        XCTAssertEqual(r.first?.raum, "Küche")
+        let g = Logik.rollladenStatus(z["cover.garage"])
+        XCTAssertFalse(g.kannPosition); XCTAssertFalse(g.kannStopp); XCTAssertEqual(g.position, 0)
+        XCTAssertTrue(Logik.istTor(z["cover.garage"])); XCTAssertFalse(Logik.istTor(z["cover.kueche"]))
+        XCTAssertEqual(Logik.rollladenText(z["cover.kueche"]), T("%1 % offen", "40"))
+        XCTAssertEqual(Logik.rollladenText(z["cover.wz"]), T("geschlossen"))
+        XCTAssertEqual(Logik.rollladenText(z["cover.weg"]), T("nicht erreichbar"))
+        XCTAssertEqual(Logik.rollladenText(Entitaet(id: "cover.x", state: "opening", attribute: [:])), T("öffnet …"))
+    }
+}

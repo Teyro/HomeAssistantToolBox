@@ -7,7 +7,7 @@ var BEREICHE_TEMPLATE =
     "{%- for ar in areas() -%}" +
     "{%- set se = area_entities(ar) | select('match', 'sensor\\\\.') | list -%}" +
     "{%- set be = area_entities(ar) | select('match', 'binary_sensor\\\\.') | list -%}" +
-    "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate)\\\\.') | list," +
+    "{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate|cover)\\\\.') | list," +
     " 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list," +
     " 'f': (be | select('is_state_attr', 'device_class', 'window') | list) + (be | select('is_state_attr', 'device_class', 'opening') | list)}] -%}" +
     "{%- endfor -%}" +
@@ -284,6 +284,68 @@ function baueModell(zustaende, bereiche, opt) {
     };
 }
 
+/** Szenen und Skripte für den Reiter „Szenen“ (in Home Assistant versteckte und ausgeblendete nicht). */
+function szenen(zustaende, versteckt, register) {
+    var szenenListe = [], skripte = [];
+    register = register || {};
+    Object.keys(zustaende).forEach(function (id) {
+        var d = domain(id);
+        if ((d !== "scene" && d !== "script") || ausgeblendet(id, versteckt || [])) return;
+        if (register[id] && register[id].hb) return;
+        (d === "scene" ? szenenListe : skripte).push({ id: id, name: name(zustaende[id]) });
+    });
+    szenenListe.sort(vergleicheName);
+    skripte.sort(vergleicheName);
+    return { szenen: szenenListe, skripte: skripte };
+}
+
+/** Rollläden, Markisen, Garagentore … (cover.*) mit Raum, nach Raum und Name sortiert. */
+function rolllaeden(zustaende, bereiche, versteckt, register) {
+    var raumVon = {};
+    register = register || {};
+    if (bereiche && bereiche.bereiche) bereiche.bereiche.forEach(function (b) {
+        (b.e || []).forEach(function (id) { if (domain(id) === "cover") raumVon[id] = b.name || b.id; });
+    });
+    var liste = [];
+    Object.keys(zustaende).forEach(function (id) {
+        if (domain(id) !== "cover" || ausgeblendet(id, versteckt || [])) return;
+        if (register[id] && (register[id].hb || register[id].ec)) return;
+        liste.push({ id: id, name: name(zustaende[id]), raum: raumVon[id] || "" });
+    });
+    liste.sort(function (a, b) { return (a.raum || "\uffff").localeCompare(b.raum || "\uffff", "de") || vergleicheName(a, b); });
+    return liste;
+}
+
+/** Zustand eines Rollladens: Position 0–100 (100 = ganz offen) und was er kann. */
+function rollladenStatus(e) {
+    var a = (e && e.attributes) || {};
+    var f = a.supported_features || 0;
+    var pos = typeof a.current_position === "number" ? a.current_position
+        : e && e.state === "open" ? 100 : e && e.state === "closed" ? 0 : null;
+    return {
+        position: pos, zustand: e ? e.state : "unavailable", verfuegbar: istVerfuegbar(e),
+        bewegt: !!e && (e.state === "opening" || e.state === "closing"),
+        kannPosition: (f & 4) !== 0, kannStopp: (f & 8) !== 0,
+        kannAuf: (f & 1) !== 0 || f === 0, kannZu: (f & 2) !== 0 || f === 0
+    };
+}
+
+/** Tore und Türen (Garage, Hoftor …) nie über „Alle auf/zu“ mitbewegen. */
+function istTor(e) {
+    var k = e && e.attributes ? e.attributes.device_class : "";
+    return k === "garage" || k === "gate" || k === "door";
+}
+
+/** Kurzer Text zum Rollladen: „offen“, „zu“, „40 % offen“, „öffnet …“. */
+function rollladenText(e) {
+    var s = rollladenStatus(e);
+    if (!s.verfuegbar) return t("nicht erreichbar");
+    if (s.zustand === "opening") return t("öffnet …");
+    if (s.zustand === "closing") return t("schließt …");
+    if (s.position !== null && s.position > 0 && s.position < 100) return t("%1 % offen", s.position);
+    return s.zustand === "closed" || s.position === 0 ? t("geschlossen") : t("offen");
+}
+
 /** Zustand einer Gruppe: wie viele Mitglieder an, mittlere Helligkeit der eingeschalteten. */
 function gruppenStatus(mitglieder, zustaende) {
     var an = 0, summe = 0, dimmbarAnz = 0, verfuegbar = 0;
@@ -377,6 +439,7 @@ function wattVon(e) {
 function relevant(id, e, hauptzaehler) {
     var d = domain(id);
     if (d === "light" || d === "switch" || d === "group" || d === "climate" || d === "person" || d === "zone") return true;
+    if (d === "scene" || d === "script" || d === "cover") return true;
     // "Wo ist?": Ortungsgeräte mit GPS-Standort und deren Akkustand
     if (d === "device_tracker") return !!(e && e.attributes && e.attributes.latitude !== undefined);
     if (d === "sensor" && /_battery(_level)?$/.test(id)) return true;
@@ -617,6 +680,17 @@ function formatSeit(ms, jetzt) {
     var h = Math.floor(min / 60);
     if (h < 24) return t("seit %1 h", h);
     return t("seit %1 d", Math.floor(h / 24));
+}
+
+/** Wie lange her: „gerade eben“, „vor 5 min“, „vor 3 h“, „vor 2 d“ (z. B. zuletzt aktivierte Szene). */
+function formatVor(ms, jetzt) {
+    if (!ms || isNaN(ms)) return "";
+    var min = Math.max(0, Math.round((jetzt - ms) / 60000));
+    if (min < 1) return t("gerade eben");
+    if (min < 60) return t("vor %1 min", min);
+    var h = Math.floor(min / 60);
+    if (h < 24) return t("vor %1 h", h);
+    return t("vor %1 d", Math.floor(h / 24));
 }
 
 /** Kartenkacheln (Web-Mercator): Längen-/Breitengrad → Kachelkoordinaten (Bruchteil) */

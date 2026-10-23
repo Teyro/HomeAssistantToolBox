@@ -9,7 +9,7 @@ public enum Logik {
         + #"{%- for ar in areas() -%}"#
         + #"{%- set se = area_entities(ar) | select('match', 'sensor\\.') | list -%}"#
         + #"{%- set be = area_entities(ar) | select('match', 'binary_sensor\\.') | list -%}"#
-        + #"{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate)\\.') | list,"#
+        + #"{%- set ns.a = ns.a + [{'id': ar, 'name': area_name(ar), 'e': area_entities(ar) | select('match', '(light|switch|climate|cover)\\.') | list,"#
         + #" 't': se | select('is_state_attr', 'device_class', 'temperature') | list, 'h': se | select('is_state_attr', 'device_class', 'humidity') | list,"#
         + #" 'f': (be | select('is_state_attr', 'device_class', 'window') | list) + (be | select('is_state_attr', 'device_class', 'opening') | list)}] -%}"#
         + #"{%- endfor -%}"#
@@ -298,7 +298,7 @@ public enum Logik {
     /// Ist diese Entität für die App überhaupt interessant? (alles andere wird ignoriert)
     public static func relevant(_ id: String, _ e: Entitaet?, _ hauptzaehler: String) -> Bool {
         let d = domain(id)
-        if ["light", "switch", "group", "climate", "person", "zone"].contains(d) { return true }
+        if ["light", "switch", "group", "climate", "person", "zone", "scene", "script", "cover"].contains(d) { return true }
         // "Wo ist?": Ortungsgeräte mit GPS-Standort und deren Akkustand
         if d == "device_tracker" { return e?.attribute["latitude"] != nil }
         if d == "sensor" && (id.hasSuffix("_battery_level") || id.hasSuffix("_battery")) { return true }

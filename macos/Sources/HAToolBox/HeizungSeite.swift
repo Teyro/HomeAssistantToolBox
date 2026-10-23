@@ -263,7 +263,7 @@ struct TemperaturRegler: View {
             if !zieht && Date().timeIntervalSince(losgelassen) > 1.5 { withAnimation(.smooth) { lokal = neu } }
         }
         .accessibilityElement()
-        .accessibilityLabel("Zieltemperatur")
+        .accessibilityLabel(T("Zieltemperatur"))
         .accessibilityValue(Logik.formatTemp(lokal))
         .accessibilityAdjustableAction { r in
             switch r {

@@ -1,5 +1,5 @@
 /*
- * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Heizung · Energie · Personen,
+ * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Heizung · Energie · Personen · Szenen · Rollläden,
  * rechts das Menü (Instanz wechseln, neu laden, Home Assistant öffnen, Einstellungen).
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -19,6 +19,8 @@ PlasmaExtras.Representation {
     property var steuerung: null    // PlasmoidItem: Instanzen, Extra heizen
     property bool zeigeHeizung: true
     property bool zeigePersonen: true
+    property bool zeigeSzenen: true
+    property bool zeigeRolllaeden: true
     property bool woIst: false
     property string ausgeblendet: ""
     property bool zeigeGruppen: true
@@ -51,6 +53,8 @@ PlasmaExtras.Representation {
                 objectName: "reiter"
                 Layout.fillWidth: true
                 position: PC3.TabBar.Header
+                // Viele Reiter: Text nur am gewählten, die anderen nur mit Symbol (Name als Tooltip)
+                readonly property bool eng: { let n = 0; for (let i = 0; i < count; i++) if (itemAt(i) && itemAt(i).visible) n++; return n > 5 && voll.width < Kirigami.Units.gridUnit * 40; }
                 Reiter { text: i18n("Lampen"); symbol: "lampe"; zahl: voll.ha.lichterAn }
                 Reiter { text: i18n("Steckdosen"); symbol: "steckdose"; zahl: voll.ha.schalterAn; visible: voll.ha.schalter.length > 0 }
                 Reiter { text: i18n("Heizung"); symbol: "heizung"; visible: voll.zeigeHeizung && voll.ha.heizungen.length > 0
@@ -59,6 +63,9 @@ PlasmaExtras.Representation {
                 Reiter { text: voll.woIst ? i18n("Wo ist?") : i18n("Personen"); symbol: "person"
                          visible: voll.zeigePersonen && (voll.woIst ? voll.ha.orter.length > 0 || voll.instanzen.length > 1 : voll.ha.personen.length > 0)
                          zahl: voll.ha.personen.filter(p => p.zustand === "home").length }
+                Reiter { text: i18n("Szenen"); symbol: "szene"; visible: voll.zeigeSzenen && (voll.ha.szenen.length > 0 || voll.ha.skripte.length > 0) }
+                Reiter { text: i18n("Rollläden"); symbol: "rollladen"; visible: voll.zeigeRolllaeden && voll.ha.rolllaeden.length > 0
+                         zahl: voll.ha.rolllaeden.filter(r => { const st = Logik.rollladenStatus(voll.ha.zustaende[r.id]); return st.verfuegbar && st.position !== 0; }).length }
             }
             // Ein Menü wie bei den Plasma-eigenen Widgets: Instanz wechseln, neu laden, …
             PC3.ToolButton {
@@ -275,6 +282,12 @@ PlasmaExtras.Representation {
                     }
                 }
             }
+            SzenenSeite {
+                ha: voll.ha
+            }
+            RolllaedenSeite {
+                ha: voll.ha
+            }
         }
     }
 
@@ -283,6 +296,12 @@ PlasmaExtras.Representation {
         id: knopf
         property string symbol
         property int zahl: 0
+        readonly property bool nurSymbol: reiter.eng && !checked
+        // Verschwindet der gewählte Reiter (z. B. andere Instanz ohne Szenen), zurück zu „Lampen“
+        onVisibleChanged: if (!visible && checked) Qt.callLater(() => reiter.currentIndex = 0)
+        PC3.ToolTip.text: text
+        PC3.ToolTip.visible: nurSymbol && hovered
+        PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
         contentItem: RowLayout {
             spacing: Kirigami.Units.smallSpacing
             Item { Layout.fillWidth: true }
@@ -293,6 +312,7 @@ PlasmaExtras.Representation {
                 farbe: Kirigami.Theme.textColor
             }
             PC3.Label {
+                visible: !knopf.nurSymbol
                 text: knopf.text
                 elide: Text.ElideRight
             }

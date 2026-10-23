@@ -253,7 +253,7 @@ struct HelligkeitsRegler: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Helligkeit")
+        .accessibilityLabel(T("Helligkeit"))
         .accessibilityValue(T("%1 Prozent", "\(Int(lokal.rounded()))"))
         .accessibilityAdjustableAction { richtung in
             switch richtung {

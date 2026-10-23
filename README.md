@@ -29,6 +29,8 @@ Lights, sockets, heating, energy and people from [Home Assistant](https://www.ho
 - **People** – map with zones, who is where, since when and how far from home
 - **“Where is?” (optional)** – the People tab like a find‑my app: people, devices and items (any `device_tracker` with GPS),
   battery, directions and the **path of the last 30 minutes, 3 or 6 hours**; with several instances everybody appears on **one map**
+- **Scenes & scripts** – start them with one click (macOS and KDE)
+- **Blinds, awnings and gates** – up, stop, down and position slider, sorted by room; “All up/down” never moves gates
 - **Several Home Assistant instances** – e.g. home and holiday house, one marked as favourite
 - **Desktop widgets / tiles** – overview, light, socket, room, heating, energy, people, any entity
 - **Live updates** over the Home Assistant WebSocket API; stops asking on a wrong token so your IP is not banned
