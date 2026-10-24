@@ -35,6 +35,7 @@ PlasmoidItem {
         token: root.aktiv.token || ""
         abfrageSekunden: Plasmoid.configuration.abfrageSekunden
         sichtbar: root.expanded || root.aufDemSchreibtisch
+        postAn: Plasmoid.configuration.zeigePost
         optionen: ({
             alteGruppen: Plasmoid.configuration.alteGruppen,
             nurSteckdosen: Plasmoid.configuration.nurSteckdosen,
@@ -176,6 +177,7 @@ PlasmoidItem {
             zeigePersonen: Plasmoid.configuration.zeigePersonen
             zeigeSzenen: Plasmoid.configuration.zeigeSzenen
             zeigeRolllaeden: Plasmoid.configuration.zeigeRolllaeden
+            zeigePost: Plasmoid.configuration.zeigePost
             woIst: Plasmoid.configuration.woIst
             ausgeblendet: Plasmoid.configuration.ausgeblendet
             hauptzaehler: verbindung.optionen.hauptzaehler || ""

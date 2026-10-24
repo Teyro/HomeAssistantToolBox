@@ -42,6 +42,11 @@ Item {
     property var szenen: []      // [{ id, name }] Szenen
     property var skripte: []     // [{ id, name }] Skripte
     property var rolllaeden: []  // [{ id, name, raum }] cover.*
+    // Post aus der Integration „Briefankündigung“ (HACS) – null, solange sie fehlt oder ausgeschaltet ist
+    property bool postAn: true
+    property var post: null          // { stand, konten: [{ naechster_abruf, … }], briefe: [...] }
+    property var postBilder: ({})    // Brief-ID → data:-Adresse des Umschlags
+    property bool postNachsehen: false
     // Name der Installation aus Home Assistant (Einstellungen → Allgemein), z. B. "Zuhause"
     property string standortName: ""
     property int lichterAn: 0
@@ -75,6 +80,66 @@ Item {
     // "Verbrauch heute": { strom|wasser|gas: { heute, gestern, einheit, zaehler } }
     property var verbrauchHeute: ({})
     property var energiePrefs: null
+
+    // ------------------------------------------------------------------ Post
+    function postLaden() {
+        if (!eingerichtet || abgelehnt || !postAn) { if (!postAn) post = null; return; }
+        anfrage("GET", "/api/briefankuendigung/briefe", null, function (antwort, meldung) {
+            if (!antwort || !antwort.briefe) { if (meldung) post = null; return; }   // Integration fehlt (404)
+            post = antwort;
+            for (const b of antwort.briefe.slice(0, 20)) if (b.bild && !postBilder[b.id]) postBildLaden(b.id);
+            if (postNachsehen && antwort.konten.every(k => !k.laeuft)) postNachsehen = false;
+        });
+    }
+
+    function postBildLaden(id) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", basis + "/api/briefankuendigung/bild/" + id);
+        xhr.setRequestHeader("Authorization", "Bearer " + token.trim());
+        xhr.responseType = "arraybuffer";
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE || xhr.status !== 200 || !xhr.response) return;
+            const neu = Object.assign({}, postBilder);
+            neu[id] = Logik.bildAdresse(new Uint8Array(xhr.response));
+            postBilder = neu;
+        };
+        xhr.send();
+    }
+
+    /** Brief als angekommen markieren (gilt auf allen Geräten) – sofort anzeigen, dann speichern. */
+    function postAbhaken(id, erledigt) {
+        if (post) {
+            const neu = Object.assign({}, post);
+            neu.briefe = post.briefe.map(b => b.id === id ? Object.assign({}, b, { erledigt: erledigt }) : b);
+            post = neu;
+        }
+        anfrage("POST", "/api/briefankuendigung/erledigt", { id: id, erledigt: erledigt }, function (antwort, fehlertext) {
+            if (fehlertext) { meldung = fehlertext; meldungTimer.restart(); postLaden(); }
+        });
+    }
+
+    /** Home Assistant jetzt ins Postfach schauen lassen und ein paar Mal nachladen. */
+    function postAbrufen() {
+        postNachsehen = true;
+        anfrage("POST", "/api/briefankuendigung/abrufen", {}, function (antwort, fehlertext) {
+            if (fehlertext) { postNachsehen = false; meldung = fehlertext; meldungTimer.restart(); return; }
+            postNachladen.zaehler = 0;
+            postNachladen.restart();
+        });
+    }
+    Timer {
+        id: postNachladen
+        property int zaehler: 0
+        interval: 5000
+        repeat: true
+        onTriggered: { ha.postLaden(); if (++zaehler >= 6 || !ha.postNachsehen) { stop(); ha.postNachsehen = false; } }
+    }
+    // Alle 10 Minuten, solange das Popup offen ist; beim Öffnen sofort
+    Timer { interval: 600000; repeat: true; running: ha.sichtbar && ha.postAn && ha.eingerichtet; onTriggered: ha.postLaden() }
+    onPostAnChanged: postLaden()
+    onEingerichtetChanged: postLaden()
+    // Andere Instanz: deren Post laden
+    onBasisChanged: { post = null; postBilder = {}; postLaden(); }
 
     // ------------------------------------------------------------------ HTTP
     function anfrage(methode, pfad, daten, fertig) {
@@ -531,7 +596,7 @@ Item {
     onAdresseChanged: neustart.restart()
     onTokenChanged: neustart.restart()
     onOptionenChanged: neuBerechnen()
-    onSichtbarChanged: if (sichtbar && !live) aktualisieren()
+    onSichtbarChanged: { if (sichtbar && !live) aktualisieren(); if (sichtbar) postLaden(); }
     Timer {
         id: neustart
         interval: 400

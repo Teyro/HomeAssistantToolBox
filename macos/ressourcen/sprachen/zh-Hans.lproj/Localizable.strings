@@ -10,6 +10,7 @@
 "%1 %" = "%1 %";
 "%1 % Luftfeuchte" = "湿度 %1 %";
 "%1 % offen" = "已打开 %1 %";
+"%1 Briefe" = "%1 封信";
 "%1 Dosen · alle aus" = "%1 个插座 · 全部关闭";
 "%1 h" = "%1 小时";
 "%1 h %2 min" = "%1 小时 %2 分钟";
@@ -19,6 +20,7 @@
 "%1 Lampen an" = "%1 盏灯已开";
 "%1 meldet Fehler %2." = "%1 报告错误 %2。";
 "%1 min" = "%1 分钟";
+"%1 Pakete" = "%1 个包裹";
 "%1 Prozent" = "百分之 %1";
 "%1 Räume" = "%1 个房间";
 "%1 Räume heizen" = "%1 个房间正在加热";
@@ -26,6 +28,7 @@
 "%1 starten" = "启动 %1";
 "%1 Steckdosen" = "%1 个插座";
 "%1 Szenen · %2 Skripte" = "%1 个场景 · %2 个脚本";
+"%1 unterwegs" = "%1 在途";
 "%1 unterwegs seit %2" = "自 %2 起移动 %1";
 "%1 von %2 an" = "%2 个中 %1 个已开";
 "%1 von %2 Lampen an" = "%2 盏灯中 %1 盏已开";
@@ -34,10 +37,12 @@
 "%1 von %2 zu Hause" = "%2 人中 %1 人在家";
 "%1 zu Hause" = "%1 人在家";
 "%1: Position" = "%1：位置";
+"1 Brief" = "1 封信";
 "1 Dose · aus" = "1 个插座 · 关闭";
 "1 h" = "1 小时";
 "1 Lampe · aus" = "1 盏灯 · 关闭";
 "1 Lampe an" = "1 盏灯已开";
+"1 Paket" = "1 个包裹";
 "1 Raum heizt" = "1 个房间正在加热";
 "2 h" = "2 小时";
 "24 h" = "24 小时";
@@ -50,6 +55,7 @@
 "Abfrage alle (Sek.):" = "轮询间隔（秒）：";
 "Abfrage alle %1 s (ohne Live-Verbindung)" = "每 %1 秒轮询一次（无实时连接时）";
 "Abmelden" = "退出登录";
+"Absender unbekannt" = "发件人未知";
 "Abwesend" = "离家";
 "Adresse" = "地址";
 "Adresse deiner Home-Assistant-Installation und einen langlebigen Zugriffstoken eintragen." = "输入你的 Home Assistant 地址和长期访问令牌。";
@@ -75,6 +81,9 @@
 "an" = "开";
 "An" = "开";
 "an · %1 %" = "开 · %1 %";
+"angekommen" = "已送达";
+"Angekommen" = "已送达";
+"angekündigt %1" = "%1 预告";
 "Anhalten" = "停止";
 "Anzeigen:" = "显示：";
 "Auch klassische Gruppen (group.*) mit Lampen" = "也包括含灯的经典组（group.*）";
@@ -95,6 +104,7 @@
 "Beliebige Entität (großer Wert)" = "任意实体（大字显示）";
 "Bitte wählen" = "请选择";
 "Boost" = "强力";
+"Brief von %1" = "来自 %1 的信";
 "Dashboard" = "仪表板";
 "Dashboard öffnen" = "打开仪表板";
 "Dauer" = "时长";
@@ -103,6 +113,7 @@
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "下载的文件不是 Home Assistant ToolBox。";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "电表自动来自 Home Assistant 能源仪表板，或在上方为每个实例单独选择。";
 "Diese Einstellungen gelten, wenn das Widget auf dem Schreibtisch liegt. Für mehrere Kacheln (z. B. eine Lampe, eine Heizung und Energie) das Widget mehrmals auf den Schreibtisch ziehen und jede Kachel einzeln einstellen." = "这些设置适用于放在桌面上的小部件。若需多个磁贴（例如一盏灯、一个暖气和能源），请将小部件多次拖到桌面并分别设置每个磁贴。";
+"Doch nicht angekommen" = "其实还没到";
 "Dosen ausblenden" = "隐藏插座";
 "Dosen zeigen" = "显示插座";
 "Download fehlgeschlagen" = "下载失败";
@@ -147,6 +158,7 @@
 "Gerade heizt kein Raum" = "目前没有房间在加热";
 "Geräte" = "设备";
 "geschlossen" = "已关闭";
+"gestern" = "昨天";
 "gestern " = "昨天 ";
 "gestern %1" = "昨天 %1";
 "Grad" = "度";
@@ -173,6 +185,8 @@
 "Heizung:" = "暖气：";
 "Helligkeit" = "亮度";
 "Helligkeit %1" = "亮度 %1";
+"heute" = "今天";
+"Heute" = "今天";
 "Heute schon %1 % vom gestrigen Tagesverbrauch" = "已达昨日用量的 %1 %";
 "Home Assistant" = "Home Assistant";
 "Home Assistant · %1" = "Home Assistant · %1";
@@ -181,6 +195,7 @@
 "Home Assistant hat den Token abgelehnt. Bitte in den Einstellungen einen neuen eintragen." = "Home Assistant 拒绝了令牌。请在设置中输入新令牌。";
 "Home Assistant hinzufügen" = "添加 Home Assistant";
 "Home Assistant ist nicht erreichbar (%1)." = "无法访问 Home Assistant（%1）。";
+"Home Assistant jetzt ins Postfach schauen lassen" = "让 Home Assistant 立即检查邮箱";
 "Home Assistant öffnen" = "打开 Home Assistant";
 "Home Assistant ToolBox" = "Home Assistant ToolBox";
 "Home Assistant ToolBox – Einstellungen" = "Home Assistant ToolBox – 设置";
@@ -225,6 +240,7 @@
 "Keine Lampen gefunden" = "未找到灯";
 "Keine Personen" = "没有人员";
 "Keine Personen in Home Assistant" = "Home Assistant 中没有人员";
+"Keine Post angekündigt" = "没有预告的邮件";
 "Keine Steckdosen" = "没有插座";
 "Keine Steckdosen gefunden" = "未找到插座";
 "Keine Szenen oder Skripte" = "没有场景或脚本";
@@ -235,6 +251,7 @@
 "Keine Zähler gefunden. In Home Assistant das Energie-Dashboard einrichten oder in den Einstellungen Zähler wählen." = "未找到电表。请在 Home Assistant 中设置能源仪表板，或在设置中选择电表。";
 "Keiner (Summe der Messsteckdosen)" = "无（计量插座总和）";
 "Komfort" = "舒适";
+"kommt heute" = "今天送达";
 "Komplett (alle Reiter)" = "完整（所有选项卡）";
 "Kühlen" = "制冷";
 "Lade …" = "加载中 …";
@@ -266,6 +283,8 @@
 "Modus" = "模式";
 "Modus:" = "模式：";
 "Nach Updates suchen" = "检查更新";
+"Nachsehen" = "立即检查";
+"nächstes Mal %1" = "下次检查 %1";
 "Name" = "名称";
 "Name (optional)" = "名称（可选）";
 "Name:" = "名称：";
@@ -278,11 +297,13 @@
 "Nicht gefunden" = "未找到";
 "Nicht verbunden" = "未连接";
 "Nichts mit Standort in dieser Gruppe" = "此分组中没有带位置的项目";
+"Nichts unterwegs" = "没有在途邮件";
 "niemand" = "无人";
 "Niemand zu Hause" = "无人在家";
 "noch keine Adresse" = "尚无地址";
 "Noch keine Instanz – füge Home Assistant hinzu." = "还没有实例 – 请添加 Home Assistant。";
 "Noch nicht eingerichtet – Rechtsklick → Einrichten" = "尚未设置 – 右键 → 设置";
+"Noch unterwegs" = "仍在途中";
 "Normalerweise aktualisiert sich das Widget sofort über die Live-Verbindung. Das Intervall gilt nur, falls die nicht möglich ist." = "通常小部件会通过实时连接立即更新。仅在无法实时连接时才使用此间隔。";
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "只显示“插座”类型的开关";
 "Ø %1" = "平均 %1";
@@ -295,10 +316,16 @@
 "Ohne Raum" = "无房间";
 "OpenStreetMap-Mitwirkende" = "OpenStreetMap 贡献者";
 "Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "带 GPS 的定位设备（device_tracker），例如来自 Companion 应用或定位器，会显示在这里。";
+"Paket" = "包裹";
+"Paket von %1" = "来自 %1 的包裹";
 "Panel:" = "面板：";
 "Personen" = "人员";
 "Personen mit Karte" = "带地图的人员";
 "Plasma neu starten" = "重启 Plasma";
+"Post" = "邮件";
+"Post (mit der Integration „Briefankündigung“)" = "邮件（需要“Briefankündigung”集成）";
+"Postfach gelesen %1" = "邮箱已读取 %1";
+"Postfach: %1" = "邮箱：%1";
 "Profil" = "预设";
 "Profil:" = "预设：";
 "Projektseite und Updates auf GitHub" = "GitHub 上的项目页面和更新";
@@ -328,9 +355,11 @@
 "seit %1 d" = "已 %1 天";
 "seit %1 h" = "已 %1 小时";
 "seit %1 min" = "已 %1 分钟";
+"Sendung %1" = "运单 %1";
 "Skript in Scriptable einmal starten und Home Assistant hinzufügen." = "在 Scriptable 中运行一次脚本并添加 Home Assistant。";
 "Skripte" = "脚本";
 "So legst du Widgets an:\n1. Homebildschirm lange drücken → „+“ → Scriptable → Größe wählen.\n2. Widget lange drücken → „Widget bearbeiten“ → Script: „Home Assistant ToolBox“.\n3. Bei „Parameter“ eintragen, was es zeigen soll:\n\n• (leer) – Übersicht\n• lampen – Lampen (Tippen schaltet)\n• heizung – alle Räume, heizung:Wohnzimmer – ein Raum mit Verlauf\n• energie – Verbrauch, Verlauf, Strom/Wasser/Gas heute\n• personen – wer ist wo\n• raum:Küche – Temperatur, Lampen, Steckdosen eines Raums\n• lampe:light.flur oder lampe:Stehlampe – eine Entität groß\n• …@Ferienhaus – andere Instanz als den Favoriten\n\nAuf dem Sperrbildschirm zeigt das Widget Lampen, Heizung und Verbrauch kurz." = "如何添加小组件：\n1. 长按主屏幕 → “+” → Scriptable → 选择尺寸。\n2. 长按小组件 → “编辑小组件” → Script：“Home Assistant ToolBox”。\n3. 在“Parameter”中输入要显示的内容：\n\n• （留空）– 概览\n• lights – 灯（点按即可开关）\n• heating – 所有房间，heating:客厅 – 单个房间及历史\n• energy – 用电、历史、今日电/水/燃气\n• people – 谁在哪里\n• room:厨房 – 房间的温度、灯和插座\n• light:light.hall 或 light:落地灯 – 大字显示单个实体\n• …@度假屋 – 非收藏的其他实例\n\n在锁定屏幕上，小组件会简要显示灯、暖气和用电。";
+"Sobald die Deutsche Post einen Brief ankündigt, erscheint er hier mit Bild des Umschlags." = "德国邮政一旦预告信件，它就会带着信封图片显示在这里。";
 "Sonstiges" = "其他";
 "Später" = "稍后";
 "Speichern" = "保存";
@@ -389,6 +418,7 @@
 "Verbunden mit %1 · %2" = "已连接到 %1 · %2";
 "Verbunden mit %1 · Stand %2" = "已连接到 %1 · 更新于 %2";
 "Verbunden: %1 Lampen, %2 Steckdosen, %3 Räume mit Heizung, %4 Personen." = "已连接：%1 盏灯、%2 个插座、%3 个有暖气的房间、%4 人。";
+"Verfolgen" = "跟踪";
 "Vergrößern" = "放大";
 "Verhältnis zur Spitze der letzten 24 Stunden" = "与过去 24 小时峰值的比例";
 "Verkleinern" = "缩小";
@@ -420,6 +450,7 @@
 "Welcher Raum: Temperatur, Lampen und Steckdosen." = "哪个房间：温度、灯和插座。";
 "Weniger" = "收起";
 "Wer ist zu Hause, wer ist wie weit weg." = "谁在家，谁离多远。";
+"Wichtig" = "重要";
 "Widget-Parameter z. B. lampe:light.flur" = "小组件参数，例如 light:light.hall";
 "Widget-Parameter z. B. raum:Küche" = "小组件参数，例如 room:厨房";
 "Widgets" = "小组件";
@@ -443,6 +474,7 @@
 "zu Hause" = "在家";
 "Zu Hause: " = "在家： ";
 "Zu Hause: %1" = "在家：%1";
+"zugestellt" = "已投递";
 "Zugriff verweigert" = "访问被拒绝";
 "Zugriff verweigert – bitte den Token prüfen." = "访问被拒绝 – 请检查令牌。";
 "Zugriffstoken" = "访问令牌";
