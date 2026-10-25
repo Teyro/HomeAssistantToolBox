@@ -22,6 +22,7 @@ KCM.SimpleKCM {
     property alias cfg_zeigePersonen: zeigePersonen.checked
     property alias cfg_zeigeSzenen: zeigeSzenen.checked
     property alias cfg_zeigeRolllaeden: zeigeRolllaeden.checked
+    property alias cfg_zeigePost: zeigePost.checked
     property alias cfg_woIst: woIst.checked
     property alias cfg_updatesSuchen: updatesSuchen.checked
     property alias cfg_abfrageSekunden: abfrage.value
@@ -302,6 +303,10 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: zeigeRolllaeden
             text: i18n("Rollläden, Markisen und Tore")
+        }
+        QQC2.CheckBox {
+            id: zeigePost
+            text: i18n("Post (mit der Integration „Briefankündigung“)")
         }
         QQC2.CheckBox {
             id: zeigePersonen

@@ -14,7 +14,7 @@
         "Id": "de.teyro.homeassistanttoolbox",
         "License": "GPL-3.0-or-later",
         "Name": "Home Assistant ToolBox",
-        "Version": "1.2.0",
+        "Version": "1.3.0",
         "Website": "https://github.com/Teyro/HomeAssistantToolBox",
         "Description[en]": "Lights, sockets, heating, energy and people from Home Assistant – in the panel and on the desktop",
         "Description[zh_CN]": "来自 Home Assistant 的灯、插座、暖气、能源和人员 – 在面板和桌面上",

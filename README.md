@@ -31,6 +31,8 @@ Lights, sockets, heating, energy and people from [Home Assistant](https://www.ho
   battery, directions and the **path of the last 30 minutes, 3 or 6 hours**; with several instances everybody appears on **one map**
 - **Scenes & scripts** – start them with one click (macOS and KDE)
 - **Blinds, awnings and gates** – up, stop, down and position slider, sorted by room; “All up/down” never moves gates
+- **Mail (KDE)** – with the [Briefankündigung](https://github.com/Teyro/Briefankuendigung-HA) integration: letters announced
+  by Deutsche Post with a picture of the envelope, DHL parcels with progress, “Arrived” (on all devices), “Check now”
 - **Several Home Assistant instances** – e.g. home and holiday house, one marked as favourite
 - **Desktop widgets / tiles** – overview, light, socket, room, heating, energy, people, any entity
 - **Live updates** over the Home Assistant WebSocket API; stops asking on a wrong token so your IP is not banned

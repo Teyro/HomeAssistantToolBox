@@ -10,6 +10,7 @@
 "%1 %" = "%1 %";
 "%1 % Luftfeuchte" = "%1 % d’humidité";
 "%1 % offen" = "ouvert à %1 %";
+"%1 Briefe" = "%1 lettres";
 "%1 Dosen · alle aus" = "%1 prises · toutes éteintes";
 "%1 h" = "%1 h";
 "%1 h %2 min" = "%1 h %2 min";
@@ -19,6 +20,7 @@
 "%1 Lampen an" = "%1 lampes allumées";
 "%1 meldet Fehler %2." = "%1 signale l’erreur %2.";
 "%1 min" = "%1 min";
+"%1 Pakete" = "%1 colis";
 "%1 Prozent" = "%1 pour cent";
 "%1 Räume" = "%1 pièces";
 "%1 Räume heizen" = "%1 pièces chauffent";
@@ -26,6 +28,7 @@
 "%1 starten" = "Lancer %1";
 "%1 Steckdosen" = "%1 prises";
 "%1 Szenen · %2 Skripte" = "%1 scènes · %2 scripts";
+"%1 unterwegs" = "%1 en route";
 "%1 unterwegs seit %2" = "%1 parcourus depuis %2";
 "%1 von %2 an" = "%1 sur %2 allumés";
 "%1 von %2 Lampen an" = "%1 sur %2 lampes allumées";
@@ -34,10 +37,12 @@
 "%1 von %2 zu Hause" = "%1 sur %2 à la maison";
 "%1 zu Hause" = "%1 à la maison";
 "%1: Position" = "%1 : position";
+"1 Brief" = "1 lettre";
 "1 Dose · aus" = "1 prise · éteinte";
 "1 h" = "1 h";
 "1 Lampe · aus" = "1 lampe · éteinte";
 "1 Lampe an" = "1 lampe allumée";
+"1 Paket" = "1 colis";
 "1 Raum heizt" = "1 pièce chauffe";
 "2 h" = "2 h";
 "24 h" = "24 h";
@@ -50,6 +55,7 @@
 "Abfrage alle (Sek.):" = "Interroger toutes les (s) :";
 "Abfrage alle %1 s (ohne Live-Verbindung)" = "Interroger toutes les %1 s (sans connexion en direct)";
 "Abmelden" = "Se déconnecter";
+"Absender unbekannt" = "Expéditeur inconnu";
 "Abwesend" = "Absent";
 "Adresse" = "Adresse";
 "Adresse deiner Home-Assistant-Installation und einen langlebigen Zugriffstoken eintragen." = "Saisissez l’adresse de votre installation Home Assistant et un jeton d’accès longue durée.";
@@ -75,6 +81,9 @@
 "an" = "allumé";
 "An" = "Allumé";
 "an · %1 %" = "allumée · %1 %";
+"angekommen" = "arrivé";
+"Angekommen" = "Arrivé";
+"angekündigt %1" = "annoncé %1";
 "Anhalten" = "Arrêter";
 "Anzeigen:" = "Afficher :";
 "Auch klassische Gruppen (group.*) mit Lampen" = "Aussi les groupes classiques (group.*) avec lampes";
@@ -95,6 +104,7 @@
 "Beliebige Entität (großer Wert)" = "N’importe quelle entité (grande valeur)";
 "Bitte wählen" = "Veuillez choisir";
 "Boost" = "Boost";
+"Brief von %1" = "Lettre de %1";
 "Dashboard" = "Tableau de bord";
 "Dashboard öffnen" = "Ouvrir le tableau de bord";
 "Dauer" = "Durée";
@@ -103,6 +113,7 @@
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "Le fichier téléchargé n’est pas Home Assistant ToolBox.";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "Les compteurs viennent automatiquement du tableau de bord Énergie de Home Assistant ou sont choisis ci-dessus par instance.";
 "Diese Einstellungen gelten, wenn das Widget auf dem Schreibtisch liegt. Für mehrere Kacheln (z. B. eine Lampe, eine Heizung und Energie) das Widget mehrmals auf den Schreibtisch ziehen und jede Kachel einzeln einstellen." = "Ces réglages s’appliquent quand le widget est sur le bureau. Pour plusieurs tuiles (p. ex. une lampe, un chauffage et l’énergie), faites glisser le widget plusieurs fois sur le bureau et réglez chaque tuile séparément.";
+"Doch nicht angekommen" = "Finalement pas arrivé";
 "Dosen ausblenden" = "Masquer les prises";
 "Dosen zeigen" = "Afficher les prises";
 "Download fehlgeschlagen" = "Échec du téléchargement";
@@ -147,6 +158,7 @@
 "Gerade heizt kein Raum" = "Aucune pièce ne chauffe actuellement";
 "Geräte" = "Appareils";
 "geschlossen" = "fermé";
+"gestern" = "hier";
 "gestern " = "hier ";
 "gestern %1" = "hier %1";
 "Grad" = "Degrés";
@@ -173,6 +185,8 @@
 "Heizung:" = "Chauffage :";
 "Helligkeit" = "Luminosité";
 "Helligkeit %1" = "Luminosité %1";
+"heute" = "aujourd’hui";
+"Heute" = "Aujourd’hui";
 "Heute schon %1 % vom gestrigen Tagesverbrauch" = "Déjà %1 % de la consommation d’hier";
 "Home Assistant" = "Home Assistant";
 "Home Assistant · %1" = "Home Assistant · %1";
@@ -181,6 +195,7 @@
 "Home Assistant hat den Token abgelehnt. Bitte in den Einstellungen einen neuen eintragen." = "Home Assistant a refusé le jeton. Veuillez en saisir un nouveau dans les paramètres.";
 "Home Assistant hinzufügen" = "Ajouter Home Assistant";
 "Home Assistant ist nicht erreichbar (%1)." = "Home Assistant est injoignable (%1).";
+"Home Assistant jetzt ins Postfach schauen lassen" = "Faire vérifier la boîte mail par Home Assistant maintenant";
 "Home Assistant öffnen" = "Ouvrir Home Assistant";
 "Home Assistant ToolBox" = "Home Assistant ToolBox";
 "Home Assistant ToolBox – Einstellungen" = "Home Assistant ToolBox – Paramètres";
@@ -225,6 +240,7 @@
 "Keine Lampen gefunden" = "Aucune lampe trouvée";
 "Keine Personen" = "Aucune personne";
 "Keine Personen in Home Assistant" = "Aucune personne dans Home Assistant";
+"Keine Post angekündigt" = "Aucun courrier annoncé";
 "Keine Steckdosen" = "Aucune prise";
 "Keine Steckdosen gefunden" = "Aucune prise trouvée";
 "Keine Szenen oder Skripte" = "Aucune scène ni script";
@@ -235,6 +251,7 @@
 "Keine Zähler gefunden. In Home Assistant das Energie-Dashboard einrichten oder in den Einstellungen Zähler wählen." = "Aucun compteur trouvé. Configurez le tableau de bord Énergie dans Home Assistant ou choisissez des compteurs dans les paramètres.";
 "Keiner (Summe der Messsteckdosen)" = "Aucun (somme des prises de mesure)";
 "Komfort" = "Confort";
+"kommt heute" = "arrive aujourd’hui";
 "Komplett (alle Reiter)" = "Complet (tous les onglets)";
 "Kühlen" = "Refroidir";
 "Lade …" = "Chargement …";
@@ -266,6 +283,8 @@
 "Modus" = "Mode";
 "Modus:" = "Mode :";
 "Nach Updates suchen" = "Rechercher des mises à jour";
+"Nachsehen" = "Vérifier";
+"nächstes Mal %1" = "prochaine vérification %1";
 "Name" = "Nom";
 "Name (optional)" = "Nom (facultatif)";
 "Name:" = "Nom :";
@@ -278,11 +297,13 @@
 "Nicht gefunden" = "Introuvable";
 "Nicht verbunden" = "Non connecté";
 "Nichts mit Standort in dieser Gruppe" = "Rien de localisé dans ce groupe";
+"Nichts unterwegs" = "Rien en route";
 "niemand" = "personne";
 "Niemand zu Hause" = "Personne à la maison";
 "noch keine Adresse" = "pas encore d’adresse";
 "Noch keine Instanz – füge Home Assistant hinzu." = "Aucune instance pour l’instant – ajoutez Home Assistant.";
 "Noch nicht eingerichtet – Rechtsklick → Einrichten" = "Pas encore configuré – clic droit → Configurer";
+"Noch unterwegs" = "Encore en route";
 "Normalerweise aktualisiert sich das Widget sofort über die Live-Verbindung. Das Intervall gilt nur, falls die nicht möglich ist." = "Normalement, le widget se met à jour instantanément via la connexion en direct. L’intervalle ne s’applique que si ce n’est pas possible.";
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "Afficher uniquement les interrupteurs de type « prise »";
 "Ø %1" = "Ø %1";
@@ -295,10 +316,16 @@
 "Ohne Raum" = "Sans pièce";
 "OpenStreetMap-Mitwirkende" = "contributeurs d’OpenStreetMap";
 "Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "Les traceurs (device_tracker) avec GPS, p. ex. de l’app Companion ou de balises, apparaissent ici.";
+"Paket" = "Colis";
+"Paket von %1" = "Colis de %1";
 "Panel:" = "Panneau :";
 "Personen" = "Personnes";
 "Personen mit Karte" = "Personnes avec carte";
 "Plasma neu starten" = "Redémarrer Plasma";
+"Post" = "Courrier";
+"Post (mit der Integration „Briefankündigung“)" = "Courrier (avec l’intégration « Briefankündigung »)";
+"Postfach gelesen %1" = "Boîte mail lue %1";
+"Postfach: %1" = "Boîte mail : %1";
 "Profil" = "Profil";
 "Profil:" = "Profil :";
 "Projektseite und Updates auf GitHub" = "Page du projet et mises à jour sur GitHub";
@@ -328,9 +355,11 @@
 "seit %1 d" = "depuis %1 j";
 "seit %1 h" = "depuis %1 h";
 "seit %1 min" = "depuis %1 min";
+"Sendung %1" = "Envoi %1";
 "Skript in Scriptable einmal starten und Home Assistant hinzufügen." = "Lancez le script une fois dans Scriptable et ajoutez Home Assistant.";
 "Skripte" = "Scripts";
 "So legst du Widgets an:\n1. Homebildschirm lange drücken → „+“ → Scriptable → Größe wählen.\n2. Widget lange drücken → „Widget bearbeiten“ → Script: „Home Assistant ToolBox“.\n3. Bei „Parameter“ eintragen, was es zeigen soll:\n\n• (leer) – Übersicht\n• lampen – Lampen (Tippen schaltet)\n• heizung – alle Räume, heizung:Wohnzimmer – ein Raum mit Verlauf\n• energie – Verbrauch, Verlauf, Strom/Wasser/Gas heute\n• personen – wer ist wo\n• raum:Küche – Temperatur, Lampen, Steckdosen eines Raums\n• lampe:light.flur oder lampe:Stehlampe – eine Entität groß\n• …@Ferienhaus – andere Instanz als den Favoriten\n\nAuf dem Sperrbildschirm zeigt das Widget Lampen, Heizung und Verbrauch kurz." = "Comment ajouter des widgets :\n1. Appui long sur l’écran d’accueil → « + » → Scriptable → choisir la taille.\n2. Appui long sur le widget → « Modifier le widget » → Script : « Home Assistant ToolBox ».\n3. Sous « Parameter », indiquez ce qu’il doit afficher :\n\n• (vide) – aperçu\n• lights – lampes (toucher pour commuter)\n• heating – toutes les pièces, heating:Salon – une pièce avec historique\n• energy – consommation, historique, électricité/eau/gaz du jour\n• people – qui est où\n• room:Cuisine – température, lampes et prises d’une pièce\n• light:light.couloir ou light:Lampadaire – une entité en grand\n• …@Maison de vacances – une autre instance que le favori\n\nSur l’écran verrouillé, le widget affiche brièvement lampes, chauffage et consommation.";
+"Sobald die Deutsche Post einen Brief ankündigt, erscheint er hier mit Bild des Umschlags." = "Dès que la Deutsche Post annonce une lettre, elle apparaît ici avec une image de l’enveloppe.";
 "Sonstiges" = "Divers";
 "Später" = "Plus tard";
 "Speichern" = "Enregistrer";
@@ -389,6 +418,7 @@
 "Verbunden mit %1 · %2" = "Connecté à %1 · %2";
 "Verbunden mit %1 · Stand %2" = "Connecté à %1 · état à %2";
 "Verbunden: %1 Lampen, %2 Steckdosen, %3 Räume mit Heizung, %4 Personen." = "Connecté : %1 lampes, %2 prises, %3 pièces avec chauffage, %4 personnes.";
+"Verfolgen" = "Suivre";
 "Vergrößern" = "Zoom avant";
 "Verhältnis zur Spitze der letzten 24 Stunden" = "Rapport au pic des dernières 24 heures";
 "Verkleinern" = "Zoom arrière";
@@ -420,6 +450,7 @@
 "Welcher Raum: Temperatur, Lampen und Steckdosen." = "Quelle pièce : température, lampes et prises.";
 "Weniger" = "Moins";
 "Wer ist zu Hause, wer ist wie weit weg." = "Qui est à la maison, qui est à quelle distance.";
+"Wichtig" = "Important";
 "Widget-Parameter z. B. lampe:light.flur" = "Paramètre du widget, p. ex. light:light.couloir";
 "Widget-Parameter z. B. raum:Küche" = "Paramètre du widget, p. ex. room:Cuisine";
 "Widgets" = "Widgets";
@@ -443,6 +474,7 @@
 "zu Hause" = "à la maison";
 "Zu Hause: " = "À la maison : ";
 "Zu Hause: %1" = "À la maison : %1";
+"zugestellt" = "livré";
 "Zugriff verweigert" = "Accès refusé";
 "Zugriff verweigert – bitte den Token prüfen." = "Accès refusé – veuillez vérifier le jeton.";
 "Zugriffstoken" = "Jeton d’accès";

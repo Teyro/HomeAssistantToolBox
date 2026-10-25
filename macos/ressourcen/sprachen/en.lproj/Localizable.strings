@@ -10,6 +10,7 @@
 "%1 %" = "%1 %";
 "%1 % Luftfeuchte" = "%1 % humidity";
 "%1 % offen" = "%1 % open";
+"%1 Briefe" = "%1 letters";
 "%1 Dosen · alle aus" = "%1 sockets · all off";
 "%1 h" = "%1 h";
 "%1 h %2 min" = "%1 h %2 min";
@@ -19,6 +20,7 @@
 "%1 Lampen an" = "%1 lights on";
 "%1 meldet Fehler %2." = "%1 reports error %2.";
 "%1 min" = "%1 min";
+"%1 Pakete" = "%1 parcels";
 "%1 Prozent" = "%1 percent";
 "%1 Räume" = "%1 rooms";
 "%1 Räume heizen" = "%1 rooms heating";
@@ -26,6 +28,7 @@
 "%1 starten" = "Start %1";
 "%1 Steckdosen" = "%1 sockets";
 "%1 Szenen · %2 Skripte" = "%1 scenes · %2 scripts";
+"%1 unterwegs" = "%1 on the way";
 "%1 unterwegs seit %2" = "%1 travelled since %2";
 "%1 von %2 an" = "%1 of %2 on";
 "%1 von %2 Lampen an" = "%1 of %2 lights on";
@@ -34,10 +37,12 @@
 "%1 von %2 zu Hause" = "%1 of %2 at home";
 "%1 zu Hause" = "%1 at home";
 "%1: Position" = "%1: position";
+"1 Brief" = "1 letter";
 "1 Dose · aus" = "1 socket · off";
 "1 h" = "1 h";
 "1 Lampe · aus" = "1 light · off";
 "1 Lampe an" = "1 light on";
+"1 Paket" = "1 parcel";
 "1 Raum heizt" = "1 room heating";
 "2 h" = "2 h";
 "24 h" = "24 h";
@@ -50,6 +55,7 @@
 "Abfrage alle (Sek.):" = "Poll every (sec.):";
 "Abfrage alle %1 s (ohne Live-Verbindung)" = "Poll every %1 s (without live connection)";
 "Abmelden" = "Sign out";
+"Absender unbekannt" = "Unknown sender";
 "Abwesend" = "Away";
 "Adresse" = "Address";
 "Adresse deiner Home-Assistant-Installation und einen langlebigen Zugriffstoken eintragen." = "Enter the address of your Home Assistant installation and a long-lived access token.";
@@ -75,6 +81,9 @@
 "an" = "on";
 "An" = "On";
 "an · %1 %" = "on · %1 %";
+"angekommen" = "arrived";
+"Angekommen" = "Arrived";
+"angekündigt %1" = "announced %1";
 "Anhalten" = "Stop";
 "Anzeigen:" = "Show:";
 "Auch klassische Gruppen (group.*) mit Lampen" = "Also classic groups (group.*) with lights";
@@ -95,6 +104,7 @@
 "Beliebige Entität (großer Wert)" = "Any entity (large value)";
 "Bitte wählen" = "Please choose";
 "Boost" = "Boost";
+"Brief von %1" = "Letter from %1";
 "Dashboard" = "Dashboard";
 "Dashboard öffnen" = "Open dashboard";
 "Dauer" = "Duration";
@@ -103,6 +113,7 @@
 "Die geladene Datei ist nicht Home Assistant ToolBox." = "The downloaded file is not Home Assistant ToolBox.";
 "Die Zähler kommen automatisch aus dem Energie-Dashboard von Home Assistant oder werden je Instanz oben gewählt." = "The meters come automatically from the Home Assistant energy dashboard or are chosen per instance above.";
 "Diese Einstellungen gelten, wenn das Widget auf dem Schreibtisch liegt. Für mehrere Kacheln (z. B. eine Lampe, eine Heizung und Energie) das Widget mehrmals auf den Schreibtisch ziehen und jede Kachel einzeln einstellen." = "These settings apply when the widget is on the desktop. For several tiles (e.g. a light, a heater and energy), drag the widget onto the desktop several times and set up each tile individually.";
+"Doch nicht angekommen" = "Not arrived after all";
 "Dosen ausblenden" = "Hide sockets";
 "Dosen zeigen" = "Show sockets";
 "Download fehlgeschlagen" = "Download failed";
@@ -147,6 +158,7 @@
 "Gerade heizt kein Raum" = "No room is heating right now";
 "Geräte" = "Devices";
 "geschlossen" = "closed";
+"gestern" = "yesterday";
 "gestern " = "yesterday ";
 "gestern %1" = "yesterday %1";
 "Grad" = "Degrees";
@@ -173,6 +185,8 @@
 "Heizung:" = "Heater:";
 "Helligkeit" = "Brightness";
 "Helligkeit %1" = "Brightness %1";
+"heute" = "today";
+"Heute" = "Today";
 "Heute schon %1 % vom gestrigen Tagesverbrauch" = "Already %1 % of yesterday’s consumption";
 "Home Assistant" = "Home Assistant";
 "Home Assistant · %1" = "Home Assistant · %1";
@@ -181,6 +195,7 @@
 "Home Assistant hat den Token abgelehnt. Bitte in den Einstellungen einen neuen eintragen." = "Home Assistant rejected the token. Please enter a new one in the settings.";
 "Home Assistant hinzufügen" = "Add Home Assistant";
 "Home Assistant ist nicht erreichbar (%1)." = "Home Assistant is not reachable (%1).";
+"Home Assistant jetzt ins Postfach schauen lassen" = "Let Home Assistant check the mailbox now";
 "Home Assistant öffnen" = "Open Home Assistant";
 "Home Assistant ToolBox" = "Home Assistant ToolBox";
 "Home Assistant ToolBox – Einstellungen" = "Home Assistant ToolBox – Settings";
@@ -225,6 +240,7 @@
 "Keine Lampen gefunden" = "No lights found";
 "Keine Personen" = "No people";
 "Keine Personen in Home Assistant" = "No people in Home Assistant";
+"Keine Post angekündigt" = "No mail announced";
 "Keine Steckdosen" = "No sockets";
 "Keine Steckdosen gefunden" = "No sockets found";
 "Keine Szenen oder Skripte" = "No scenes or scripts";
@@ -235,6 +251,7 @@
 "Keine Zähler gefunden. In Home Assistant das Energie-Dashboard einrichten oder in den Einstellungen Zähler wählen." = "No meters found. Set up the energy dashboard in Home Assistant or choose meters in the settings.";
 "Keiner (Summe der Messsteckdosen)" = "None (sum of measuring sockets)";
 "Komfort" = "Comfort";
+"kommt heute" = "arriving today";
 "Komplett (alle Reiter)" = "Complete (all tabs)";
 "Kühlen" = "Cool";
 "Lade …" = "Loading …";
@@ -266,6 +283,8 @@
 "Modus" = "Mode";
 "Modus:" = "Mode:";
 "Nach Updates suchen" = "Check for updates";
+"Nachsehen" = "Check now";
+"nächstes Mal %1" = "next check %1";
 "Name" = "Name";
 "Name (optional)" = "Name (optional)";
 "Name:" = "Name:";
@@ -278,11 +297,13 @@
 "Nicht gefunden" = "Not found";
 "Nicht verbunden" = "Not connected";
 "Nichts mit Standort in dieser Gruppe" = "Nothing with a location in this group";
+"Nichts unterwegs" = "Nothing on the way";
 "niemand" = "nobody";
 "Niemand zu Hause" = "Nobody at home";
 "noch keine Adresse" = "no address yet";
 "Noch keine Instanz – füge Home Assistant hinzu." = "No instance yet – add Home Assistant.";
 "Noch nicht eingerichtet – Rechtsklick → Einrichten" = "Not set up yet – right-click → Set up";
+"Noch unterwegs" = "Still on the way";
 "Normalerweise aktualisiert sich das Widget sofort über die Live-Verbindung. Das Intervall gilt nur, falls die nicht möglich ist." = "Normally the widget updates instantly via the live connection. The interval only applies if that is not possible.";
 "Nur Schalter vom Typ „Steckdose“ zeigen" = "Only show switches of type “outlet”";
 "Ø %1" = "Ø %1";
@@ -295,10 +316,16 @@
 "Ohne Raum" = "Without room";
 "OpenStreetMap-Mitwirkende" = "OpenStreetMap contributors";
 "Ortungsgeräte (device_tracker) mit GPS, z. B. aus der Companion-App oder von Trackern, erscheinen hier." = "Trackers (device_tracker) with GPS, e.g. from the Companion app or tracking tags, appear here.";
+"Paket" = "Parcel";
+"Paket von %1" = "Parcel from %1";
 "Panel:" = "Panel:";
 "Personen" = "People";
 "Personen mit Karte" = "People with map";
 "Plasma neu starten" = "Restart Plasma";
+"Post" = "Mail";
+"Post (mit der Integration „Briefankündigung“)" = "Mail (with the “Briefankündigung” integration)";
+"Postfach gelesen %1" = "Mailbox read %1";
+"Postfach: %1" = "Mailbox: %1";
 "Profil" = "Preset";
 "Profil:" = "Preset:";
 "Projektseite und Updates auf GitHub" = "Project page and updates on GitHub";
@@ -328,9 +355,11 @@
 "seit %1 d" = "for %1 d";
 "seit %1 h" = "for %1 h";
 "seit %1 min" = "for %1 min";
+"Sendung %1" = "Shipment %1";
 "Skript in Scriptable einmal starten und Home Assistant hinzufügen." = "Run the script in Scriptable once and add Home Assistant.";
 "Skripte" = "Scripts";
 "So legst du Widgets an:\n1. Homebildschirm lange drücken → „+“ → Scriptable → Größe wählen.\n2. Widget lange drücken → „Widget bearbeiten“ → Script: „Home Assistant ToolBox“.\n3. Bei „Parameter“ eintragen, was es zeigen soll:\n\n• (leer) – Übersicht\n• lampen – Lampen (Tippen schaltet)\n• heizung – alle Räume, heizung:Wohnzimmer – ein Raum mit Verlauf\n• energie – Verbrauch, Verlauf, Strom/Wasser/Gas heute\n• personen – wer ist wo\n• raum:Küche – Temperatur, Lampen, Steckdosen eines Raums\n• lampe:light.flur oder lampe:Stehlampe – eine Entität groß\n• …@Ferienhaus – andere Instanz als den Favoriten\n\nAuf dem Sperrbildschirm zeigt das Widget Lampen, Heizung und Verbrauch kurz." = "How to add widgets:\n1. Long-press the home screen → “+” → Scriptable → choose a size.\n2. Long-press the widget → “Edit Widget” → Script: “Home Assistant ToolBox”.\n3. Under “Parameter” enter what it should show:\n\n• (empty) – overview\n• lights – lights (tap to switch)\n• heating – all rooms, heating:Living room – one room with history\n• energy – consumption, history, electricity/water/gas today\n• people – who is where\n• room:Kitchen – temperature, lights and sockets of a room\n• light:light.hall or light:Floor lamp – one entity, large\n• …@Holiday home – another instance than the favorite\n\nOn the lock screen the widget briefly shows lights, heating and consumption.";
+"Sobald die Deutsche Post einen Brief ankündigt, erscheint er hier mit Bild des Umschlags." = "As soon as Deutsche Post announces a letter, it appears here with a picture of the envelope.";
 "Sonstiges" = "Other";
 "Später" = "Later";
 "Speichern" = "Save";
@@ -389,6 +418,7 @@
 "Verbunden mit %1 · %2" = "Connected to %1 · %2";
 "Verbunden mit %1 · Stand %2" = "Connected to %1 · as of %2";
 "Verbunden: %1 Lampen, %2 Steckdosen, %3 Räume mit Heizung, %4 Personen." = "Connected: %1 lights, %2 sockets, %3 rooms with heating, %4 people.";
+"Verfolgen" = "Track";
 "Vergrößern" = "Zoom in";
 "Verhältnis zur Spitze der letzten 24 Stunden" = "Ratio to the peak of the last 24 hours";
 "Verkleinern" = "Zoom out";
@@ -420,6 +450,7 @@
 "Welcher Raum: Temperatur, Lampen und Steckdosen." = "Which room: temperature, lights and sockets.";
 "Weniger" = "Less";
 "Wer ist zu Hause, wer ist wie weit weg." = "Who is at home, who is how far away.";
+"Wichtig" = "Important";
 "Widget-Parameter z. B. lampe:light.flur" = "Widget parameter e.g. light:light.hall";
 "Widget-Parameter z. B. raum:Küche" = "Widget parameter e.g. room:Kitchen";
 "Widgets" = "Widgets";
@@ -443,6 +474,7 @@
 "zu Hause" = "at home";
 "Zu Hause: " = "At home: ";
 "Zu Hause: %1" = "At home: %1";
+"zugestellt" = "delivered";
 "Zugriff verweigert" = "Access denied";
 "Zugriff verweigert – bitte den Token prüfen." = "Access denied – please check the token.";
 "Zugriffstoken" = "Access token";

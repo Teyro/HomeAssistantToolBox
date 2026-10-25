@@ -1,6 +1,7 @@
 // Nachgebautes Home Assistant (REST + WebSocket) mit einer Beispielwohnung – zum Testen (Plasma-Widget und macOS-App).
 import http from 'node:http';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import fs from 'node:fs';
 
 const TOKEN = process.env.HA_MOCK_TOKEN || 'test-token';
@@ -248,6 +249,37 @@ function gruppenAktualisieren() {
   }
 }
 
+// Post (Integration „Briefankündigung“, 1.3): Briefe, Pakete, Umschlag als PNG
+function umschlagPNG(b = 360, h = 220, dunkel = 0) {
+  const zeilen = [];
+  for (let y = 0; y < h; y++) {
+    const z = [0];
+    for (let x = 0; x < b; x++) {
+      let p = [246, 244, 238];
+      if (y < 26) p = [34, 34, 34];
+      else if (y > 110 && y < 118 && x > 40 && x < 200 + dunkel) p = [60, 60, 60];
+      else if ((y > 130 && y < 136 || y > 146 && y < 152) && x > 40 && x < 230) p = [90, 90, 90];
+      else if (x > 280 && x < 330 && y > 40 && y < 90) p = [200, 40, 40];
+      z.push(...p);
+    }
+    zeilen.push(Buffer.from(z));
+  }
+  const crc = (buf) => { let c, t = []; for (let n = 0; n < 256; n++) { c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } let r = 0xffffffff; for (const x of buf) r = t[(r ^ x) & 255] ^ (r >>> 8); return (r ^ 0xffffffff) >>> 0; };
+  const block = (art, d) => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); const ad = Buffer.concat([Buffer.from(art), d]); const c = Buffer.alloc(4); c.writeUInt32BE(crc(ad)); return Buffer.concat([l, ad, c]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(b, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), block('IHDR', ihdr), block('IDAT', zlib.deflateSync(Buffer.concat(zeilen))), block('IEND', Buffer.alloc(0))]);
+}
+const POST = NAME !== 'Zuhause' ? null : {
+  erledigt: new Set(), stand: Date.now() - 4 * 3600e3, abrufe: 0,
+  briefe: [
+    { id: 'a'.repeat(20), datum: Date.now() - 3 * 3600e3, absender: 'Finanzamt Hamburg-Nord', art: 'brief', bild: true, wichtig: true },
+    { id: 'b'.repeat(20), datum: Date.now() - 3.2 * 3600e3, absender: 'AOK Nordwest', art: 'brief', bild: true },
+    { id: 'c'.repeat(20), datum: Date.now() - 26 * 3600e3, absender: 'Thalia Bücher GmbH', art: 'paket', bild: false, sendung: '00340434161094015902', stand: 'heute' },
+    { id: 'd'.repeat(20), datum: Date.now() - 50 * 3600e3, absender: 'Stadtwerke Hamburg', art: 'brief', bild: false },
+    { id: 'e'.repeat(20), datum: Date.now() - 74 * 3600e3, absender: 'Zalando SE', art: 'paket', bild: false, sendung: '1234567890123', stand: 'zugestellt' },
+  ],
+};
+
 const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
@@ -267,6 +299,15 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     const json = (o) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (url.pathname === '/api/states') return json(Object.values(z));
+    if (url.pathname.startsWith('/api/briefankuendigung/')) {
+      if (!POST) { res.writeHead(404); res.end('404: Not Found'); return; }
+      const p = url.pathname.slice(23);
+      if (p === 'briefe') return json({ version: 2, stand: POST.stand, fehler: '', konten: [{ id: 'e1', name: 'Christian', stand: POST.stand, fehler: '', zeiten: ['02:00', '05:00'], naechster_abruf: Date.now() + 5 * 3600e3, laeuft: false }],
+        briefe: POST.briefe.map((b) => ({ ...b, konto: 'e1', konto_name: 'Christian', erledigt: POST.erledigt.has(b.id) || b.stand === 'zugestellt' })) });
+      if (p.startsWith('bild/')) { const i = POST.briefe.findIndex((b) => b.id === p.slice(5) && b.bild); if (i < 0) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(umschlagPNG(360, 220, i * 30)); }
+      if (p === 'erledigt' && req.method === 'POST') { const d = JSON.parse(body); if (d.erledigt) POST.erledigt.add(d.id); else POST.erledigt.delete(d.id); return json(d); }
+      if (p === 'abrufen' && req.method === 'POST') { POST.abrufe++; POST.stand = Date.now(); res.writeHead(202, { 'Content-Type': 'application/json' }); return res.end('{"gestartet":1}'); }
+    }
     if (url.pathname === '/api/config') return json({ location_name: NAME, latitude: HEIM[0], longitude: HEIM[1], unit_system: { temperature: '°C' }, version: '2026.10.0' });
     if (url.pathname === '/api/template') {
       const t = JSON.parse(body).template;

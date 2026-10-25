@@ -64,3 +64,21 @@ if (ctx.rollladenText({ state: 'opening', attributes: { current_position: 30, su
 if (ctx.rollladenText(undefined) !== 'nicht erreichbar') throw new Error('nicht erreichbar');
 if (ctx.formatVor(Date.now() - 3 * 3600e3 - 60000, Date.now()) !== 'vor 3 h') throw new Error('formatVor');
 if (!ctx.relevant('cover.kueche', z['cover.kueche'], '') || !ctx.relevant('scene.kinoabend', z['scene.kinoabend'], '')) throw new Error('relevant');
+
+// 1.3: Post (Integration „Briefankündigung“)
+const jetztP = new Date(2026, 9, 21, 9, 0).getTime();
+const briefe = [
+  { id: 'a', datum: jetztP - 3600e3, absender: 'AOK', art: 'brief' },
+  { id: 'b', datum: jetztP - 7200e3, absender: 'Finanzamt', art: 'brief', wichtig: true },
+  { id: 'c', datum: jetztP - 86400e3, absender: 'Thalia', art: 'paket', stand: 'heute' },
+  { id: 'd', datum: jetztP - 2 * 86400e3, absender: 'Zalando', art: 'paket', stand: 'zugestellt' },
+  { id: 'e', datum: jetztP - 3 * 86400e3, absender: 'Stadtwerke', art: 'brief', erledigt: true },
+];
+const pg = ctx.postGruppen(briefe, jetztP);
+console.log('Post:', JSON.stringify({ heute: pg.heute.map((b) => b.id), unterwegs: pg.unterwegs.map((b) => b.id), angekommen: pg.angekommen.map((b) => b.id) }), ctx.postAnzahl(briefe.slice(0, 4)));
+if (pg.heute.join() !== [briefe[1], briefe[0]].join() || pg.heute[0].id !== 'b' || pg.unterwegs.map((b) => b.id).join() !== 'c' || pg.angekommen.map((b) => b.id).join() !== 'd,e') throw new Error('Post-Gruppen');
+if (ctx.postAnzahl(briefe.slice(0, 4)) !== '2 Briefe, 2 Pakete' || ctx.postDatum(jetztP - 86400e3, jetztP) !== 'gestern') throw new Error('Post-Texte');
+if (ctx.paketStufe(briefe[2]) !== 2 || ctx.paketStufe(briefe[3]) !== 3) throw new Error('Paketstufe');
+const png = ctx.bildAdresse(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d]));
+if (png !== 'data:image/png;base64,' + Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d]).toString('base64')) throw new Error('Base64: ' + png);
+if (ctx.bildAdresse(new Uint8Array([0xff, 0xd8, 0xff])) !== 'data:image/jpeg;base64,/9j/') throw new Error('Base64 JPEG');

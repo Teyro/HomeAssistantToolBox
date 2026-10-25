@@ -29,6 +29,8 @@ Dazu gibt es **Widgets für den Schreibtisch** – und für **iPhone/iPad** eine
 - **Personen**: Karte wie bei „Wo ist?“, wer ist wo und wie weit weg, heizt es gerade?
 - **Szenen & Skripte**: mit einem Klick starten (macOS und KDE)
 - **Rollläden, Markisen und Tore**: auf, stopp, zu und Positionsregler, nach Raum; „Alle auf/zu“ bewegt nie Tore
+- **Post (KDE)**: mit der Integration [Briefankündigung](https://github.com/Teyro/Briefankuendigung-HA) – angekündigte Briefe
+  mit Bild des Umschlags, DHL-Pakete mit Fortschritt, „Angekommen“ (auf allen Geräten), „Nachsehen“
 - **„Wo ist?“ (optional)**: der Personen-Reiter wie Apples App – Personen, Geräte und Objekte (jeder `device_tracker` mit GPS),
   Akku, Route und der **Weg der letzten 30 Minuten, 3 oder 6 Stunden**; mit mehreren Instanzen alle auf **einer Karte**
 - **Fenster offen/zu** bei jeder Heizung und **24-Stunden-Verlauf** (Ist, Ziel, Heizphasen) zum Aufklappen

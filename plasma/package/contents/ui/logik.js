@@ -917,3 +917,65 @@ function updateAusReleases(releases, aktuell, dateiname) {
         notizen: neuer.map(function (r) { return { version: r.tag_name.replace(/^v/, ""), titel: r.name || r.tag_name, text: r.body || "" }; })
     };
 }
+
+// ------------------------------------------------------------------ Post (Integration „Briefankündigung“)
+/** Erledigt: als angekommen markiert oder zugestelltes Paket. */
+function postErledigt(b) { return !!b.erledigt || (b.art === "paket" && b.stand === "zugestellt"); }
+function gleicherTag(a, b) { var x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); }
+
+/**
+ * Briefe und Pakete gruppieren: heute angekündigt / noch unterwegs / angekommen (letzte 14 Tage).
+ * Wichtige zuerst, sonst neueste zuerst.
+ */
+function postGruppen(briefe, jetzt) {
+    var g = { heute: [], unterwegs: [], angekommen: [] };
+    var sortiert = (briefe || []).slice().sort(function (a, b) { return (!!b.wichtig - !!a.wichtig) || (b.datum - a.datum); });
+    for (var i = 0; i < sortiert.length; i++) {
+        var b = sortiert[i];
+        if (postErledigt(b)) g.angekommen.push(b);
+        else if (gleicherTag(b.datum, jetzt)) g.heute.push(b);
+        else g.unterwegs.push(b);
+    }
+    g.angekommen.sort(function (a, b) { return b.datum - a.datum; });
+    return g;
+}
+
+/** „2 Briefe, 1 Paket“ */
+function postAnzahl(liste) {
+    var p = 0;
+    for (var i = 0; i < liste.length; i++) if (liste[i].art === "paket") p++;
+    var b = liste.length - p, teile = [];
+    if (b) teile.push(b === 1 ? t("1 Brief") : t("%1 Briefe", b));
+    if (p) teile.push(p === 1 ? t("1 Paket") : t("%1 Pakete", p));
+    return teile.join(", ");
+}
+
+/** „heute“, „gestern“, „Mo 19.10.“ */
+function postDatum(ms, jetzt) {
+    var tag = function (x) { var d = new Date(x); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+    var diff = Math.round((tag(jetzt) - tag(ms)) / 86400000);
+    if (diff === 0) return t("heute");
+    if (diff === 1) return t("gestern");
+    var d = new Date(ms);
+    return d.getDate() + "." + (d.getMonth() + 1) + ".";
+}
+
+/** Stand eines Pakets als Stufe 1–3 (unterwegs, kommt heute, zugestellt) */
+function paketStufe(b) { return b.stand === "zugestellt" ? 3 : b.stand === "heute" ? 2 : 1; }
+
+var _B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/** Bytes (Uint8Array) als data:-Adresse für ein Image – die Bilder brauchen das Token, das kann Image nicht. */
+function bildAdresse(bytes) {
+    var typ = bytes[0] === 0x89 && bytes[1] === 0x50 ? "image/png" : bytes[0] === 0x47 && bytes[1] === 0x49 ? "image/gif"
+            : bytes[0] === 0x52 && bytes[1] === 0x49 ? "image/webp" : "image/jpeg";
+    var teile = [], n = bytes.length;
+    for (var i = 0; i < n; i += 3) {
+        var a = bytes[i], b = i + 1 < n ? bytes[i + 1] : 0, c = i + 2 < n ? bytes[i + 2] : 0;
+        var x = (a << 16) | (b << 8) | c;
+        teile.push(_B64.charAt((x >> 18) & 63) + _B64.charAt((x >> 12) & 63) + (i + 1 < n ? _B64.charAt((x >> 6) & 63) : "=") + (i + 2 < n ? _B64.charAt(x & 63) : "="));
+    }
+    return "data:" + typ + ";base64," + teile.join("");
+}
+
+/** DHL-Sendungsverfolgung */
+function dhlAdresse(nummer) { return "https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=" + encodeURIComponent(nummer); }

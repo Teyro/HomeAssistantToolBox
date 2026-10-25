@@ -1,5 +1,5 @@
 /*
- * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Heizung · Energie · Personen · Szenen · Rollläden,
+ * Ausgeklappte Ansicht: Reiter Lampen · Steckdosen · Heizung · Energie · Personen · Szenen · Rollläden · Post,
  * rechts das Menü (Instanz wechseln, neu laden, Home Assistant öffnen, Einstellungen).
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -21,6 +21,7 @@ PlasmaExtras.Representation {
     property bool zeigePersonen: true
     property bool zeigeSzenen: true
     property bool zeigeRolllaeden: true
+    property bool zeigePost: true
     property bool woIst: false
     property string ausgeblendet: ""
     property bool zeigeGruppen: true
@@ -66,6 +67,9 @@ PlasmaExtras.Representation {
                 Reiter { text: i18n("Szenen"); symbol: "szene"; visible: voll.zeigeSzenen && (voll.ha.szenen.length > 0 || voll.ha.skripte.length > 0) }
                 Reiter { text: i18n("Rollläden"); symbol: "rollladen"; visible: voll.zeigeRolllaeden && voll.ha.rolllaeden.length > 0
                          zahl: voll.ha.rolllaeden.filter(r => { const st = Logik.rollladenStatus(voll.ha.zustaende[r.id]); return st.verfuegbar && st.position !== 0; }).length }
+                // Post: nur mit der Integration „Briefankündigung“; Zahl = heute angekündigt und noch nicht da
+                Reiter { text: i18n("Post"); symbol: "brief"; visible: voll.zeigePost && voll.ha.post !== null
+                         zahl: voll.ha.post ? Logik.postGruppen(voll.ha.post.briefe, Date.now()).heute.length : 0 }
             }
             // Ein Menü wie bei den Plasma-eigenen Widgets: Instanz wechseln, neu laden, …
             PC3.ToolButton {
@@ -286,6 +290,9 @@ PlasmaExtras.Representation {
                 ha: voll.ha
             }
             RolllaedenSeite {
+                ha: voll.ha
+            }
+            PostSeite {
                 ha: voll.ha
             }
         }
